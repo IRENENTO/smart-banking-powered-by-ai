@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const passport = require('./config/passport');
 const connectDB = require('./config/db');
 const { PORT } = require('./config/env');
@@ -25,9 +26,21 @@ app.use(express.json());
 const responseFormatter = require('./middleware/response.middleware');
 app.use(responseFormatter);
 
+// Session Store
+const sessionStore = new MySQLStore({
+    host: process.env.DB_HOST || 'localhost',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'irene2003',
+    database: process.env.DB_NAME || 'smart_banking_powered_by_ai',
+    clearExpired: true,
+    checkExpirationInterval: 900000,
+    expiration: 86400000
+});
+
 // Session Middleware
 app.use(session({
     secret: process.env.JWT_SECRET || 'your-secret-key',
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: { secure: false, httpOnly: true }
