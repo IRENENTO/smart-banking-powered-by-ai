@@ -295,3 +295,4 @@ The model returns a **Risk Score (0-100)** and a status (**APPROVED**, **REVIEW*
 - **Banks**: Reduced default rates through data-driven decisions and operational efficiency.
 - **Economy**: Improved financial inclusion by providing transparent, fast credit access to SMEs and individuals.
 - **Academic**: Demonstrates practical integration of ML in distributed enterprise systems.
+"# smart-banking-powered-by-ai" 
