@@ -1,0 +1,26 @@
+{
+  "projectType": {
+    "value": "node",
+    "updatedAt": "2026-05-12T23:05:33.599Z"
+  },
+  "projectName": {
+    "value": "ai-banking",
+    "updatedAt": "2026-05-12T23:05:33.710Z"
+  },
+  "dependencies": {
+    "value": "@react-navigation/bottom-tabs, @react-navigation/native, @react-navigation/native-stack, axios, dotenv, mongodb, react-native-gesture-handler, react-native-reanimated, react-native-safe-area-context, react-native-screens",
+    "updatedAt": "2026-05-12T23:05:33.731Z"
+  },
+  "fileCount": {
+    "value": "2174",
+    "updatedAt": "2026-05-12T23:05:47.113Z"
+  },
+  "directories": {
+    "value": "ai-banking-mobile, ai-banking-mobile/assets, ai-banking-mobile/src, ai-banking-mobile/src/components, ai-banking-mobile/src/hooks, ai-banking-mobile/src/navigation, ai-banking-mobile/src/screens, ai-banking-mobile/src/services, ai-banking-mobile/src/store, ai-engine, ai-engine/app, ai-engine/app/models, ai-engine/app/services, backend, backend/app, backend/app/api, backend/app/core, backend/app/db, backend/app/ml_engine, backend/app/models, backend/app/services, backend/migrations, backend/src, backend/src/config, backend/src/controllers, backend/src/middleware, backend/src/migrations, backend/src/models, backend/src/routes, backend/src/seeders",
+    "updatedAt": "2026-05-12T23:05:47.142Z"
+  },
+  "fileTypes": {
+    "value": ".py(776), .tsx(613), .ts(433), .js(104), .md(81), .json(41), .j2(33), .css(14)",
+    "updatedAt": "2026-05-12T23:05:47.178Z"
+  }
+}

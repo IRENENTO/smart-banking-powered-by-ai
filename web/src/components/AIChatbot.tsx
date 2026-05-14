@@ -1,0 +1,687 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  MessageCircle,
+  X,
+  Send,
+  Bot,
+  User,
+  Minimize2,
+  RotateCcw,
+  ChevronRight,
+  Mic,
+  MicOff,
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { aiService } from '../services/api';
+
+// ─── Types ──────────────────────────────────────────────────────────────────
+
+interface Message {
+  id: string;
+  role: 'bot' | 'user';
+  text: string;
+  timestamp: Date;
+  quickReplies?: string[];
+}
+
+// ─── Knowledge Base ──────────────────────────────────────────────────────────
+
+const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?: boolean }[] = [
+  {
+    keywords: ['hello', 'hi', 'hey', 'start', 'help', 'bonjour', 'muraho'],
+    answer:
+      "👋 Hello! I'm **Lend-AI**, your personal banking assistant for AI Smart Banking.\n\nI can help you:\n• 📊 Understand your Dashboard\n• 💸 Send & receive Money\n• 🏦 Manage Accounts\n• 💳 Apply for Loans\n• 💰 Track Savings\n• 📈 Check AI Insights\n\nWhat would you like to know?",
+    quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'],
+  },
+  {
+    keywords: ['dashboard', 'home', 'overview', 'main page', 'summary'],
+    answer:
+      "📊 **Dashboard Guide**\n\nYour Dashboard is your financial command center!\n\n1. **Portfolio Value** – Your total account balance in RWF.\n2. **AI Risk Score** – A score out of 100 measuring your financial health.\n3. **Recent Transactions** – Your latest account activity at a glance.\n\n➡️ Click **Dashboard** in the top menu to go there.",
+    quickReplies: ['What is AI Risk Score?', 'How to send money?', 'Check my transactions'],
+  },
+  {
+    keywords: ['send', 'payment', 'transfer', 'pay', 'money', 'send money', 'recipient'],
+    answer:
+      "💸 **How to Send Money**\n\nIt's quick and easy!\n\n**Step 1:** Click **Payments** in the top menu.\n**Step 2:** Fill in:\n   • Recipient Name\n   • Account or Mobile Number\n   • Amount (in RWF)\n   • Note (optional)\n**Step 3:** Click the **Send Payment** button.\n\nYou'll see a green confirmation message when it's done! ✅",
+    quickReplies: ['What is Mobile Money?', 'View scheduled payments', 'Go back to start'],
+  },
+  {
+    keywords: ['mobile money', 'mtn', 'momo', 'airtel', 'mobile'],
+    answer:
+      "📱 **Mobile Money**\n\nWe support two mobile wallets:\n\n• **MTN MoMo** – Balance shown on the Payments page.\n• **Airtel Money** – Also listed on the Payments page.\n\nYou can use your mobile number as the recipient account when sending payments.\n\n➡️ Go to **Payments → Mobile Money** section to check your balance.",
+    quickReplies: ['How to send money?', 'Schedule a payment', 'Go back to start'],
+  },
+  {
+    keywords: ['schedule', 'scheduled', 'recurring', 'automatic', 'repeat'],
+    answer:
+      "🗓️ **Scheduled Payments**\n\nScheduled payments are automatic recurring transfers (e.g., weekly, monthly).\n\nYou can view them on the **Payments** page in the **Scheduled Payments** panel on the right.\n\nEach entry shows:\n• Who you pay\n• How often (weekly/monthly)\n• The next due date\n• Amount in RWF",
+    quickReplies: ['How to send money?', 'What is Mobile Money?', 'Go back to start'],
+  },
+  {
+    keywords: ['account', 'accounts', 'balance', 'bank account', 'my account'],
+    answer:
+      "🏦 **Accounts Guide**\n\nYour **Accounts** page shows all your bank accounts.\n\nYou'll see:\n• **Account number** and type\n• **Current balance** in RWF\n• **Account status** (Active/Inactive)\n\n➡️ Click **Accounts** in the navigation to view them.",
+    quickReplies: ['View my transactions', 'How to send money?', 'Savings help'],
+  },
+  {
+    keywords: ['transaction', 'transactions', 'history', 'activity', 'spending'],
+    answer:
+      "📋 **Transactions Guide**\n\nThe **Transactions** page shows your full activity history.\n\nYou can:\n• See all **deposits** and **withdrawals**\n• Filter by **date** or **type**\n• View the **amount** and **description** for each\n\n➡️ Click **Transactions** in the top menu.",
+    quickReplies: ['Check my balance', 'Send money', 'View AI Insights'],
+  },
+  {
+    keywords: ['loan', 'loans', 'apply', 'loan application', 'borrow', 'credit', 'lending'],
+    answer:
+      "💳 **How to Apply for a Loan**\n\nApplying is simple:\n\n**Step 1:** Click **Loans** in the top menu.\n**Step 2:** Click **Apply for Loan**.\n**Step 3:** Fill in:\n   • Loan amount\n   • Purpose\n   • Repayment period\n**Step 4:** Submit. Our AI reviews your risk profile instantly!\n\n🤖 Your **AI Risk Score** determines your eligibility.",
+    quickReplies: ['What is AI Risk Score?', 'Check loan status', 'Go back to start'],
+  },
+  {
+    keywords: ['loan status', 'application status', 'my loan', 'pending loan'],
+    answer:
+      "🔍 **Loan Status**\n\nTo check your loan application:\n\n➡️ Click **Loans** in the top menu.\n\nYou'll see the current status:\n• **Pending** – Under review\n• **Approved** ✅ – Congratulations!\n• **Rejected** ❌ – Try improving your AI Risk Score first.",
+    quickReplies: ['Apply for a loan', 'What is AI Risk Score?', 'Go back to start'],
+  },
+  {
+    keywords: ['savings', 'save', 'saving', 'goal', 'saving goal'],
+    answer:
+      "💰 **Savings Guide**\n\nThe **Savings** page helps you build healthy saving habits!\n\nYou can:\n• **Create saving goals** (e.g., new phone, vacation)\n• Track **progress** toward each goal\n• See your **total saved amount**\n\n➡️ Click **Savings** in the top menu to get started.",
+    quickReplies: ['Create a saving goal', 'Check my balance', 'View AI Insights'],
+  },
+  {
+    keywords: ['ai', 'insight', 'insights', 'ai insights', 'artificial intelligence', 'analysis', 'smart'],
+    answer:
+      "🤖 **AI Insights**\n\nThis is the brain of AI Smart Banking!\n\nThe AI analyzes your financial behavior and gives you:\n• **Spending patterns** – Where your money goes\n• **Saving recommendations** – How to save more\n• **Risk analysis** – Your financial health score\n• **Loan predictions** – Likelihood of approval\n\n➡️ Click **AI Insights** in the top menu.",
+    quickReplies: ['What is AI Risk Score?', 'Apply for a loan', 'Go back to start'],
+  },
+  {
+    keywords: ['risk', 'risk score', 'score', 'health', 'financial health', 'credit score'],
+    answer:
+      "🛡️ **AI Risk Score Explained**\n\nYour Risk Score (out of 100) measures your financial health.\n\n• **80–100** 🟢 Excellent – High approval chances\n• **60–79** 🟡 Good – Decent approval odds\n• **40–59** 🟠 Fair – Work on saving more\n• **0–39** 🔴 Poor – Focus on reducing debt\n\n**To improve it:** Save regularly, make payments on time, and reduce outstanding loans.",
+    quickReplies: ['Apply for a loan', 'View AI Insights', 'Go back to start'],
+  },
+  {
+    keywords: ['language', 'kinyarwanda', 'french', 'english', 'langue', 'translate', 'change language'],
+    answer:
+      "🌍 **Changing Language**\n\nAI Smart Banking supports 3 languages:\n• 🇬🇧 English\n• 🇷🇼 Kinyarwanda\n• 🇫🇷 Français\n\n**How to switch:**\n1. Look for the 🌐 globe icon in the top-right of the navigation bar.\n2. Click it and choose your language.\n\nThe entire interface will update instantly!",
+    quickReplies: ['Go back to start', 'Dashboard help', 'Send money'],
+  },
+  {
+    keywords: ['dark', 'light', 'theme', 'mode', 'night', 'dark mode'],
+    answer:
+      "🌙 **Dark / Light Mode**\n\nYou can switch between dark and light themes!\n\n**How to toggle:**\n➡️ Click the **☀️ / 🌙 icon** (sun or moon) in the top-right navigation bar.\n\nThe app will switch instantly for a more comfortable viewing experience.",
+    quickReplies: ['Language settings', 'Go back to start', 'Dashboard help'],
+  },
+  {
+    keywords: ['login', 'sign in', 'signin', 'log in', 'password', 'forgot password'],
+    answer:
+      "🔐 **Login Help**\n\nTo log in to AI Smart Banking:\n\n1. Go to the **Login** page.\n2. Enter your **email address** and **password**.\n3. Click **Sign In**.\n\n**Forgot your password?**\nClick the **'Forgot Password'** link on the login page to reset it via your email.",
+    quickReplies: ['Register a new account', 'Go back to start'],
+  },
+  {
+    keywords: ['register', 'sign up', 'signup', 'create account', 'new account', 'join'],
+    answer:
+      "✍️ **Creating a New Account**\n\nGetting started is free!\n\n1. Click **Register** on the login page.\n2. Fill in your:\n   • Full name\n   • Email address\n   • Password\n3. Click **Create Account**.\n\nOnce registered, you'll be taken to your Dashboard automatically! 🎉",
+    quickReplies: ['Login help', 'How to send money?', 'Go back to start'],
+  },
+  {
+    keywords: ['admin', 'administrator', 'manage users', 'admin panel'],
+    answer:
+      "⚙️ **Admin Panel**\n\nThe Admin Panel is for system administrators only.\n\nAdmins can:\n• View all users and accounts\n• Manage loan applications\n• Generate reports\n• Monitor system health\n\n➡️ Access via **Admin** in the navigation (requires admin privileges).",
+    quickReplies: ['View Reports', 'Go back to start'],
+  },
+  {
+    keywords: ['report', 'reports', 'export', 'download', 'statement'],
+    answer:
+      "📑 **Reports**\n\nThe **Reports** page lets you generate financial summaries.\n\nYou can:\n• View transaction reports\n• Filter by date range\n• Export data for your records\n\n➡️ Click **Reports** from the admin menu.",
+    quickReplies: ['Go back to start', 'View Transactions'],
+  },
+  {
+    keywords: ['thank', 'thanks', 'merci', 'murakoze', 'bye', 'goodbye', 'great', 'awesome'],
+    answer:
+      "😊 You're welcome! I'm always here to help.\n\nIf you have more questions, just type them anytime. Happy banking with **AI Smart Banking**! 🏦✨",
+    quickReplies: ['Go back to start', 'Send money', 'Apply for a loan'],
+  },
+  // Add fallback for general questions to use API
+  {
+    keywords: ['unknown', 'question', 'ask', 'tell', 'what', 'how', 'when', 'where', 'why'],
+    answer: "Let me check that for you...",
+    useAPI: true,
+  },
+  {
+    keywords: ['dashboard', 'home', 'overview', 'main page', 'summary'],
+    answer:
+      "📊 **Dashboard Guide**\n\nYour Dashboard is your financial command center!\n\n1. **Portfolio Value** – Your total account balance in RWF.\n2. **AI Risk Score** – A score out of 100 measuring your financial health.\n3. **Recent Transactions** – Your latest account activity at a glance.\n\n➡️ Click **Dashboard** in the top menu to go there.",
+    quickReplies: ['What is AI Risk Score?', 'How to send money?', 'Check my transactions'],
+  },
+  {
+    keywords: ['send', 'payment', 'transfer', 'pay', 'money', 'send money', 'recipient'],
+    answer:
+      "💸 **How to Send Money**\n\nIt's quick and easy!\n\n**Step 1:** Click **Payments** in the top menu.\n**Step 2:** Fill in:\n   • Recipient Name\n   • Account or Mobile Number\n   • Amount (in RWF)\n   • Note (optional)\n**Step 3:** Click the **Send Payment** button.\n\nYou'll see a green confirmation message when it's done! ✅",
+    quickReplies: ['What is Mobile Money?', 'View scheduled payments', 'Go back to start'],
+  },
+  {
+    keywords: ['mobile money', 'mtn', 'momo', 'airtel', 'mobile'],
+    answer:
+      "📱 **Mobile Money**\n\nWe support two mobile wallets:\n\n• **MTN MoMo** – Balance shown on the Payments page.\n• **Airtel Money** – Also listed on the Payments page.\n\nYou can use your mobile number as the recipient account when sending payments.\n\n➡️ Go to **Payments → Mobile Money** section to check your balance.",
+    quickReplies: ['How to send money?', 'Schedule a payment', 'Go back to start'],
+  },
+  {
+    keywords: ['schedule', 'scheduled', 'recurring', 'automatic', 'repeat'],
+    answer:
+      "🗓️ **Scheduled Payments**\n\nScheduled payments are automatic recurring transfers (e.g., weekly, monthly).\n\nYou can view them on the **Payments** page in the **Scheduled Payments** panel on the right.\n\nEach entry shows:\n• Who you pay\n• How often (weekly/monthly)\n• The next due date\n• Amount in RWF",
+    quickReplies: ['How to send money?', 'What is Mobile Money?', 'Go back to start'],
+  },
+  {
+    keywords: ['account', 'accounts', 'balance', 'bank account', 'my account'],
+    answer:
+      "🏦 **Accounts Guide**\n\nYour **Accounts** page shows all your bank accounts.\n\nYou'll see:\n• **Account number** and type\n• **Current balance** in RWF\n• **Account status** (Active/Inactive)\n\n➡️ Click **Accounts** in the top navigation to view them.",
+    quickReplies: ['View my transactions', 'How to send money?', 'Savings help'],
+  },
+  {
+    keywords: ['transaction', 'transactions', 'history', 'activity', 'spending'],
+    answer:
+      "📋 **Transactions Guide**\n\nThe **Transactions** page shows your full activity history.\n\nYou can:\n• See all **deposits** and **withdrawals**\n• Filter by **date** or **type**\n• View the **amount** and **description** for each\n\n➡️ Click **Transactions** in the top menu.",
+    quickReplies: ['Check my balance', 'Send money', 'View AI Insights'],
+  },
+  {
+    keywords: ['loan', 'loans', 'apply', 'loan application', 'borrow', 'credit', 'lending'],
+    answer:
+      "💳 **How to Apply for a Loan**\n\nApplying is simple:\n\n**Step 1:** Click **Loans** in the top menu.\n**Step 2:** Click **Apply for Loan**.\n**Step 3:** Fill in:\n   • Loan amount\n   • Purpose\n   • Repayment period\n**Step 4:** Submit. Our AI reviews your risk profile instantly!\n\n🤖 Your **AI Risk Score** determines your eligibility.",
+    quickReplies: ['What is AI Risk Score?', 'Check loan status', 'Go back to start'],
+  },
+  {
+    keywords: ['loan status', 'application status', 'my loan', 'pending loan'],
+    answer:
+      "🔍 **Loan Status**\n\nTo check your loan application:\n\n➡️ Click **Loans** in the top menu.\n\nYou'll see the current status:\n• **Pending** – Under review\n• **Approved** ✅ – Congratulations!\n• **Rejected** ❌ – Try improving your AI Risk Score first.",
+    quickReplies: ['Apply for a loan', 'What is AI Risk Score?', 'Go back to start'],
+  },
+  {
+    keywords: ['savings', 'save', 'saving', 'goal', 'saving goal'],
+    answer:
+      "💰 **Savings Guide**\n\nThe **Savings** page helps you build healthy saving habits!\n\nYou can:\n• **Create saving goals** (e.g., new phone, vacation)\n• Track **progress** toward each goal\n• See your **total saved amount**\n\n➡️ Click **Savings** in the top menu to get started.",
+    quickReplies: ['Create a saving goal', 'Check my balance', 'View AI Insights'],
+  },
+  {
+    keywords: ['ai', 'insight', 'insights', 'ai insights', 'artificial intelligence', 'analysis', 'smart'],
+    answer:
+      "🤖 **AI Insights**\n\nThis is the brain of AI Smart Banking!\n\nThe AI analyzes your financial behavior and gives you:\n• **Spending patterns** – Where your money goes\n• **Saving recommendations** – How to save more\n• **Risk analysis** – Your financial health score\n• **Loan predictions** – Likelihood of approval\n\n➡️ Click **AI Insights** in the top menu.",
+    quickReplies: ['What is AI Risk Score?', 'Apply for a loan', 'Go back to start'],
+  },
+  {
+    keywords: ['risk', 'risk score', 'score', 'health', 'financial health', 'credit score'],
+    answer:
+      "🛡️ **AI Risk Score Explained**\n\nYour Risk Score (out of 100) measures your financial health.\n\n• **80–100** 🟢 Excellent – High approval chances\n• **60–79** 🟡 Good – Decent approval odds\n• **40–59** 🟠 Fair – Work on saving more\n• **0–39** 🔴 Poor – Focus on reducing debt\n\n**To improve it:** Save regularly, make payments on time, and reduce outstanding loans.",
+    quickReplies: ['Apply for a loan', 'View AI Insights', 'Go back to start'],
+  },
+  {
+    keywords: ['language', 'kinyarwanda', 'french', 'english', 'langue', 'translate', 'change language'],
+    answer:
+      "🌍 **Changing Language**\n\nAI Smart Banking supports 3 languages:\n• 🇬🇧 English\n• 🇷🇼 Kinyarwanda\n• 🇫🇷 Français\n\n**How to switch:**\n1. Look for the 🌐 globe icon in the top-right of the navigation bar.\n2. Click it and choose your language.\n\nThe entire interface will update instantly!",
+    quickReplies: ['Go back to start', 'Dashboard help', 'Send money'],
+  },
+  {
+    keywords: ['dark', 'light', 'theme', 'mode', 'night', 'dark mode'],
+    answer:
+      "🌙 **Dark / Light Mode**\n\nYou can switch between dark and light themes!\n\n**How to toggle:**\n➡️ Click the **☀️ / 🌙 icon** (sun or moon) in the top-right navigation bar.\n\nThe app will switch instantly for a more comfortable viewing experience.",
+    quickReplies: ['Language settings', 'Go back to start', 'Dashboard help'],
+  },
+  {
+    keywords: ['login', 'sign in', 'signin', 'log in', 'password', 'forgot password'],
+    answer:
+      "🔐 **Login Help**\n\nTo log in to AI Smart Banking:\n\n1. Go to the **Login** page.\n2. Enter your **email address** and **password**.\n3. Click **Sign In**.\n\n**Forgot your password?**\nClick the **'Forgot Password'** link on the login page to reset it via your email.",
+    quickReplies: ['Register a new account', 'Go back to start'],
+  },
+  {
+    keywords: ['register', 'sign up', 'signup', 'create account', 'new account', 'join'],
+    answer:
+      "✍️ **Creating a New Account**\n\nGetting started is free!\n\n1. Click **Register** on the login page.\n2. Fill in your:\n   • Full name\n   • Email address\n   • Password\n3. Click **Create Account**.\n\nOnce registered, you'll be taken to your Dashboard automatically! 🎉",
+    quickReplies: ['Login help', 'How to send money?', 'Go back to start'],
+  },
+  {
+    keywords: ['admin', 'administrator', 'manage users', 'admin panel'],
+    answer:
+      "⚙️ **Admin Panel**\n\nThe Admin Panel is for system administrators only.\n\nAdmins can:\n• View all users and accounts\n• Manage loan applications\n• Generate reports\n• Monitor system health\n\n➡️ Access via **Admin** in the navigation (requires admin privileges).",
+    quickReplies: ['View Reports', 'Go back to start'],
+  },
+  {
+    keywords: ['report', 'reports', 'export', 'download', 'statement'],
+    answer:
+      "📑 **Reports**\n\nThe **Reports** page lets you generate financial summaries.\n\nYou can:\n• View transaction reports\n• Filter by date range\n• Export data for your records\n\n➡️ Click **Reports** from the admin menu.",
+    quickReplies: ['Go back to start', 'View Transactions'],
+  },
+  {
+    keywords: ['thank', 'thanks', 'merci', 'murakoze', 'bye', 'goodbye', 'great', 'awesome'],
+    answer:
+      "😊 You're welcome! I'm always here to help.\n\nIf you have more questions, just type them anytime. Happy banking with **AI Smart Banking**! 🏦✨",
+    quickReplies: ['Go back to start', 'Send money', 'Apply for a loan'],
+  },
+];
+
+const FALLBACK: Message = {
+  id: 'fallback',
+  role: 'bot',
+  text: "🤔 I'm not sure about that. Here are some things I can help with:",
+  timestamp: new Date(),
+  quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help', 'Change language'],
+};
+
+const WELCOME_MSG: Message = {
+  id: 'welcome',
+  role: 'bot',
+  text: "👋 Hi! I'm **Lend-AI**, your smart banking guide.\n\nWhat can I help you with today?",
+  timestamp: new Date(),
+  quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'],
+};
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function getBotResponse(input: string): Omit<Message, 'id' | 'timestamp'> & { useAPI?: boolean } {
+  const lower = input.toLowerCase();
+  const match = KB.find((kb) => kb.keywords.some((kw) => lower.includes(kw)));
+  if (match) {
+    return { role: 'bot', text: match.answer, quickReplies: match.quickReplies, useAPI: match.useAPI };
+  }
+  // If no match found, use API
+  return { role: 'bot', text: "Let me check that for you...", useAPI: true };
+}
+
+function uid() {
+  return Math.random().toString(36).slice(2);
+}
+
+function formatTime(d: Date) {
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Render bold markdown (**text**)
+function renderBold(text: string) {
+  const parts = text.split(/\*\*(.*?)\*\*/g);
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <strong key={i} className="font-semibold">
+        {part}
+      </strong>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+const TypingIndicator: React.FC = () => (
+  <div className="flex items-end gap-2 mb-4">
+    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-600 to-[#0A9396] flex items-center justify-center flex-shrink-0">
+      <Bot size={14} className="text-white" />
+    </div>
+    <div className="px-4 py-3 bg-white dark:bg-[#0B1F3A] rounded-2xl rounded-bl-sm border border-gray-100 dark:border-gray-700 shadow-sm">
+      <div className="flex items-center gap-1.5 h-4">
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full block"
+            animate={{ y: [0, -5, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+          />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const ChatBubble: React.FC<{ msg: Message }> = ({ msg }) => {
+  const isBot = msg.role === 'bot';
+  const lines = msg.text.split('\n');
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+      className={`flex items-end gap-2 mb-4 ${isBot ? 'flex-row' : 'flex-row-reverse'}`}
+    >
+      {/* Avatar */}
+      <div
+        className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+          isBot
+            ? 'bg-gradient-to-br from-blue-600 to-[#0A9396]'
+            : 'bg-gradient-to-br from-purple-500 to-indigo-600'
+        }`}
+      >
+        {isBot ? <Bot size={14} className="text-white" /> : <User size={14} className="text-white" />}
+      </div>
+
+      {/* Bubble */}
+      <div className={`max-w-[82%] flex flex-col ${isBot ? 'items-start' : 'items-end'}`}>
+        <div
+          className={`px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${
+            isBot
+              ? 'bg-white dark:bg-[#0B1F3A] text-gray-800 dark:text-gray-100 rounded-bl-sm border border-gray-100 dark:border-gray-700'
+              : 'bg-gradient-to-br from-blue-600 to-[#0A9396] text-white rounded-br-sm'
+          }`}
+        >
+          {lines.map((line, idx) => (
+            <p key={idx} className={line === '' ? 'mt-2' : ''}>
+              {renderBold(line)}
+            </p>
+          ))}
+        </div>
+        <span className="text-xs text-gray-400 dark:text-gray-600 mt-1 px-1">
+          {formatTime(msg.timestamp)}
+        </span>
+      </div>
+    </motion.div>
+  );
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+const AIChatbot: React.FC = () => {
+  const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [minimized, setMinimized] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([WELCOME_MSG]);
+  const [input, setInput] = useState('');
+  const [typing, setTyping] = useState(false);
+  const [unread, setUnread] = useState(0);
+  const [isListening, setIsListening] = useState(false);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Initialize Web Speech API
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition && !recognitionRef.current) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.language = 'en-US';
+
+      recognitionRef.current.onstart = () => setIsListening(true);
+      recognitionRef.current.onend = () => setIsListening(false);
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        setInput(transcript);
+      };
+      recognitionRef.current.onerror = () => setIsListening(false);
+    }
+  }, []);
+
+  const toggleMicrophone = () => {
+    if (!recognitionRef.current) return;
+    if (isListening) {
+      recognitionRef.current.stop();
+    } else {
+      recognitionRef.current.start();
+    }
+  };
+
+  // Scroll to bottom whenever messages change
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, typing]);
+
+  // Focus input when opened
+  useEffect(() => {
+    if (open && !minimized) {
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  }, [open, minimized]);
+
+  const pushBotMsg = useCallback((text: string, quickReplies?: string[]) => {
+    const msg: Message = { id: uid(), role: 'bot', text, timestamp: new Date(), quickReplies };
+    setMessages((prev) => [...prev, msg]);
+  }, []);
+
+  const handleSend = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+
+      // Handle magic quick-replies
+      if (trimmed === 'Go back to start') {
+        setMessages([WELCOME_MSG]);
+        setInput('');
+        return;
+      }
+
+      // Push user message
+      const userMsg: Message = { id: uid(), role: 'user', text: trimmed, timestamp: new Date() };
+      setMessages((prev) => [...prev, userMsg]);
+      setInput('');
+      setTyping(true);
+
+      try {
+        const response = getBotResponse(trimmed);
+        const botMsg: Message = { id: uid(), ...response, timestamp: new Date() };
+        
+        // If API call is needed
+        if (response.useAPI) {
+          try {
+            const apiResponse = await aiService.chat(trimmed);
+            botMsg.text = apiResponse.data.response || apiResponse.data.message || "I received your message, but I'm not sure how to respond. Can you try rephrasing?";
+            botMsg.quickReplies = apiResponse.data.quickReplies || ['Go back to start'];
+          } catch (apiError) {
+            console.error('API call failed:', apiError);
+            botMsg.text = "I'm having trouble connecting to my knowledge base right now. Please try again later or ask about banking basics.";
+            botMsg.quickReplies = ['How to send money?', 'Apply for a loan', 'View my balance'];
+          }
+        }
+        
+        setMessages((prev) => [...prev, botMsg]);
+      } catch (error) {
+        console.error('Error handling message:', error);
+        const errorMsg: Message = { 
+          id: uid(), 
+          role: 'bot', 
+          text: "Sorry, I encountered an error. Please try again.", 
+          timestamp: new Date(),
+          quickReplies: ['Go back to start']
+        };
+        setMessages((prev) => [...prev, errorMsg]);
+      } finally {
+        setTyping(false);
+      }
+    },
+    [open]
+  );
+
+  const handleOpen = () => {
+    setOpen(true);
+    setMinimized(false);
+    setUnread(0);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setMinimized(false);
+  };
+
+  const handleReset = () => {
+    setMessages([WELCOME_MSG]);
+    setInput('');
+  };
+
+  return (
+    <>
+      {/* ── Floating Trigger Button ── */}
+      <AnimatePresence>
+        {!open && (
+          <motion.button
+            key="fab"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleOpen}
+            aria-label="Open AI Assistant"
+            className="fixed bottom-6 right-6 z-[9999] w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-[#0A9396] shadow-2xl shadow-blue-500/40 flex items-center justify-center text-white"
+          >
+            <MessageCircle size={26} />
+            {unread > 0 && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center"
+              >
+                {unread}
+              </motion.span>
+            )}
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ── Chat Window ── */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="chat-window"
+            initial={{ opacity: 0, y: 40, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+            className="fixed bottom-6 right-6 z-[9999] flex flex-col"
+            style={{ width: 'min(380px, calc(100vw - 2rem))' }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-600 to-[#0A9396] rounded-t-2xl shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                  <Bot size={20} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-bold text-sm leading-tight">Lend-AI Assistant</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-green-400 inline-block animate-pulse" />
+                    <p className="text-blue-100 text-xs">Always online to help</p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleReset}
+                  title="Reset conversation"
+                  className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <RotateCcw size={15} />
+                </button>
+                <button
+                  onClick={() => setMinimized((m) => !m)}
+                  title="Minimize"
+                  className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <Minimize2 size={15} />
+                </button>
+                <button
+                  onClick={handleClose}
+                  title="Close"
+                  className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Body – collapsible */}
+            <AnimatePresence>
+              {!minimized && (
+                <motion.div
+                  key="body"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                  className="overflow-hidden"
+                >
+                  {/* Messages area */}
+                  <div className="bg-gray-50 dark:bg-[#061428] border-x border-gray-200 dark:border-gray-800 flex flex-col overflow-y-auto p-4 gap-0"
+                    style={{ height: 380 }}
+                  >
+                    {messages.map((msg) => (
+                      <div key={msg.id}>
+                        <ChatBubble msg={msg} />
+                        {/* Quick reply chips */}
+                        {msg.role === 'bot' && msg.quickReplies && msg.id === messages[messages.length - 1]?.id && !typing && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.15 }}
+                            className="flex flex-wrap gap-2 mb-4 pl-9"
+                          >
+                            {msg.quickReplies.map((qr) => (
+                              <button
+                                key={qr}
+                                onClick={() => handleSend(qr)}
+                                className="flex items-center gap-1 text-xs px-3 py-1.5 rounded-full border border-blue-200 dark:border-[#0A9396]/40 bg-blue-50 dark:bg-[#0A9396]/10 text-blue-700 dark:text-[#0A9396] hover:bg-blue-100 dark:hover:bg-[#0A9396]/20 transition-colors font-medium"
+                              >
+                                {qr}
+                                <ChevronRight size={12} />
+                              </button>
+                            ))}
+                          </motion.div>
+                        )}
+                      </div>
+                    ))}
+
+                    {typing && <TypingIndicator />}
+                    <div ref={bottomRef} />
+                  </div>
+
+                  {/* Input area */}
+                  <div className="flex items-center gap-2 px-3 py-3 bg-white dark:bg-[#0B1F3A] rounded-b-2xl border border-gray-200 dark:border-gray-800 border-t-0">
+                    <input
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend(input)}
+                      placeholder="Ask me anything…"
+                      className="flex-1 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white text-sm rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-[#0A9396] placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+                    />
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={toggleMicrophone}
+                      disabled={typing}
+                      title={isListening ? 'Stop listening' : 'Start voice input'}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
+                        isListening
+                          ? 'bg-red-500 text-white shadow-lg shadow-red-500/50'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {isListening ? <Mic size={16} /> : <MicOff size={16} />}
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleSend(input)}
+                      disabled={!input.trim() || typing}
+                      className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-[#0A9396] text-white flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed shadow-md shadow-blue-500/30 hover:shadow-blue-500/50 transition-shadow flex-shrink-0"
+                    >
+                      <Send size={16} />
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Minimized bar */}
+            {minimized && (
+              <button
+                onClick={() => setMinimized(false)}
+                className="bg-white dark:bg-[#0B1F3A] border border-gray-200 dark:border-gray-800 border-t-0 rounded-b-2xl px-4 py-2.5 text-sm text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#0B1F3A]/80 transition-colors text-center w-full"
+              >
+                Click to expand chat ↑
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+};
+
+export default AIChatbot;

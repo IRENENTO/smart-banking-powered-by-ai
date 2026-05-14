@@ -1,0 +1,400 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased text-gray-900 bg-gray-50 dark:bg-[#0B1F3A] dark:text-gray-100 transition-colors duration-300;
+    font-family: 'Inter', sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6, .font-poppins {
+    font-family: 'Poppins', sans-serif;
+  }
+}
+
+/* ── Custom Scrollbar ──────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0A9396 0%, #2563eb 100%);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #087F82 0%, #1d4ed8 100%);
+}
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #0A9396 transparent;
+}
+
+/* ── GLOBAL DARK MODE STYLES ──────────────────────────────── */
+:root.dark {
+  color-scheme: dark;
+}
+
+:root.dark,
+:is(.dark) {
+  --color-bg: #0B1F3A;
+  --color-bg-secondary: #0F2844;
+  --color-bg-tertiary: #132D4B;
+  --color-text: #E5E7EB;
+  --color-text-secondary: #9CA3AF;
+  --color-border: #1F3A52;
+}
+
+/* Global dark mode background and text */
+:root.dark body,
+:is(.dark) body {
+  background-color: #0B1F3A;
+  color: #E5E7EB;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode for common elements */
+:root.dark,
+:is(.dark) {
+  --background: #0B1F3A;
+  --foreground: #E5E7EB;
+  --card-bg: #0F2844;
+  --card-border: #1F3A52;
+  --input-bg: #132D4B;
+  --input-border: #1F3A52;
+  --hover-bg: #1F3A52;
+}
+
+/* Buttons and interactive elements in dark mode */
+:root.dark button,
+:is(.dark) button {
+  background-color: #132D4B;
+  color: #E5E7EB;
+  border-color: #1F3A52;
+  transition: all 0.2s ease;
+}
+
+:root.dark button:hover,
+:is(.dark) button:hover {
+  background-color: #1F3A52;
+  border-color: #2A4A6A;
+}
+
+/* Input fields in dark mode */
+:root.dark input,
+:root.dark textarea,
+:root.dark select,
+:is(.dark) input,
+:is(.dark) textarea,
+:is(.dark) select {
+  background-color: #132D4B;
+  color: #E5E7EB;
+  border-color: #1F3A52;
+  transition: all 0.2s ease;
+}
+
+:root.dark input::placeholder,
+:root.dark textarea::placeholder,
+:is(.dark) input::placeholder,
+:is(.dark) textarea::placeholder {
+  color: #9CA3AF;
+}
+
+:root.dark input:focus,
+:root.dark textarea:focus,
+:root.dark select:focus,
+:is(.dark) input:focus,
+:is(.dark) textarea:focus,
+:is(.dark) select:focus {
+  background-color: #1F3A52;
+  border-color: #0A9396;
+  box-shadow: 0 0 0 3px rgba(10, 147, 150, 0.1);
+}
+
+/* Cards and containers */
+:root.dark .card,
+:root.dark .container,
+:root.dark [role="region"],
+:is(.dark) .card,
+:is(.dark) .container,
+:is(.dark) [role="region"] {
+  background-color: #0F2844;
+  border-color: #1F3A52;
+}
+
+/* Text colors */
+:root.dark h1,
+:root.dark h2,
+:root.dark h3,
+:root.dark h4,
+:root.dark h5,
+:root.dark h6,
+:root.dark p,
+:is(.dark) h1,
+:is(.dark) h2,
+:is(.dark) h3,
+:is(.dark) h4,
+:is(.dark) h5,
+:is(.dark) h6,
+:is(.dark) p {
+  color: #E5E7EB;
+}
+
+:root.dark .text-muted,
+:root.dark .text-secondary,
+:is(.dark) .text-muted,
+:is(.dark) .text-secondary {
+  color: #9CA3AF;
+}
+
+/* Navigation bars and headers */
+:root.dark nav,
+:root.dark header,
+:is(.dark) nav,
+:is(.dark) header {
+  background-color: #0F2844;
+  border-color: #1F3A52;
+}
+
+/* Tables */
+:root.dark table,
+:root.dark tbody,
+:root.dark thead,
+:is(.dark) table,
+:is(.dark) tbody,
+:is(.dark) thead {
+  background-color: #0F2844;
+  border-color: #1F3A52;
+}
+
+:root.dark tbody tr,
+:is(.dark) tbody tr {
+  border-bottom-color: #1F3A52;
+}
+
+:root.dark tbody tr:hover,
+:is(.dark) tbody tr:hover {
+  background-color: #132D4B;
+}
+
+/* Forms */
+:root.dark form,
+:is(.dark) form {
+  color: #E5E7EB;
+}
+
+:root.dark label,
+:is(.dark) label {
+  color: #D1D5DB;
+}
+
+/* Modals and dialogs */
+:root.dark [role="dialog"],
+:root.dark .modal,
+:root.dark .dialog,
+:is(.dark) [role="dialog"],
+:is(.dark) .modal,
+:is(.dark) .dialog {
+  background-color: #0F2844;
+  border-color: #1F3A52;
+  color: #E5E7EB;
+}
+
+/* Scrollbar for dark mode */
+:root.dark ::-webkit-scrollbar-thumb,
+:is(.dark) ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0A9396 0%, #2563eb 100%);
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  overflow-x: hidden;
+  white-space: nowrap;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.navbar-links::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.navbar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: background 0.2s ease, transform 0.2s ease, color 0.2s ease;
+}
+
+.navbar-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.navbar-link span {
+  white-space: nowrap;
+}
+
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  z-index: 9999;
+  width: min(360px, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.toast-item {
+  pointer-events: auto;
+  min-width: 280px;
+  border-radius: 16px;
+  padding: 0.9rem 1rem;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(18px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+
+.toast-item.toast-success {
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.toast-item.toast-error {
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.toast-item.toast-warning {
+  border-color: rgba(234, 179, 8, 0.25);
+}
+
+.toast-item.toast-info {
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.toast-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.toast-icon-wrapper {
+  min-width: 28px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.toast-message {
+  color: #0f172a;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.toast-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.toast-item.toast-success .toast-icon-wrapper {
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.toast-item.toast-error .toast-icon-wrapper {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.toast-item.toast-warning .toast-icon-wrapper {
+  background: rgba(234, 179, 8, 0.12);
+}
+
+.toast-item.toast-info .toast-icon-wrapper {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+:root.dark .toast-item,
+:is(.dark) .toast-item {
+  background: rgba(15, 23, 42, 0.92);
+  color: #e2e8f0;
+}
+
+:root.dark .toast-message,
+:is(.dark) .toast-message,
+:root.dark .toast-title,
+:is(.dark) .toast-title {
+  color: #e2e8f0;
+}
+
+:root.dark .toast-icon-wrapper,
+:is(.dark) .toast-icon-wrapper {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Links */
+:root.dark a,
+:is(.dark) a {
+  color: #4ECDC4;
+}
+
+:root.dark a:hover,
+:is(.dark) a:hover {
+  color: #2BBAB6;
+}
+
+/* Alerts and messages */
+:root.dark .alert,
+:root.dark .message,
+:is(.dark) .alert,
+:is(.dark) .message {
+  background-color: #132D4B;
+  border-color: #1F3A52;
+}
+
+:root.dark .alert-error,
+:is(.dark) .alert-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #FCA5A5;
+}
+
+:root.dark .alert-success,
+:is(.dark) .alert-success {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #86EFAC;
+}
+
+:root.dark .alert-warning,
+:is(.dark) .alert-warning {
+  background-color: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.3);
+  color: #FCDX34;
+}
+
+:root.dark .alert-info,
+:is(.dark) .alert-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #93C5FD;
+}

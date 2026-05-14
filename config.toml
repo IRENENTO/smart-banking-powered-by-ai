@@ -1,0 +1,6 @@
+[llm]
+provider = "gemini"
+model = "gemini-pro"
+
+[llm.gemini]
+api_key = "AIzaSyAzUL_pYDMd1vbJ5RAILkKHZL56Cbm-_2g"
