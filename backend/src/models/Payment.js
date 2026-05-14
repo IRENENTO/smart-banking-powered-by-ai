@@ -3,6 +3,19 @@ class Payment {
         this.table = 'payments';
     }
 
+    _clampLimitOffset(limit, offset, defaultLimit = 50, maxLimit = 500) {
+        const limParsed = parseInt(String(limit), 10);
+        const offParsed = parseInt(String(offset), 10);
+        const lim = Number.isFinite(limParsed) && limParsed > 0 ? Math.min(maxLimit, limParsed) : defaultLimit;
+        const off = Number.isFinite(offParsed) && offParsed >= 0 ? offParsed : 0;
+        return [lim, off];
+    }
+
+    _clampLimit(limit, defaultLimit = 10, maxLimit = 100) {
+        const limParsed = parseInt(String(limit), 10);
+        return Number.isFinite(limParsed) && limParsed > 0 ? Math.min(maxLimit, limParsed) : defaultLimit;
+    }
+
     // Get database connection
     getConnection() {
         return global.dbConnection;
@@ -71,12 +84,14 @@ class Payment {
     // Get payments by user ID
     async findByUserId(userId, limit = 50, offset = 0) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT * FROM payments 
+        const [lim, off] = this._clampLimitOffset(limit, offset);
+        const [rows] = await connection.query(
+            `SELECT * FROM payments 
             WHERE user_id = ? 
             ORDER BY created_at DESC 
-            LIMIT ? OFFSET ?
-        `, [userId, limit, offset]);
+            LIMIT ${lim} OFFSET ${off}`,
+            [userId]
+        );
         return rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
@@ -88,12 +103,14 @@ class Payment {
     // Get payments by user ID and type
     async findByUserIdAndType(userId, paymentType, limit = 50, offset = 0) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT * FROM payments 
+        const [lim, off] = this._clampLimitOffset(limit, offset);
+        const [rows] = await connection.query(
+            `SELECT * FROM payments 
             WHERE user_id = ? AND payment_type = ? 
             ORDER BY created_at DESC 
-            LIMIT ? OFFSET ?
-        `, [userId, paymentType, limit, offset]);
+            LIMIT ${lim} OFFSET ${off}`,
+            [userId, paymentType]
+        );
         return rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
@@ -105,12 +122,14 @@ class Payment {
     // Get payments by user ID and status
     async findByUserIdAndStatus(userId, status, limit = 50, offset = 0) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT * FROM payments 
+        const [lim, off] = this._clampLimitOffset(limit, offset);
+        const [rows] = await connection.query(
+            `SELECT * FROM payments 
             WHERE user_id = ? AND status = ? 
             ORDER BY created_at DESC 
-            LIMIT ? OFFSET ?
-        `, [userId, status, limit, offset]);
+            LIMIT ${lim} OFFSET ${off}`,
+            [userId, status]
+        );
         return rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
@@ -122,12 +141,14 @@ class Payment {
     // Get pending PayPack payments for a user
     async findPendingPaypackByUserId(userId, limit = 50, offset = 0) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT * FROM payments
+        const [lim, off] = this._clampLimitOffset(limit, offset);
+        const [rows] = await connection.query(
+            `SELECT * FROM payments
             WHERE user_id = ? AND status = 'pending' AND provider = 'paypack'
             ORDER BY created_at DESC
-            LIMIT ? OFFSET ?
-        `, [userId, limit, offset]);
+            LIMIT ${lim} OFFSET ${off}`,
+            [userId]
+        );
         return rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
@@ -178,12 +199,14 @@ class Payment {
     // Get recent payments
     async getRecentPayments(userId, limit = 10) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT * FROM payments 
+        const lim = this._clampLimit(limit, 10, 100);
+        const [rows] = await connection.query(
+            `SELECT * FROM payments 
             WHERE user_id = ? 
             ORDER BY created_at DESC 
-            LIMIT ?
-        `, [userId, limit]);
+            LIMIT ${lim}`,
+            [userId]
+        );
         return rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}

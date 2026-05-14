@@ -8,20 +8,34 @@ class AIInsight {
         return global.dbConnection;
     }
 
-    // Create new AI insight
+    // Create new AI insight (works with or without is_read column)
     async create(insightData) {
         const connection = this.getConnection();
-        const [result] = await connection.execute(`
-            INSERT INTO ai_insights (user_id, message, type, is_read)
-            VALUES (?, ?, ?, ?)
-        `, [
+        const type = insightData.type || 'recommendation';
+        const paramsFull = [
             insightData.user_id,
             insightData.message,
-            insightData.type || 'recommendation',
+            type,
             insightData.is_read || false
-        ]);
+        ];
+        const paramsMinimal = [insightData.user_id, insightData.message, type];
 
-        return this.findById(result.insertId);
+        try {
+            const [result] = await connection.execute(`
+                INSERT INTO ai_insights (user_id, message, type, is_read)
+                VALUES (?, ?, ?, ?)
+            `, paramsFull);
+            return this.findById(result.insertId);
+        } catch (err) {
+            if (err.code === 'ER_BAD_FIELD_ERROR' && String(err.sqlMessage || '').includes('is_read')) {
+                const [result] = await connection.execute(`
+                    INSERT INTO ai_insights (user_id, message, type)
+                    VALUES (?, ?, ?)
+                `, paramsMinimal);
+                return this.findById(result.insertId);
+            }
+            throw err;
+        }
     }
 
     // Find insight by ID
@@ -38,16 +52,22 @@ class AIInsight {
         return rows;
     }
 
-    // Mark insight as read
+    // Mark insight as read (no-op if is_read column missing)
     async markAsRead(id) {
         const connection = this.getConnection();
-        const [result] = await connection.execute(`
-            UPDATE ai_insights 
-            SET is_read = TRUE 
-            WHERE id = ?
-        `, [id]);
-
-        return result.affectedRows > 0;
+        try {
+            const [result] = await connection.execute(`
+                UPDATE ai_insights 
+                SET is_read = TRUE 
+                WHERE id = ?
+            `, [id]);
+            return result.affectedRows > 0;
+        } catch (err) {
+            if (err.code === 'ER_BAD_FIELD_ERROR' && String(err.sqlMessage || '').includes('is_read')) {
+                return false;
+            }
+            throw err;
+        }
     }
 
     // Delete insight
@@ -61,15 +81,21 @@ class AIInsight {
         return result.affectedRows > 0;
     }
 
-    // Get unread insights count
+    // Get unread insights count (0 if is_read column missing)
     async getUnreadCount(userId) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT COUNT(*) as count FROM ai_insights 
-            WHERE user_id = ? AND is_read = FALSE
-        `, [userId]);
-
-        return rows[0].count || 0;
+        try {
+            const [rows] = await connection.execute(`
+                SELECT COUNT(*) as count FROM ai_insights 
+                WHERE user_id = ? AND is_read = FALSE
+            `, [userId]);
+            return rows[0].count || 0;
+        } catch (err) {
+            if (err.code === 'ER_BAD_FIELD_ERROR' && String(err.sqlMessage || '').includes('is_read')) {
+                return 0;
+            }
+            throw err;
+        }
     }
 }
 

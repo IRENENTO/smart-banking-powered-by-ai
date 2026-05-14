@@ -101,4 +101,4 @@ class Account {
     }
 }
 
-module.exports = Account;
+module.exports = new Account();

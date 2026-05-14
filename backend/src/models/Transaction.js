@@ -3,6 +3,20 @@ class Transaction {
         this.table = 'transactions';
     }
 
+    /** Safe integers for LIMIT/OFFSET (bound params break on some MySQL/mysql2 combos). */
+    _clampLimitOffset(limit, offset, defaultLimit = 50, maxLimit = 500) {
+        const limParsed = parseInt(String(limit), 10);
+        const offParsed = parseInt(String(offset), 10);
+        const lim = Number.isFinite(limParsed) && limParsed > 0 ? Math.min(maxLimit, limParsed) : defaultLimit;
+        const off = Number.isFinite(offParsed) && offParsed >= 0 ? offParsed : 0;
+        return [lim, off];
+    }
+
+    _clampLimit(limit, defaultLimit = 10, maxLimit = 100) {
+        const limParsed = parseInt(String(limit), 10);
+        return Number.isFinite(limParsed) && limParsed > 0 ? Math.min(maxLimit, limParsed) : defaultLimit;
+    }
+
     // Get database connection
     getConnection() {
         return global.dbConnection;
@@ -56,36 +70,42 @@ class Transaction {
     // Get transactions by user ID
     async findByUserId(userId, limit = 50, offset = 0) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT * FROM transactions 
+        const [lim, off] = this._clampLimitOffset(limit, offset);
+        const [rows] = await connection.query(
+            `SELECT * FROM transactions 
             WHERE user_id = ? 
             ORDER BY created_at DESC 
-            LIMIT ? OFFSET ?
-        `, [userId, limit, offset]);
+            LIMIT ${lim} OFFSET ${off}`,
+            [userId]
+        );
         return rows;
     }
 
     // Get transactions by type
     async findByType(userId, type, limit = 50, offset = 0) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT * FROM transactions 
+        const [lim, off] = this._clampLimitOffset(limit, offset);
+        const [rows] = await connection.query(
+            `SELECT * FROM transactions 
             WHERE user_id = ? AND type = ? 
             ORDER BY created_at DESC 
-            LIMIT ? OFFSET ?
-        `, [userId, type, limit, offset]);
+            LIMIT ${lim} OFFSET ${off}`,
+            [userId, type]
+        );
         return rows;
     }
 
     // Get transactions by status
     async findByStatus(userId, status, limit = 50, offset = 0) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT * FROM transactions 
+        const [lim, off] = this._clampLimitOffset(limit, offset);
+        const [rows] = await connection.query(
+            `SELECT * FROM transactions 
             WHERE user_id = ? AND status = ? 
             ORDER BY created_at DESC 
-            LIMIT ? OFFSET ?
-        `, [userId, status, limit, offset]);
+            LIMIT ${lim} OFFSET ${off}`,
+            [userId, status]
+        );
         return rows;
     }
 
@@ -96,7 +116,7 @@ class Transaction {
             SELECT 
                 COUNT(*) as total_transactions,
                 SUM(CASE WHEN type = 'deposit' AND status = 'completed' THEN amount ELSE 0 END) as total_deposits,
-                SUM(CASE WHEN type = 'withdrawal' AND status = 'completed' THEN amount ELSE 0 END) as total_withdrawals,
+                SUM(CASE WHEN type = 'withdraw' AND status = 'completed' THEN amount ELSE 0 END) as total_withdrawals,
                 SUM(CASE WHEN type = 'payment' AND status = 'completed' THEN amount ELSE 0 END) as total_payments,
                 SUM(CASE WHEN type = 'transfer' AND status = 'completed' THEN amount ELSE 0 END) as total_transfers,
                 COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_transactions
@@ -109,12 +129,14 @@ class Transaction {
     // Get recent transactions
     async getRecentTransactions(userId, limit = 10) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT * FROM transactions 
+        const lim = this._clampLimit(limit, 10, 100);
+        const [rows] = await connection.query(
+            `SELECT * FROM transactions 
             WHERE user_id = ? AND status = 'completed'
             ORDER BY created_at DESC 
-            LIMIT ?
-        `, [userId, limit]);
+            LIMIT ${lim}`,
+            [userId]
+        );
         return rows;
     }
 
@@ -128,13 +150,14 @@ class Transaction {
     // Get all transactions (admin)
     async findAll(limit = 50, offset = 0) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT t.*, u.name as user_name, u.email as user_email, u.account_number
+        const [lim, off] = this._clampLimitOffset(limit, offset, 50, 500);
+        const [rows] = await connection.query(
+            `SELECT t.*, u.name as user_name, u.email as user_email, u.account_number
             FROM transactions t
             JOIN users u ON t.user_id = u.id
             ORDER BY t.created_at DESC 
-            LIMIT ? OFFSET ?
-        `, [limit, offset]);
+            LIMIT ${lim} OFFSET ${off}`
+        );
         return rows;
     }
 }

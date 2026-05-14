@@ -1,5 +1,6 @@
 const Transaction = require('../models/Transaction');
-const Account = require('../models/Account');
+const AccountModule = require('../models/Account');
+const Account = typeof AccountModule.findByUserId === 'function' ? AccountModule : new AccountModule();
 const User = require('../models/User');
 
 exports.getTransactions = async (req, res) => {

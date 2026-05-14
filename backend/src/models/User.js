@@ -10,6 +10,14 @@ class User {
         return global.dbConnection;
     }
 
+    _clampLimitOffset(limit, offset, defaultLimit = 50, maxLimit = 500) {
+        const limParsed = parseInt(String(limit), 10);
+        const offParsed = parseInt(String(offset), 10);
+        const lim = Number.isFinite(limParsed) && limParsed > 0 ? Math.min(maxLimit, limParsed) : defaultLimit;
+        const off = Number.isFinite(offParsed) && offParsed >= 0 ? offParsed : 0;
+        return [lim, off];
+    }
+
     // Hash password
     async hashPassword(password) {
         const salt = await bcrypt.genSalt(10);
@@ -198,12 +206,13 @@ class User {
     // Get all users
     async findAll(limit = 50, offset = 0) {
         const connection = this.getConnection();
-        const [rows] = await connection.execute(`
+        const [lim, off] = this._clampLimitOffset(limit, offset);
+        const [rows] = await connection.query(`
             SELECT id, name, email, phone, role, email_verified, profile_completed, pin_set, balance, account_number, created_at
             FROM users 
             ORDER BY created_at DESC 
-            LIMIT ? OFFSET ?
-        `, [limit, offset]);
+            LIMIT ${lim} OFFSET ${off}
+        `);
         return rows.map((row) => this.wrapUser(row));
     }
 
