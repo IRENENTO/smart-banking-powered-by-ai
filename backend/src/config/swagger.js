@@ -69,11 +69,6 @@ const options = {
                         pin_set: {
                             type: 'boolean',
                             description: 'Transaction PIN setup status'
-                        },
-                        kyc_status: {
-                            type: 'string',
-                            enum: ['pending', 'verified', 'rejected'],
-                            description: 'KYC verification status'
                         }
                     }
                 },
@@ -395,33 +390,6 @@ const options = {
                             format: 'date-time'
                         }
                     }
-                },
-                KYCDocument: {
-                    type: 'object',
-                    properties: {
-                        id: {
-                            type: 'integer',
-                            description: 'Document ID'
-                        },
-                        user_id: {
-                            type: 'integer',
-                            description: 'User ID'
-                        },
-                        document_type: {
-                            type: 'string',
-                            enum: ['national_id', 'selfie', 'passport', 'driving_license'],
-                            description: 'Type of document'
-                        },
-                        upload_status: {
-                            type: 'string',
-                            enum: ['pending', 'approved', 'rejected'],
-                            description: 'Upload status'
-                        },
-                        uploaded_at: {
-                            type: 'string',
-                            format: 'date-time'
-                        }
-                    }
                 }
             }
         }
@@ -435,7 +403,6 @@ const options = {
         './src/routes/transaction.routes.js',
         './src/routes/account.routes.js',
         './src/routes/insights.routes.js',
-        './src/routes/kyc.routes.js',
         './src/routes/security.routes.js',
         './src/routes/otp.routes.js'
     ], // Path to the API docs

@@ -51,7 +51,7 @@ A comprehensive **enterprise-grade admin dashboard** has been successfully imple
   - Users (management & monitoring)
   - Transactions (monitoring & fraud alerts)
   - Loans (application management)
-  - Security (fraud alerts & KYC)
+  - Security (fraud alerts)
 - Advanced data tables with search, filter, pagination
 - Responsive design (mobile, tablet, desktop)
 - Dark mode support
@@ -96,9 +96,7 @@ audit_logs              - Admin action audit trail
 - GET /api/admin/loans - List loans
 - GET /api/admin/savings - List savings
 
-**Compliance (5 endpoints)**
-- GET /api/admin/kyc - List KYC submissions
-- PATCH /api/admin/kyc/:id/verify - Verify KYC
+**Compliance (3 endpoints)**
 - GET /api/admin/fraud-alerts - List fraud alerts
 - PATCH /api/admin/fraud-alerts/:id/review - Review alerts
 - GET /api/admin/activity-logs - Activity logs
@@ -138,14 +136,12 @@ audit_logs              - Admin action audit trail
 - User activity tracking
 - Login history recording
 - Fraud alert management
-- KYC verification workflows
 - Role-based access control
 
 ### User Management 👥
 - View all users with details
 - Search and filter users
 - Activate/deactivate accounts
-- Monitor KYC status
 - Track user transactions
 - View user profiles
 
@@ -303,7 +299,6 @@ README.md                                    - This file
 - Pending Loans: Count and amount
 - Total Savings: Sum of savings goals
 - Fraud Alerts: Pending alerts count
-- KYC Pending: Submissions awaiting verification
 
 ### Analytics Provided
 - User growth trend (30 days)
@@ -324,7 +319,6 @@ README.md                                    - This file
 ✅ Integrates with transaction tables  
 ✅ Uses existing loan system  
 ✅ Connects to payment processing  
-✅ Tracks KYC submissions  
 ✅ Monitors user activity  
 
 ### Future Integration Ready

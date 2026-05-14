@@ -149,11 +149,7 @@ const VerifyOTP: React.FC = () => {
             // Redirect based on user verification status
             if (response.user.profile_completed) {
                 if (response.user.pin_set) {
-                    if (response.user.kyc_status === 'verified') {
-                        navigate(returnPath);
-                    } else {
-                        navigate('/upload-kyc', { state: { from: returnPath } });
-                    }
+                    navigate(returnPath);
                 } else {
                     navigate('/set-security', { state: { from: returnPath } });
                 }

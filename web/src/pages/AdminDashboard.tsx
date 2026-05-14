@@ -32,7 +32,6 @@ interface DashboardStats {
     pending_loans: number;
     pending_loans_amount: number;
     total_savings: number;
-    kyc_pending: number;
     fraud_alerts_pending: number;
     total_revenue: number;
 }
@@ -484,7 +483,6 @@ const AdminDashboard: React.FC = () => {
                                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Name</th>
                                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Email</th>
                                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">KYC</th>
                                     <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Joined</th>
                                 </tr>
                             </thead>
@@ -504,15 +502,6 @@ const AdminDashboard: React.FC = () => {
                                             }`}>
                                                 {user.status === 'active' ? <CheckCircle size={14} /> : <XCircle size={14} />}
                                                 {user.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-3 text-sm">
-                                            <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                                                user.kyc_status === 'verified'
-                                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                                                    : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                                            }`}>
-                                                {user.kyc_status}
                                             </span>
                                         </td>
                                         <td className="px-6 py-3 text-sm text-gray-600 dark:text-gray-400">
@@ -682,13 +671,6 @@ const AdminDashboard: React.FC = () => {
 
                     {/* Security Summary */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <DashboardCardComponent
-                            title="KYC Pending"
-                            value={stats?.kyc_pending || 0}
-                            subtitle="Awaiting verification"
-                            bgColor="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20"
-                            textColor="text-yellow-600 dark:text-yellow-400"
-                        />
                         <DashboardCardComponent
                             title="Active Sessions"
                             value={stats?.active_users_today || 0}

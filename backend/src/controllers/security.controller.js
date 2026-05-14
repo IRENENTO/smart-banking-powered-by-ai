@@ -52,8 +52,7 @@ exports.setTransactionPin = async (req, res) => {
                 name: updatedUser.name,
                 email_verified: updatedUser.email_verified,
                 profile_completed: updatedUser.profile_completed,
-                pin_set: updatedUser.pin_set,
-                kyc_status: updatedUser.kyc_status
+                pin_set: updatedUser.pin_set
             }
         });
     } catch (err) {

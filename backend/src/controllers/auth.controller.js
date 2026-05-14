@@ -31,7 +31,7 @@ exports.register = async (req, res) => {
         existing = await User.findByPhone(phone);
         if (existing) return res.status(400).json({ msg: 'User with this phone number already exists' });
 
-        const user = await User.create({ name, email, phone, password, email_verified: false, profile_completed: false, pin_set: false, kyc_status: 'pending' });
+        const user = await User.create({ name, email, phone, password, email_verified: false, profile_completed: false, pin_set: false });
 
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
@@ -58,7 +58,6 @@ exports.register = async (req, res) => {
                 email_verified: user.email_verified || false,
                 profile_completed: user.profile_completed || false,
                 pin_set: user.pin_set || false,
-                kyc_status: user.kyc_status || 'pending',
                 profile_picture: user.profile_picture || null
             }
         });
@@ -94,7 +93,6 @@ exports.login = async (req, res) => {
                 email_verified: user.email_verified || false,
                 profile_completed: user.profile_completed || false,
                 pin_set: user.pin_set || false,
-                kyc_status: user.kyc_status || 'pending',
                 profile_picture: user.profile_picture || null
             }
         });

@@ -73,18 +73,6 @@ const requirePinSet = async (req, res, next) => {
     next();
 };
 
-const requireKycVerified = async (req, res, next) => {
-    const user = await getUserFromToken(req, res);
-    if (!user) return;
-
-    if (user.kyc_status !== 'verified') {
-        return res.status(403).json({ msg: 'KYC verification is required to access this resource' });
-    }
-
-    req.user = user;
-    next();
-};
-
 const optionalAuth = async (req, res, next) => {
     const token = req.header('Authorization')?.replace('Bearer ', '') || req.header('x-auth-token');
     if (!token) { req.user = null; return next(); }
@@ -97,4 +85,4 @@ const optionalAuth = async (req, res, next) => {
     next();
 };
 
-module.exports = { auth, authWithUser, requireEmailVerified, requireProfileCompleted, requirePinSet, requireKycVerified, optionalAuth };
+module.exports = { auth, authWithUser, requireEmailVerified, requireProfileCompleted, requirePinSet, optionalAuth };

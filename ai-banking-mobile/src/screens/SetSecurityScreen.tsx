@@ -26,7 +26,6 @@ export default function SetSecurityScreen({ navigation }: Props) {
     setIsLoading(true);
     try {
       await api.put('/security/set-pin', { pin });
-      // Move to KYC verification (or skip to dashboard)
       navigation.replace('MainTabs');
     } catch (error: any) {
       Alert.alert('Error', error.response?.data?.msg || 'Failed to set PIN');

@@ -9,7 +9,6 @@ interface User {
     email_verified: boolean;
     profile_completed: boolean;
     pin_set: boolean;
-    kyc_status: 'pending' | 'verified' | 'rejected';
 }
 
 interface RouteGuardProps {
@@ -18,7 +17,6 @@ interface RouteGuardProps {
     requireVerification?: boolean;
     requireProfile?: boolean;
     requirePin?: boolean;
-    requireKyc?: boolean;
 }
 
 const parseJSON = (value: string | null) => {
@@ -35,8 +33,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     requireAuth = true,
     requireVerification = false,
     requireProfile = false,
-    requirePin = false,
-    requireKyc = false
+    requirePin = false
 }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -87,12 +84,6 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
                     return;
                 }
 
-                if (requireKyc && userData.kyc_status !== 'verified') {
-                    console.log('KYC not verified, redirecting to upload-kyc');
-                    navigate('/upload-kyc', { state: { from: location.pathname } });
-                    return;
-                }
-
                 console.log('All checks passed, allowing access');
                 setLoading(false);
                 return;
@@ -108,7 +99,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
         };
 
         checkAuth();
-    }, [navigate, location, requireAuth, requireVerification, requireProfile, requirePin, requireKyc]);
+    }, [navigate, location, requireAuth, requireVerification, requireProfile, requirePin]);
 
     if (loading) {
         return (

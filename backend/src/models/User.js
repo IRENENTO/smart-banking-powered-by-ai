@@ -90,7 +90,6 @@ class User {
             'email_verified',
             'profile_completed',
             'pin_set',
-            'kyc_status',
             'balance',
             'account_number'
         ];
@@ -104,7 +103,6 @@ class User {
             userData.email_verified || false,
             userData.profile_completed || false,
             userData.pin_set || false,
-            userData.kyc_status || 'pending',
             0.00,
             accountNumber
         ];
@@ -201,7 +199,7 @@ class User {
     async findAll(limit = 50, offset = 0) {
         const connection = this.getConnection();
         const [rows] = await connection.execute(`
-            SELECT id, name, email, phone, role, email_verified, profile_completed, pin_set, kyc_status, balance, account_number, created_at
+            SELECT id, name, email, phone, role, email_verified, profile_completed, pin_set, balance, account_number, created_at
             FROM users 
             ORDER BY created_at DESC 
             LIMIT ? OFFSET ?

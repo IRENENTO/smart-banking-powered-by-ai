@@ -125,24 +125,6 @@ router.get('/savings', adminController.getSavings);
 
 /**
  * @swagger
- * /api/admin/kyc:
- *   get:
- *     summary: Get KYC submissions
- *     tags: [Admin KYC]
- */
-router.get('/kyc', adminController.getKYC);
-
-/**
- * @swagger
- * /api/admin/kyc/{id}/verify:
- *   patch:
- *     summary: Verify KYC submission
- *     tags: [Admin KYC]
- */
-router.patch('/kyc/:id/verify', adminController.verifyKYC);
-
-/**
- * @swagger
  * /api/admin/ai-insights:
  *   get:
  *     summary: Get AI insights and predictions

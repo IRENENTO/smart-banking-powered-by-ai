@@ -8,7 +8,6 @@ ALTER TABLE users ADD COLUMN phone VARCHAR(20) NOT NULL DEFAULT '';
 ALTER TABLE users ADD COLUMN email_verified BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN profile_completed BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE users ADD COLUMN pin_set BOOLEAN NOT NULL DEFAULT FALSE;
-ALTER TABLE users ADD COLUMN kyc_status VARCHAR(20) NOT NULL DEFAULT 'pending';
 
 -- Create OTP table for verification
 CREATE TABLE IF NOT EXISTS otp_codes (
@@ -51,30 +50,10 @@ CREATE TABLE IF NOT EXISTS user_security (
     UNIQUE KEY unique_user_security (user_id)
 );
 
--- Create kyc_documents table for KYC verification
-CREATE TABLE IF NOT EXISTS kyc_documents (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    document_type ENUM('national_id', 'selfie', 'passport', 'driving_license') NOT NULL,
-    file_path VARCHAR(255) NOT NULL,
-    file_name VARCHAR(255) NOT NULL,
-    file_size INT NOT NULL,
-    mime_type VARCHAR(100) NOT NULL,
-    upload_status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
-    rejection_reason TEXT NULL,
-    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reviewed_at TIMESTAMP NULL,
-    reviewed_by INT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_document_type (user_id, document_type),
-    INDEX idx_upload_status (upload_status)
-);
-
 -- Add indexes for better performance
 CREATE INDEX idx_users_email_verified ON users(email_verified);
 CREATE INDEX idx_users_profile_completed ON users(profile_completed);
 CREATE INDEX idx_users_pin_set ON users(pin_set);
-CREATE INDEX idx_users_kyc_status ON users(kyc_status);
 CREATE INDEX idx_users_phone ON users(phone);
 
 -- Update existing users to have default values for backward compatibility
@@ -82,9 +61,8 @@ UPDATE users SET
     phone = CASE WHEN phone IS NULL OR phone = '' THEN CONCAT('250', SUBSTRING(id, 1, 9)) ELSE phone END,
     email_verified = FALSE,
     profile_completed = FALSE,
-    pin_set = FALSE,
-    kyc_status = 'pending'
-WHERE phone IS NULL OR phone = '' OR email_verified IS NULL OR profile_completed IS NULL OR pin_set IS NULL OR kyc_status IS NULL;
+    pin_set = FALSE
+WHERE phone IS NULL OR phone = '' OR email_verified IS NULL OR profile_completed IS NULL OR pin_set IS NULL;
 
 -- =====================================================
 -- CORE BANKING TABLES (AI Smart Lend)

@@ -350,7 +350,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                 
                                 {isAuthenticated ? (
                                     <>
-                                        {user && (!user.profile_completed || !user.pin_set || user.kyc_status !== 'verified') && (
+                                        {user && (!user.profile_completed || !user.pin_set) && (
                                             <motion.div
                                                 initial={{ opacity: 0, x: -10 }}
                                                 animate={{ opacity: 1, x: 0 }}
@@ -360,14 +360,10 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                                 }}
                                             >
                                                 <div style={{ fontSize: '12px', color: '#fbbf24', marginBottom: 8, fontWeight: 600 }}>
-                                                    {!user.profile_completed ? 'Profile not completed' :
-                                                     !user.pin_set ? 'PIN not set' :
-                                                     'KYC not verified'}
+                                                    {!user.profile_completed ? 'Profile not completed' : 'PIN not set'}
                                                 </div>
                                                 <Link
-                                                    to={!user.profile_completed ? '/complete-profile' :
-                                                         !user.pin_set ? '/set-security' :
-                                                         '/upload-kyc'}
+                                                    to={!user.profile_completed ? '/complete-profile' : '/set-security'}
                                                     style={{
                                                         display: 'flex',
                                                         alignItems: 'center',

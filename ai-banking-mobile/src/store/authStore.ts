@@ -6,7 +6,6 @@ interface AuthUser {
   name: string;
   phone: string;
   profileComplete: boolean;
-  kycVerified: boolean;
   token: string;
 }
 

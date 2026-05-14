@@ -10,16 +10,11 @@ const toSafeUser = (user) => ({
     email_verified: user.email_verified || false,
     profile_completed: user.profile_completed || false,
     pin_set: user.pin_set || false,
-    kyc_status: user.kyc_status || 'pending',
-    balance: user.balance,
-    account_number: user.account_number,
-    created_at: user.created_at,
-    updated_at: user.updated_at,
     profile_picture: user.profile_picture || null
 });
 
 exports.completeProfile = async (req, res) => {
-    const dateOfBirth = req.body.dateOfBirth || req.body.date_of_birth;
+    const dateOfBirth = req.body.dateOfBirth;
     const address = req.body.address;
     const nationalId = req.body.nationalId || req.body.national_id;
 

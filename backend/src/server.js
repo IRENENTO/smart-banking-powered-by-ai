@@ -53,7 +53,6 @@ app.use('/api/otp', require('./routes/otp.routes'));
 app.use('/api/profile', require('./routes/profile.routes'));
 app.use('/api/security', require('./routes/security.routes'));
 app.use('/api/account', require('./routes/account.routes'));
-app.use('/api/kyc', require('./routes/kyc.routes'));
 app.use('/api/loans', require('./routes/loan.routes'));
 app.use('/api/transactions', require('./routes/transaction.routes'));
 app.use('/api/insights', require('./routes/insights.routes'));
@@ -76,7 +75,6 @@ app.get('/', (req, res) => {
             account: '/api/account',
             transactions: '/api/transactions',
             loans: '/api/loans',
-            kyc: '/api/kyc',
             insights: '/api/insights'
         }
     });

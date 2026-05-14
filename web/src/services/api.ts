@@ -117,13 +117,6 @@ export const accountService = {
     deleteAccount: () => api.delete('/account')
 };
 
-export const kycService = {
-    uploadDocument: (data: any) => api.post('/kyc/upload', data),
-    getStatus: () => api.get('/kyc/status'),
-    getDocuments: () => api.get('/kyc/documents'),
-    deleteDocument: (documentId: number) => api.delete(`/kyc/documents/${documentId}`)
-};
-
 export const securityService = {
     setPin: (pin: string) => api.post('/security/set-pin', { transactionPin: pin }),
     verifyPin: (pin: string) => api.post('/security/verify-pin', { pin })

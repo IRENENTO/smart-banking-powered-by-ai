@@ -60,12 +60,6 @@ GET    /api/admin/loans               - List all loans with details
 GET    /api/admin/savings             - List all savings goals
 ```
 
-**KYC Management**
-```
-GET    /api/admin/kyc                 - List KYC submissions
-PATCH  /api/admin/kyc/:id/verify      - Approve/reject KYC
-```
-
 **AI & Insights**
 ```
 GET    /api/admin/ai-insights         - Get AI market insights
@@ -135,7 +129,6 @@ backend/migrations/001_create_admin_tables.sql - Database tables
 **Users Tab**
 - Complete user list with pagination and search
 - User status display (active/inactive/suspended)
-- KYC verification status
 - Account creation dates
 - Click-through to detailed user profiles
 
@@ -156,7 +149,6 @@ backend/migrations/001_create_admin_tables.sql - Database tables
 **Security Tab**
 - Active fraud alerts with severity levels
 - Suspicious account detection
-- KYC verification pending count
 - Active session monitoring
 - Real-time threat detection
 
@@ -246,7 +238,6 @@ backend/migrations/001_create_admin_tables.sql - Database tables
 **Users Tab** - User management and monitoring
 - Search users by name, email, or phone
 - Filter by account status
-- Monitor KYC verification status
 - View user join dates and profiles
 
 **Transactions Tab** - Monitor all financial transactions
@@ -264,7 +255,6 @@ backend/migrations/001_create_admin_tables.sql - Database tables
 **Security Tab** - Monitor platform security
 - Review fraud alerts by severity
 - Monitor suspicious account activities
-- Track KYC verification queue
 - Monitor active user sessions
 
 ### Admin Actions
@@ -281,11 +271,6 @@ backend/migrations/001_create_admin_tables.sql - Database tables
 - Access user details
 - Activate/deactivate accounts
 - Suspend suspicious accounts
-
-**Verify KYC**
-- Review pending KYC submissions
-- Approve verified documents
-- Reject invalid submissions
 
 **Review Fraud Alerts**
 - Investigate suspicious activities
@@ -358,7 +343,6 @@ backend/migrations/001_create_admin_tables.sql - Database tables
 ```
 - View all dashboard data
 - Manage users and accounts
-- Verify KYC submissions
 - Review fraud alerts
 - Export reports
 ```
@@ -465,7 +449,6 @@ All admin endpoints return standardized responses:
 - [ ] Auto-refresh updates data
 - [ ] User search and filtering works
 - [ ] User status update functionality
-- [ ] KYC verification process
 - [ ] Fraud alert review
 - [ ] Logout clears session
 - [ ] Redirect to login for unauthorized access
@@ -527,7 +510,6 @@ The Admin Dashboard is now fully operational with:
 - ✅ Real-time data monitoring
 - ✅ Comprehensive user management
 - ✅ Fraud detection and alerts
-- ✅ KYC verification workflows
 - ✅ Analytics and reporting
 - ✅ Audit logging
 - ✅ Role-based access control

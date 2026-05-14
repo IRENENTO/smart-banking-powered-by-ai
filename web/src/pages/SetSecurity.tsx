@@ -48,11 +48,7 @@ const SetSecurity: React.FC = () => {
         }
 
         if (user.pin_set) {
-            if (user.kyc_status === 'verified') {
-                navigate('/dashboard');
-            } else {
-                navigate('/upload-kyc');
-            }
+            navigate('/dashboard');
         }
     }, [navigate]);
 
@@ -144,7 +140,7 @@ const SetSecurity: React.FC = () => {
             const updatedUser = { ...currentUser, pin_set: true };
             localStorage.setItem('user', JSON.stringify(updatedUser));
 
-            navigate('/upload-kyc');
+            navigate('/dashboard');
         } catch (err: any) {
             if (err.response?.status === 401) {
                 setError(lang === 'EN' ? 'Session expired. Please log in again.' : 
@@ -167,7 +163,7 @@ const SetSecurity: React.FC = () => {
     };
 
     const handleSkip = () => {
-        navigate('/upload-kyc');
+        navigate('/dashboard');
     };
 
     const cycleLang = () => {

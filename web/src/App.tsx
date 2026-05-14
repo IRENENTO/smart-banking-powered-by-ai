@@ -11,7 +11,6 @@ import Register from './pages/Register';
 import VerifyOTP from './pages/VerifyOTP';
 import CompleteProfile from './pages/CompleteProfile';
 import SetSecurity from './pages/SetSecurity';
-import UploadKYC from './pages/UploadKYC';
 import AuthSuccess from './pages/AuthSuccess';
 import Dashboard from './pages/Dashboard';
 import RouteGuard from './components/RouteGuard';
@@ -64,7 +63,6 @@ const App: React.FC = () => {
                                 <SetSecurity />
                             </RouteGuard>
                         } />
-                        <Route path="/upload-kyc" element={<UploadKYC />} />
                         <Route path="/auth-success" element={<AuthSuccess />} />
                         <Route path="/dashboard" element={
                             <RouteGuard 
@@ -72,7 +70,6 @@ const App: React.FC = () => {
                                 requireVerification={false} 
                                 requireProfile={false} 
                                 requirePin={false} 
-                                requireKyc={false}
                             >
                                 <Dashboard />
                             </RouteGuard>

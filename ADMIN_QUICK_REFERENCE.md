@@ -76,7 +76,7 @@ web/
 | **Users** | List, Search, Status mgmt | ✅ On-demand |
 | **Transactions** | Monitor, Filter, Fraud alerts | ✅ On-demand |
 | **Loans** | Applications, Risk scores | ✅ On-demand |
-| **Security** | Fraud alerts, KYC pending | ✅ On-demand |
+| **Security** | Fraud alerts | ✅ On-demand |
 
 ---
 
@@ -135,16 +135,6 @@ GET /api/admin/payments?page=1&limit=10
 ```bash
 # Get loans
 GET /api/admin/loans?page=1&limit=10
-```
-
-### KYC
-```bash
-# Get KYC submissions
-GET /api/admin/kyc?page=1&limit=10
-
-# Verify KYC
-PATCH /api/admin/kyc/456/verify
-Body: { "status": "verified|rejected", "notes": "..." }
 ```
 
 ### Security

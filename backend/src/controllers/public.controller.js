@@ -189,7 +189,7 @@ exports.getFAQ = async (req, res) => {
                         },
                         {
                             question: "What documents do I need to register?",
-                            answer: "You'll need a valid national ID, email address, phone number, and to be at least 18 years old. You'll also need to complete our KYC verification process."
+                            answer: "You'll need a valid national ID, email address, phone number, and to be at least 18 years old."
                         },
                         {
                             question: "Is AI Banking available in all parts of Rwanda?",

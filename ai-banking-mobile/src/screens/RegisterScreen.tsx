@@ -35,7 +35,6 @@ export default function RegisterScreen({ navigation }: Props) {
           name,
           phone,
           profileComplete: false,
-          kycVerified: false,
           token: response.data.token,
         });
         // Auto-login and go to OTP verification

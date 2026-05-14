@@ -23,7 +23,6 @@ const demoUsers = [
         email_verified: true,
         profile_completed: true,
         pin_set: true,
-        kyc_status: 'verified',
         balance: 5000.00
     },
     {
@@ -35,7 +34,6 @@ const demoUsers = [
         email_verified: true,
         profile_completed: true,
         pin_set: true,
-        kyc_status: 'verified',
         balance: 3500.00
     },
     {
@@ -47,7 +45,6 @@ const demoUsers = [
         email_verified: true,
         profile_completed: true,
         pin_set: false,
-        kyc_status: 'pending',
         balance: 1200.00
     },
     {
@@ -59,7 +56,6 @@ const demoUsers = [
         email_verified: false,
         profile_completed: false,
         pin_set: false,
-        kyc_status: 'pending',
         balance: 800.00
     },
     {
@@ -71,7 +67,6 @@ const demoUsers = [
         email_verified: true,
         profile_completed: true,
         pin_set: true,
-        kyc_status: 'verified',
         balance: 7500.00
     }
 ];
@@ -211,8 +206,8 @@ async function seedUsers() {
         
         try {
             await connection.execute(`
-                INSERT INTO users (name, email, phone, password, role, email_verified, profile_completed, pin_set, kyc_status, balance, account_number)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO users (name, email, phone, password, role, email_verified, profile_completed, pin_set, balance, account_number)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 user.name,
                 user.email,
@@ -222,7 +217,6 @@ async function seedUsers() {
                 user.email_verified,
                 user.profile_completed,
                 user.pin_set,
-                user.kyc_status,
                 user.balance,
                 accountNumber
             ]);
@@ -315,7 +309,7 @@ async function seedLoans() {
     const connection = await mysql.createConnection(dbConfig);
     
     try {
-        const [users] = await connection.execute('SELECT id FROM users WHERE role = "user" AND kyc_status = "verified" ORDER BY id LIMIT 3');
+        const [users] = await connection.execute('SELECT id FROM users WHERE role = "user" ORDER BY id LIMIT 3');
         
         for (let i = 0; i < users.length && i < demoLoans.length; i++) {
             const loan = demoLoans[i];

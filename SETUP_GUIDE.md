@@ -127,7 +127,7 @@ npm start
 | Email | Password | Balance | Status |
 |-------|----------|---------|---------|
 | sarah.johnson@example.com | password123 | $3,500.00 | Fully Verified |
-| michael.brown@example.com | password123 | $1,200.00 | KYC Pending |
+| michael.brown@example.com | password123 | $1,200.00 | Profile incomplete |
 | emily.davis@example.com | password123 | $800.00 | Email Not Verified |
 | david.wilson@example.com | password123 | $7,500.00 | Fully Verified |
 
@@ -137,7 +137,7 @@ npm start
 
 #### User Management
 - [x] User registration with email verification
-- [x] Multi-step verification flow (email → profile → PIN → KYC)
+- [x] Multi-step verification flow (email → profile → PIN)
 - [x] JWT authentication with role-based access
 - [x] Password hashing with bcrypt
 
@@ -192,7 +192,6 @@ npm start
 3. Verify email (simulated)
 4. Complete profile
 5. Set transaction PIN
-6. Upload KYC documents (simulated)
 
 ### 2. Test Login
 1. Go to `http://localhost:3000/login`

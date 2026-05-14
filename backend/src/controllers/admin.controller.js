@@ -42,11 +42,6 @@ const getStats = async (req, res) => {
             'SELECT SUM(current_amount) as total FROM savings_goals'
         );
 
-        // KYC pending
-        const [kycPending] = await connection.execute(
-            `SELECT COUNT(*) as total FROM users WHERE kyc_status = 'pending'`
-        );
-
         // Fraud alerts
         const [fraudAlerts] = await connection.execute(
             `SELECT COUNT(*) as total FROM fraud_alerts WHERE status = 'pending'`
@@ -81,7 +76,6 @@ const getStats = async (req, res) => {
                 pending_loans: pendingLoans[0].total,
                 pending_loans_amount: pendingLoans[0].total_amount || 0,
                 total_savings: savingsData[0].total || 0,
-                kyc_pending: kycPending[0].total,
                 fraud_alerts_pending: fraudAlerts[0].total,
                 total_revenue: revenueData[0].total || 0,
                 monthly_growth: monthlyGrowth[0] || {}
@@ -418,89 +412,6 @@ const getSavings = async (req, res) => {
     }
 };
 
-/**
- * Get KYC submissions
- */
-const getKYC = async (req, res) => {
-    try {
-        const connection = global.dbConnection;
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const offset = (page - 1) * limit;
-
-        const [kyc] = await connection.execute(
-            `SELECT k.*, u.email, u.name FROM kyc_submissions k
-             LEFT JOIN users u ON k.user_id = u.id
-             ORDER BY k.created_at DESC LIMIT ? OFFSET ?`,
-            [limit, offset]
-        );
-
-        const [countResult] = await connection.execute(
-            'SELECT COUNT(*) as total FROM kyc_submissions'
-        );
-
-        res.json({
-            success: true,
-            data: {
-                kyc,
-                pagination: {
-                    page,
-                    limit,
-                    total: countResult[0].total,
-                    pages: Math.ceil(countResult[0].total / limit)
-                }
-            }
-        });
-    } catch (err) {
-        console.error('Error fetching KYC:', err);
-        res.status(500).json({ error: 'Failed to fetch KYC submissions' });
-    }
-};
-
-/**
- * Verify KYC submission
- */
-const verifyKYC = async (req, res) => {
-    try {
-        const connection = global.dbConnection;
-        const kycId = req.params.id;
-        const { status, notes } = req.body;
-
-        if (!['verified', 'rejected'].includes(status)) {
-            return res.status(400).json({ error: 'Invalid status' });
-        }
-
-        // Get KYC record
-        const [kyc] = await connection.execute(
-            'SELECT user_id FROM kyc_submissions WHERE id = ?',
-            [kycId]
-        );
-
-        if (kyc.length === 0) {
-            return res.status(404).json({ error: 'KYC not found' });
-        }
-
-        // Update KYC
-        await connection.execute(
-            `UPDATE kyc_submissions SET status = ?, verified_by = ?, verified_at = NOW(), notes = ? WHERE id = ?`,
-            [status, req.admin.id, notes || null, kycId]
-        );
-
-        // Update user KYC status
-        await connection.execute(
-            'UPDATE users SET kyc_status = ? WHERE id = ?',
-            [status === 'verified' ? 'verified' : 'rejected', kyc[0].user_id]
-        );
-
-        res.json({
-            success: true,
-            message: `KYC ${status} successfully`
-        });
-    } catch (err) {
-        console.error('Error verifying KYC:', err);
-        res.status(500).json({ error: 'Failed to verify KYC' });
-    }
-};
 
 /**
  * Get AI insights
@@ -920,8 +831,6 @@ module.exports = {
     getPayments,
     getLoans,
     getSavings,
-    getKYC,
-    verifyKYC,
     getAIInsights,
     getFraudAlerts,
     reviewFraudAlert,

@@ -32,8 +32,7 @@ Expected response:
     "account": "/api/account",
     "transactions": "/api/transactions",
     "loans": "/api/loans",
-    "insights": "/api/insights",
-    "kyc": "/api/kyc"
+    "insights": "/api/insights"
   }
 }
 ```
@@ -89,8 +88,7 @@ curl -X POST http://localhost:5000/api/auth/login \
     "role": "user",
     "email_verified": false,
     "profile_completed": false,
-    "pin_set": false,
-    "kyc_status": "pending"
+    "pin_set": false
   }
 }
 ```
@@ -367,82 +365,6 @@ curl -X PUT http://localhost:5000/api/insights/1/read \
 }
 ```
 
-### Phase 6: KYC Verification
-
-#### 6.1 Upload KYC Document
-
-```bash
-curl -X POST http://localhost:5000/api/kyc/upload \
-  -H "Authorization: Bearer $TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "document_type": "national_id",
-    "file_name": "national_id.pdf",
-    "file_size": 245000,
-    "mime_type": "application/pdf"
-  }'
-```
-
-**Expected Response (201):**
-```json
-{
-  "msg": "KYC document uploaded successfully",
-  "document": {
-    "id": 1,
-    "document_type": "national_id",
-    "upload_status": "pending",
-    "uploaded_at": "2024-01-01T00:04:00Z"
-  }
-}
-```
-
-#### 6.2 Get KYC Status
-
-```bash
-curl -X GET http://localhost:5000/api/kyc/status \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-**Expected Response (200):**
-```json
-{
-  "kyc_status": "pending",
-  "documents": [
-    {
-      "id": 1,
-      "document_type": "national_id",
-      "file_name": "national_id.pdf",
-      "upload_status": "pending",
-      "uploaded_at": "2024-01-01T00:04:00Z",
-      "rejection_reason": null
-    }
-  ]
-}
-```
-
-#### 6.3 Get KYC Documents
-
-```bash
-curl -X GET http://localhost:5000/api/kyc/documents \
-  -H "Authorization: Bearer $TOKEN"
-```
-
-**Expected Response (200):**
-```json
-{
-  "documents": [
-    {
-      "id": 1,
-      "document_type": "national_id",
-      "file_name": "national_id.pdf",
-      "upload_status": "pending",
-      "uploaded_at": "2024-01-01T00:04:00Z",
-      "rejection_reason": null
-    }
-  ]
-}
-```
-
 ## Error Testing
 
 ### Test Missing Authorization
@@ -539,9 +461,6 @@ curl -X POST http://localhost:5000/api/transactions/withdraw \
 | /api/insights/generate | POST | 200 | ✅ PASS |
 | /api/insights | GET | 200 | ✅ PASS |
 | /api/insights/:id/read | PUT | 200 | ✅ PASS |
-| /api/kyc/upload | POST | 201 | ✅ PASS |
-| /api/kyc/status | GET | 200 | ✅ PASS |
-| /api/kyc/documents | GET | 200 | ✅ PASS |
 
 ## Database Verification
 
@@ -558,7 +477,6 @@ Expected tables:
 - transactions
 - loans
 - ai_insights
-- kyc_documents
 - otp_codes
 - user_profiles
 - user_security

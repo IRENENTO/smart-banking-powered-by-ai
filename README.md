@@ -80,7 +80,6 @@ ai-banking/
 │  │  │  └─ swagger.js   # API documentation configuration
 │  │  ├─ controllers/    # API controllers handling request/response logic
 │  │  │  ├─ auth.controller.js     # Authentication endpoint handlers
-│  │  │  ├─ kyc.controller.js      # Know Your Customer verification
 │  │  │  ├─ loan.controller.js     # Loan application and management
 │  │  │  ├─ otp.controller.js      # One-time password handling
 │  │  │  ├─ payment.controller.js  # Payment processing endpoints
@@ -100,7 +99,6 @@ ai-banking/
 │  │  │  └─ User.js      # User data model and schema
 │  │  ├─ routes/         # API route definitions and endpoint mappings
 │  │  │  ├─ auth.routes.js       # Authentication routes
-│  │  │  ├─ kyc.routes.js        # KYC verification routes
 │  │  │  ├─ loan.routes.js       # Loan-related endpoints
 │  │  │  ├─ oauth.routes.js      # OAuth authentication routes
 │  │  │  ├─ otp.routes.js        # One-time password routes
@@ -207,7 +205,6 @@ ai-banking/
 │  │  │  ├─ SetSecurity.tsx # Security configuration page
 │  │  │  ├─ Settings.tsx # Application settings page
 │  │  │  ├─ Transactions.tsx # Transaction history page
-│  │  │  ├─ UploadKYC.tsx # KYC document upload page
 │  │  │  └─ VerifyOTP.tsx # OTP verification page
 │  │  ├─ services/       # API service functions and HTTP clients
 │  │  │  ├─ api.ts       # Main API service client

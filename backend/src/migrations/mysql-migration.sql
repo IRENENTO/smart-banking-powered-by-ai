@@ -13,10 +13,8 @@ CREATE TABLE IF NOT EXISTS users (
     email_verified BOOLEAN DEFAULT FALSE,
     profile_completed BOOLEAN DEFAULT FALSE,
     pin_set BOOLEAN DEFAULT FALSE,
-    kyc_status ENUM('pending', 'verified', 'rejected') DEFAULT 'pending',
     otp_code VARCHAR(6),
     otp_expires_at DATETIME NULL,
-    kyc_rejection_reason TEXT,
     balance DECIMAL(15,2) DEFAULT 0.00,
     account_number VARCHAR(20) UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -130,21 +128,6 @@ CREATE TABLE IF NOT EXISTS savings_goals (
     INDEX idx_status (status)
 );
 
--- Create kyc_documents table
-CREATE TABLE IF NOT EXISTS kyc_documents (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    document_type ENUM('national_id', 'passport', 'driving_license', 'selfie') NOT NULL,
-    document_url VARCHAR(500) NOT NULL,
-    status ENUM('pending', 'verified', 'rejected') DEFAULT 'pending',
-    rejection_reason TEXT,
-    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    reviewed_at DATETIME NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    INDEX idx_user_id (user_id),
-    INDEX idx_status (status)
-);
-
 -- Create notifications table
 CREATE TABLE IF NOT EXISTS notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -197,8 +180,8 @@ CREATE TABLE IF NOT EXISTS cards (
 );
 
 -- Insert default admin user
-INSERT INTO users (name, email, phone, password, role, email_verified, profile_completed, pin_set, kyc_status, balance, account_number) 
-VALUES ('Admin User', 'admin@aibanking.com', '+250000000000', '$2a$10$rOQJjQJQJQJQJQJQJQJQJuQJQJQJQJQJQJQJQJQJQJQJQJQJQJQJQJQ', 'admin', TRUE, TRUE, TRUE, 'verified', 0.00, 'ADMIN001')
+INSERT INTO users (name, email, phone, password, role, email_verified, profile_completed, pin_set, balance, account_number) 
+VALUES ('Admin User', 'admin@aibanking.com', '+250000000000', '$2a$10$rOQJjQJQJQJQJQJQJQJQJuQJQJQJQJQJQJQJQJQJQJQJQJQJQJQJQJQ', 'admin', TRUE, TRUE, TRUE, 0.00, 'ADMIN001')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
 -- Create triggers for automatic balance updates

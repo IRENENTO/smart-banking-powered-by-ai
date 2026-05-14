@@ -44,11 +44,7 @@ const CompleteProfile: React.FC = () => {
 
         if (user.profile_completed) {
             if (user.pin_set) {
-                if (user.kyc_status === 'verified') {
-                    navigate('/dashboard');
-                } else {
-                    navigate('/upload-kyc');
-                }
+                navigate('/dashboard');
             } else {
                 navigate('/set-security');
             }

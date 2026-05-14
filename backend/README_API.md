@@ -2,7 +2,7 @@
 
 ## Overview
 
-This backend provides a comprehensive banking API with authentication, account management, transactions, loans, AI-powered insights, and KYC verification. It uses Node.js + Express + MySQL.
+This backend provides a comprehensive banking API with authentication, account management, transactions, loans, AI-powered insights, and user onboarding support. It uses Node.js + Express + MySQL.
 
 ## Prerequisites
 
@@ -57,7 +57,6 @@ CREATE TABLE IF NOT EXISTS users (
     email_verified BOOLEAN DEFAULT FALSE,
     profile_completed BOOLEAN DEFAULT FALSE,
     pin_set BOOLEAN DEFAULT FALSE,
-    kyc_status VARCHAR(20) DEFAULT 'pending',
     date_of_birth DATE,
     address TEXT,
     national_id VARCHAR(50),
@@ -124,7 +123,7 @@ http://localhost:5000/api-docs
 
 - **GET** `/api/profile` - Get user profile
 - **PUT** `/api/profile` - Update user profile
-- **POST** `/api/profile/complete` - Complete profile with KYC data
+- **POST** `/api/profile/complete` - Complete profile with user details
 
 ### Account Management
 
@@ -152,13 +151,6 @@ http://localhost:5000/api-docs
 - **PUT** `/api/insights/{insightId}/read` - Mark insight as read
 - **DELETE** `/api/insights/{insightId}` - Delete insight
 
-### KYC (Know Your Customer)
-
-- **POST** `/api/kyc/upload` - Upload KYC document
-- **GET** `/api/kyc/status` - Get KYC status
-- **GET** `/api/kyc/documents` - Get KYC documents
-- **POST** `/api/kyc/review` - Admin: Review KYC document
-
 ## Database Schema
 
 ### Tables Created
@@ -168,9 +160,8 @@ http://localhost:5000/api-docs
 3. **transactions** - Transaction history
 4. **loans** - Loan applications and status
 5. **ai_insights** - AI-generated insights and recommendations
-6. **kyc_documents** - KYC verification documents
-7. **otp_codes** - OTP codes for verification
-8. **user_profiles** - Extended user profile data
+6. **otp_codes** - OTP codes for verification
+7. **user_profiles** - Extended user profile data
 9. **user_security** - User security settings (PIN, etc.)
 
 ## Key Features
@@ -208,13 +199,6 @@ http://localhost:5000/api-docs
 - Spending analysis
 - Savings recommendations
 - Risk alerts
-
-### 6. KYC Verification
-
-- Document upload support
-- Status tracking
-- Admin review workflow
-- Support for multiple document types
 
 ## Error Handling
 
@@ -328,7 +312,6 @@ backend/
 │   │   ├── account.controller.js
 │   │   ├── auth.controller.js
 │   │   ├── insights.controller.js
-│   │   ├── kyc.controller.js
 │   │   ├── loan.controller.js
 │   │   ├── profile.controller.js
 │   │   ├── transaction.controller.js
@@ -340,7 +323,6 @@ backend/
 │   ├── models/
 │   │   ├── Account.js
 │   │   ├── AIInsight.js
-│   │   ├── KYC.js
 │   │   ├── Loan.js
 │   │   ├── Transaction.js
 │   │   ├── User.js
@@ -349,7 +331,6 @@ backend/
 │   │   ├── account.routes.js
 │   │   ├── auth.routes.js
 │   │   ├── insights.routes.js
-│   │   ├── kyc.routes.js
 │   │   ├── loan.routes.js
 │   │   ├── transaction.routes.js
 │   │   └── ...

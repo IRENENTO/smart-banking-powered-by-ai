@@ -63,7 +63,6 @@ navigate('/dashboard')
    - email_verified? NO → /verify-otp
    - profile_completed? NO → /complete-profile
    - pin_set? NO → /set-security
-   - kyc_status='verified'? NO → /upload-kyc
 ```
 
 **Key Code** ([web/src/pages/Register.tsx](web/src/pages/Register.tsx), lines 112-119):
@@ -82,8 +81,7 @@ The [RouteGuard.tsx](web/src/components/RouteGuard.tsx) component manages the mu
 1. `/verify-otp` - Email verification
 2. `/complete-profile` - Personal info (DOB, address, national ID)
 3. `/set-security` - PIN setup
-4. `/upload-kyc` - Document verification
-5. `/dashboard` - Main dashboard
+4. `/dashboard` - Main dashboard
 
 **Implementation** ([web/src/components/RouteGuard.tsx](web/src/components/RouteGuard.tsx), lines 44-72):
 ```typescript
@@ -97,10 +95,6 @@ if (requireProfile && !userData.profile_completed) {
 
 if (requirePin && !userData.pin_set) {
     navigate('/set-security', { state: { from: location.pathname } });
-}
-
-if (requireKyc && userData.kyc_status !== 'verified') {
-    navigate('/upload-kyc', { state: { from: location.pathname } });
 }
 ```
 
@@ -166,7 +160,6 @@ Backend creates user + sets flags:
   - email_verified: false
   - profile_completed: false
   - pin_set: false
-  - kyc_status: 'pending'
          ↓
 Alert: "Registration successful. Please login."
          ↓
@@ -175,7 +168,7 @@ navigation.navigate('Login')
 ❌ PROBLEM: No auto-login, no verification flow
 ❌ User must manually login after registration
 ❌ No profile completion step
-❌ No KYC or PIN setup
+❌ No PIN setup
 ```
 
 **Key Code** ([ai-banking-mobile/src/screens/RegisterScreen.tsx](ai-banking-mobile/src/screens/RegisterScreen.tsx), lines 20-26):
@@ -187,7 +180,7 @@ Alert.alert('Success', 'Registration successful. Please login.', [
 ```
 
 ### Issues:
-1. **No Multi-Step Flow**: Unlike web, there's no OTP verification, profile completion, or KYC upload
+1. **No Multi-Step Flow**: Unlike web, there's no OTP verification, profile completion, or PIN setup
 2. **No Auto-Login**: User must manually login after registration
 3. **[ProfileScreen.tsx](ai-banking-mobile/src/screens/ProfileScreen.tsx) is Hardcoded**: Shows dummy data "User Name", not fetched from backend
 4. **Token Storage**: Uses in-memory store, will be lost on app restart (should use AsyncStorage)
@@ -230,8 +223,7 @@ navigation.navigate('Home', { token: res.data.token, user: res.data.user });
         "role": "user",
         "email_verified": false,
         "profile_completed": false,
-        "pin_set": false,
-        "kyc_status": "pending"
+        "pin_set": false
     }
 }
 ```
@@ -294,7 +286,6 @@ navigation.replace('MainTabs');  // ✅ Uses replace() to avoid back stack issue
   1. `/verify-otp` (email verification)
   2. `/complete-profile` (personal info)
   3. `/set-security` (PIN setup)
-  4. `/upload-kyc` (KYC documents)
 
 **Mobile (ai-banking-mobile)** ❌:
 - No auto-login in [ai-banking-mobile/src/screens/RegisterScreen.tsx](ai-banking-mobile/src/screens/RegisterScreen.tsx)
@@ -304,11 +295,10 @@ navigation.replace('MainTabs');  // ✅ Uses replace() to avoid back stack issue
 
 ### Q4: Are there multiple screens in registration flow?
 
-**Web** ✅ YES - 4 additional screens:
+**Web** ✅ YES - 3 additional screens:
 1. [web/src/pages/VerifyOTP.tsx](web/src/pages/VerifyOTP.tsx)
 2. [web/src/pages/CompleteProfile.tsx](web/src/pages/CompleteProfile.tsx)
 3. [web/src/pages/SetSecurity.tsx](web/src/pages/SetSecurity.tsx)
-4. [web/src/pages/UploadKYC.tsx](web/src/pages/UploadKYC.tsx)
 
 **Mobile (ai-banking-mobile)** ❌ NO - Only one register screen:
 - [ai-banking-mobile/src/screens/RegisterScreen.tsx](ai-banking-mobile/src/screens/RegisterScreen.tsx)
@@ -337,7 +327,7 @@ navigation.replace('MainTabs');  // ✅ Uses replace() to avoid back stack issue
 
 **Mobile (ai-banking-mobile):**
 1. ❌ **No auto-login after registration** → User must manually login
-2. ❌ **No multi-step verification flow** → Missing email verification, profile completion, PIN setup, KYC
+2. ❌ **No multi-step verification flow** → Missing email verification, profile completion, PIN setup
 3. ❌ **Token stored in memory** → Lost on app restart (use AsyncStorage)
 4. ❌ **ProfileScreen has hardcoded data** → Should fetch from API
 
@@ -372,7 +362,6 @@ const handleRegister = async () => {
 - `VerifyOTPScreen.tsx`
 - `CompleteProfileScreen.tsx`
 - `SetSecurityScreen.tsx`
-- `UploadKYCScreen.tsx`
 
 **3. Fix token persistence** - Use AsyncStorage:
 ```typescript

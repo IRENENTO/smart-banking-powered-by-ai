@@ -49,10 +49,9 @@ const Profile: React.FC = () => {
           setProfileCompleted(user.profile_completed || false);
           
           let level = 0;
-          if (user.email_verified) level += 25;
-          if (user.profile_completed) level += 25;
-          if (user.pin_set) level += 25;
-          if (user.kyc_status === 'verified') level += 25;
+          if (user.email_verified) level += 33;
+          if (user.profile_completed) level += 33;
+          if (user.pin_set) level += 34;
           setCompletionLevel(level);
         }
 
