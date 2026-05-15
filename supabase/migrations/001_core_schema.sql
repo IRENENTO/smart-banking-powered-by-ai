@@ -24,10 +24,10 @@ CREATE TABLE IF NOT EXISTS public.users (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_users_email ON public.users(email);
-CREATE INDEX idx_users_phone ON public.users(phone);
-CREATE INDEX idx_users_account_number ON public.users(account_number);
-CREATE INDEX idx_users_auth_id ON public.users(auth_id);
+CREATE INDEX IF NOT EXISTS idx_users_email ON public.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_phone ON public.users(phone);
+CREATE INDEX IF NOT EXISTS idx_users_account_number ON public.users(account_number);
+CREATE INDEX IF NOT EXISTS idx_users_auth_id ON public.users(auth_id);
 
 -- 2. User Profiles
 CREATE TABLE IF NOT EXISTS public.user_profiles (
@@ -68,11 +68,11 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_transactions_user_id ON public.transactions(user_id);
-CREATE INDEX idx_transactions_type ON public.transactions(type);
-CREATE INDEX idx_transactions_status ON public.transactions(status);
-CREATE INDEX idx_transactions_created_at ON public.transactions(created_at);
-CREATE INDEX idx_transactions_reference ON public.transactions(reference_number);
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_type ON public.transactions(type);
+CREATE INDEX IF NOT EXISTS idx_transactions_status ON public.transactions(status);
+CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON public.transactions(created_at);
+CREATE INDEX IF NOT EXISTS idx_transactions_reference ON public.transactions(reference_number);
 
 -- 5. Loans
 CREATE TABLE IF NOT EXISTS public.loans (
@@ -97,9 +97,9 @@ CREATE TABLE IF NOT EXISTS public.loans (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_loans_user_id ON public.loans(user_id);
-CREATE INDEX idx_loans_status ON public.loans(status);
-CREATE INDEX idx_loans_risk_score ON public.loans(risk_score);
+CREATE INDEX IF NOT EXISTS idx_loans_user_id ON public.loans(user_id);
+CREATE INDEX IF NOT EXISTS idx_loans_status ON public.loans(status);
+CREATE INDEX IF NOT EXISTS idx_loans_risk_score ON public.loans(risk_score);
 
 -- 6. Loan Repayments
 CREATE TABLE IF NOT EXISTS public.loan_repayments (
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS public.loan_repayments (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_loan_repayments_loan_id ON public.loan_repayments(loan_id);
+CREATE INDEX IF NOT EXISTS idx_loan_repayments_loan_id ON public.loan_repayments(loan_id);
 
 -- 7. Savings Goals
 CREATE TABLE IF NOT EXISTS public.savings_goals (
@@ -130,7 +130,7 @@ CREATE TABLE IF NOT EXISTS public.savings_goals (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_savings_goals_user_id ON public.savings_goals(user_id);
+CREATE INDEX IF NOT EXISTS idx_savings_goals_user_id ON public.savings_goals(user_id);
 
 -- 8. Payment Schedules
 CREATE TABLE IF NOT EXISTS public.payment_schedules (
@@ -150,9 +150,9 @@ CREATE TABLE IF NOT EXISTS public.payment_schedules (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_payment_schedules_user_id ON public.payment_schedules(user_id);
-CREATE INDEX idx_payment_schedules_status ON public.payment_schedules(status);
-CREATE INDEX idx_payment_schedules_next_payment ON public.payment_schedules(next_payment_date);
+CREATE INDEX IF NOT EXISTS idx_payment_schedules_user_id ON public.payment_schedules(user_id);
+CREATE INDEX IF NOT EXISTS idx_payment_schedules_status ON public.payment_schedules(status);
+CREATE INDEX IF NOT EXISTS idx_payment_schedules_next_payment ON public.payment_schedules(next_payment_date);
 
 -- 9. AI Insights
 CREATE TABLE IF NOT EXISTS public.ai_insights (
@@ -164,8 +164,8 @@ CREATE TABLE IF NOT EXISTS public.ai_insights (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_ai_insights_user_id ON public.ai_insights(user_id);
-CREATE INDEX idx_ai_insights_is_read ON public.ai_insights(is_read);
+CREATE INDEX IF NOT EXISTS idx_ai_insights_user_id ON public.ai_insights(user_id);
+CREATE INDEX IF NOT EXISTS idx_ai_insights_is_read ON public.ai_insights(is_read);
 
 -- 10. Notifications
 CREATE TABLE IF NOT EXISTS public.notifications (
@@ -178,8 +178,8 @@ CREATE TABLE IF NOT EXISTS public.notifications (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_notifications_user_id ON public.notifications(user_id);
-CREATE INDEX idx_notifications_is_read ON public.notifications(is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON public.notifications(is_read);
 
 -- 11. Beneficiaries
 CREATE TABLE IF NOT EXISTS public.beneficiaries (
@@ -192,7 +192,7 @@ CREATE TABLE IF NOT EXISTS public.beneficiaries (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_beneficiaries_user_id ON public.beneficiaries(user_id);
+CREATE INDEX IF NOT EXISTS idx_beneficiaries_user_id ON public.beneficiaries(user_id);
 
 -- 12. Cards
 CREATE TABLE IF NOT EXISTS public.cards (
@@ -205,7 +205,7 @@ CREATE TABLE IF NOT EXISTS public.cards (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_cards_user_id ON public.cards(user_id);
+CREATE INDEX IF NOT EXISTS idx_cards_user_id ON public.cards(user_id);
 
 -- 13. Investments
 CREATE TABLE IF NOT EXISTS public.investments (
@@ -221,7 +221,7 @@ CREATE TABLE IF NOT EXISTS public.investments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_investments_user_id ON public.investments(user_id);
+CREATE INDEX IF NOT EXISTS idx_investments_user_id ON public.investments(user_id);
 
 -- 14. Investment Types
 CREATE TABLE IF NOT EXISTS public.investment_types (
@@ -295,8 +295,8 @@ CREATE TABLE IF NOT EXISTS public.payments (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_payments_user_id ON public.payments(user_id);
-CREATE INDEX idx_payments_status ON public.payments(status);
+CREATE INDEX IF NOT EXISTS idx_payments_user_id ON public.payments(user_id);
+CREATE INDEX IF NOT EXISTS idx_payments_status ON public.payments(status);
 
 -- 20. Payment Methods
 CREATE TABLE IF NOT EXISTS public.payment_methods (
@@ -330,7 +330,7 @@ CREATE TABLE IF NOT EXISTS public.accounts (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_accounts_user_id ON public.accounts(user_id);
+CREATE INDEX IF NOT EXISTS idx_accounts_user_id ON public.accounts(user_id);
 
 -- 23. Admin Users
 CREATE TABLE IF NOT EXISTS public.admin_users (
