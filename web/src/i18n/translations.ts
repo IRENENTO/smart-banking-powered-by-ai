@@ -102,7 +102,45 @@ export type TranslationKey =
   | 'category.bills'
   | 'category.mobileMoney'
   | 'status.completed'
-  | 'status.pending';
+  | 'status.pending'
+  | 'loanApplication.deductionAmount'
+  | 'loanApplication.deductionPeriod'
+  | 'loanApplication.deductionPeriodDaily'
+  | 'loanApplication.deductionPeriodWeekly'
+  | 'loanApplication.deductionPeriodMonthly'
+  | 'loanApplication.deductionInfo'
+  | 'loanStatus.progress'
+  | 'loanStatus.daysRemaining'
+  | 'loanStatus.paidPercentage'
+  | 'loanStatus.remainingAmount'
+  | 'loanStatus.nextDeduction'
+  | 'loanStatus.extend'
+  | 'loanStatus.extensionRequest'
+  | 'loanStatus.extensionDays'
+  | 'loanStatus.extensionApproved'
+  | 'loanStatus.extensionDenied'
+  | 'loanStatus.noLoans'
+  | 'schedules.title'
+  | 'schedules.subtitle'
+  | 'schedules.create'
+  | 'schedules.name'
+  | 'schedules.amount'
+  | 'schedules.frequency'
+  | 'schedules.startDate'
+  | 'schedules.endDate'
+  | 'schedules.description'
+  | 'schedules.status'
+  | 'schedules.nextPayment'
+  | 'schedules.pause'
+  | 'schedules.resume'
+  | 'schedules.delete'
+  | 'schedules.noSchedules'
+  | 'savings.autoDeduction'
+  | 'savings.autoDeductionAmount'
+  | 'savings.autoDeductionPeriod'
+  | 'savings.autoDeductionInfo'
+  | 'savings.lastDeduction'
+  | 'savings.noGoals';
 
 type Dict = Record<TranslationKey, string>;
 
@@ -208,7 +246,45 @@ const EN: Dict = {
   'category.bills': 'Bills',
   'category.mobileMoney': 'Mobile Money',
   'status.completed': 'Completed',
-  'status.pending': 'Pending'
+  'status.pending': 'Pending',
+  'loanApplication.deductionAmount': 'Deduction Amount (per period)',
+  'loanApplication.deductionPeriod': 'Deduction Period',
+  'loanApplication.deductionPeriodDaily': 'Daily',
+  'loanApplication.deductionPeriodWeekly': 'Weekly',
+  'loanApplication.deductionPeriodMonthly': 'Monthly',
+  'loanApplication.deductionInfo': 'Set up auto-deduction to repay your loan automatically',
+  'loanStatus.progress': 'Repayment Progress',
+  'loanStatus.daysRemaining': 'Days remaining to pay off',
+  'loanStatus.paidPercentage': 'Paid',
+  'loanStatus.remainingAmount': 'Remaining',
+  'loanStatus.nextDeduction': 'Next deduction',
+  'loanStatus.extend': 'Request Extension',
+  'loanStatus.extensionRequest': 'Request Extension (days)',
+  'loanStatus.extensionDays': 'Number of extra days',
+  'loanStatus.extensionApproved': 'Extension Approved!',
+  'loanStatus.extensionDenied': 'Extension Denied',
+  'loanStatus.noLoans': 'No loan applications yet',
+  'schedules.title': 'Payment Schedules',
+  'schedules.subtitle': 'Automate recurring payments with AI-powered deductions',
+  'schedules.create': 'Create Schedule',
+  'schedules.name': 'Schedule Name',
+  'schedules.amount': 'Amount (RWF)',
+  'schedules.frequency': 'Frequency',
+  'schedules.startDate': 'Start Date',
+  'schedules.endDate': 'End Date (optional)',
+  'schedules.description': 'Description',
+  'schedules.status': 'Status',
+  'schedules.nextPayment': 'Next Payment',
+  'schedules.pause': 'Pause',
+  'schedules.resume': 'Resume',
+  'schedules.delete': 'Delete',
+  'schedules.noSchedules': 'No payment schedules yet',
+  'savings.autoDeduction': 'Auto Deduction',
+  'savings.autoDeductionAmount': 'Auto-deduction Amount (RWF)',
+  'savings.autoDeductionPeriod': 'Auto-deduction Period',
+  'savings.autoDeductionInfo': 'Set up auto-deduction to save automatically from your balance',
+  'savings.lastDeduction': 'Last deduction',
+  'savings.noGoals': 'No savings goals yet'
 };
 
 const FR: Dict = {
@@ -298,7 +374,45 @@ const FR: Dict = {
   'category.bills': 'Factures',
   'category.mobileMoney': 'Mobile Money',
   'status.completed': 'Terminé',
-  'status.pending': 'En attente'
+  'status.pending': 'En attente',
+  'loanApplication.deductionAmount': 'Montant de la déduction (par période)',
+  'loanApplication.deductionPeriod': 'Période de déduction',
+  'loanApplication.deductionPeriodDaily': 'Quotidien',
+  'loanApplication.deductionPeriodWeekly': 'Hebdomadaire',
+  'loanApplication.deductionPeriodMonthly': 'Mensuel',
+  'loanApplication.deductionInfo': 'Configurez le prélèvement automatique pour rembourser votre prêt',
+  'loanStatus.progress': 'Progrès de remboursement',
+  'loanStatus.daysRemaining': 'Jours restants',
+  'loanStatus.paidPercentage': 'Payé',
+  'loanStatus.remainingAmount': 'Restant',
+  'loanStatus.nextDeduction': 'Prochain prélèvement',
+  'loanStatus.extend': 'Demander une prolongation',
+  'loanStatus.extensionRequest': 'Demande de prolongation (jours)',
+  'loanStatus.extensionDays': 'Nombre de jours supplémentaires',
+  'loanStatus.extensionApproved': 'Prolongation approuvée !',
+  'loanStatus.extensionDenied': 'Prolongation refusée',
+  'loanStatus.noLoans': 'Pas encore de demandes de prêt',
+  'schedules.title': 'Paiements programmés',
+  'schedules.subtitle': 'Automatisez les paiements récurrents avec l\'IA',
+  'schedules.create': 'Créer un programme',
+  'schedules.name': 'Nom du programme',
+  'schedules.amount': 'Montant (RWF)',
+  'schedules.frequency': 'Fréquence',
+  'schedules.startDate': 'Date de début',
+  'schedules.endDate': 'Date de fin (optionnel)',
+  'schedules.description': 'Description',
+  'schedules.status': 'Statut',
+  'schedules.nextPayment': 'Prochain paiement',
+  'schedules.pause': 'Pause',
+  'schedules.resume': 'Reprendre',
+  'schedules.delete': 'Supprimer',
+  'schedules.noSchedules': 'Aucun programme de paiement',
+  'savings.autoDeduction': 'Prélèvement automatique',
+  'savings.autoDeductionAmount': 'Montant du prélèvement automatique (RWF)',
+  'savings.autoDeductionPeriod': 'Période de prélèvement',
+  'savings.autoDeductionInfo': 'Configurez le prélèvement automatique pour épargner depuis votre solde',
+  'savings.lastDeduction': 'Dernier prélèvement',
+  'savings.noGoals': 'Aucun objectif d\'épargne'
 };
 
 const RW: Dict = {
@@ -390,7 +504,45 @@ const RW: Dict = {
   'category.bills': 'Fagitire',
   'category.mobileMoney': 'Mobile Money',
   'status.completed': 'Byarangiye',
-  'status.pending': 'Bitegereje'
+  'status.pending': 'Bitegereje',
+  'loanApplication.deductionAmount': 'Amafaranga yishyurwa (buri gihe)',
+  'loanApplication.deductionPeriod': 'Igihe cyo kwishyura',
+  'loanApplication.deductionPeriodDaily': 'Buri munsi',
+  'loanApplication.deductionPeriodWeekly': 'Buri cyumweru',
+  'loanApplication.deductionPeriodMonthly': 'Buri kwezi',
+  'loanApplication.deductionInfo': 'Shiraho kwishyura bwite kugirango wishyure inguzanyo yawe',
+  'loanStatus.progress': 'Iterambere ry\'inyishyu',
+  'loanStatus.daysRemaining': 'Iminsi isigaye',
+  'loanStatus.paidPercentage': 'Byishyuwe',
+  'loanStatus.remainingAmount': 'Mbasigaye',
+  'loanStatus.nextDeduction': 'Igikurikiraho',
+  'loanStatus.extend': 'Saba ikindi gihe',
+  'loanStatus.extensionRequest': 'Saba ikindi gihe (iminsi)',
+  'loanStatus.extensionDays': 'Iminsi y\'inyongera',
+  'loanStatus.extensionApproved': 'Ikiyongerewe gihe cyemewe!',
+  'loanStatus.extensionDenied': 'Ikiyongerewe gihe nticyemewe',
+  'loanStatus.noLoans': 'Nta nguzanyo zisabwe',
+  'schedules.title': 'Gahunda yo kwishyura',
+  'schedules.subtitle': 'Shiraho kwishyura bwite buri gihe ukoresheje AI',
+  'schedules.create': 'Kora gahunda',
+  'schedules.name': 'Izina ry\'gahunda',
+  'schedules.amount': 'Amafaranga (RWF)',
+  'schedules.frequency': 'Inshuro',
+  'schedules.startDate': 'Itariki yo gutangirira',
+  'schedules.endDate': 'Itariki yo kurangirira (by\'amahitamo)',
+  'schedules.description': 'Ibisobanuro',
+  'schedules.status': 'Imiterere',
+  'schedules.nextPayment': 'Igikurikiraho',
+  'schedules.pause': 'Komeza',
+  'schedules.resume': 'Tangira',
+  'schedules.delete': 'Siba',
+  'schedules.noSchedules': 'Nta gahunda yo kwishyura',
+  'savings.autoDeduction': 'Kwishyura bwite',
+  'savings.autoDeductionAmount': 'Amafaranga yishyurwa bwite (RWF)',
+  'savings.autoDeductionPeriod': 'Igihe cyo kwishyura bwite',
+  'savings.autoDeductionInfo': 'Shiraho kwishyura bwite kugirango uzigame',
+  'savings.lastDeduction': 'Ubwishe bwanyuma',
+  'savings.noGoals': 'Nta ntego yo kuzigama'
 };
 
 export function getDict(lang: Lang): Dict {

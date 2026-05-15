@@ -10,7 +10,8 @@ const toSafeUser = (user) => ({
     email_verified: user.email_verified || false,
     profile_completed: user.profile_completed || false,
     pin_set: user.pin_set || false,
-    profile_picture: user.profile_picture || null
+    profile_picture: user.profile_picture || null,
+    account_number: user.account_number || null
 });
 
 exports.completeProfile = async (req, res) => {

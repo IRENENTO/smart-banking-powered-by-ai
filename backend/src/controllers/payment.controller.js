@@ -253,10 +253,13 @@ exports.payment = async (req, res) => {
             return res.status(400).json({ msg: 'Insufficient balance' });
         }
 
-        // Check if recipient exists
-        const recipient = await User.findByAccountNumber(recipient_account_number);
+        // Check if recipient exists (try account number first, then phone)
+        let recipient = await User.findByAccountNumber(recipient_account_number);
         if (!recipient) {
-            return res.status(404).json({ msg: 'Recipient account not found' });
+            recipient = await User.findByPhone(recipient_account_number);
+        }
+        if (!recipient) {
+            return res.status(404).json({ msg: 'Recipient not found' });
         }
 
         if (recipient.id === userId) {
@@ -276,7 +279,7 @@ exports.payment = async (req, res) => {
             type: 'payment',
             amount: amountValue,
             description: description || 'Payment',
-            recipient_account_number,
+            recipient_account_number: recipient.account_number,
             recipient_name: recipient_name || recipient.name,
             balance_before: parseFloat(currentBalance),
             balance_after: parseFloat(newBalance),

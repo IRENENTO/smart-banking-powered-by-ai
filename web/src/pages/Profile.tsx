@@ -17,6 +17,7 @@ const parseJSON = (value: string | null) => {
 const Profile: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [address, setAddress] = useState('');
   const [nationalId, setNationalId] = useState('');
@@ -45,6 +46,7 @@ const Profile: React.FC = () => {
         if (user) {
           setName(user.name || '');
           setEmail(user.email || '');
+          setAccountNumber(user.account_number || '');
           setProfilePicture(user.profile_picture || '');
           setProfileCompleted(user.profile_completed || false);
           
@@ -191,6 +193,12 @@ const Profile: React.FC = () => {
             <div style={{ fontSize: '14px', color: '#64748b', marginBottom: '8px' }}>
               <strong>Current Information:</strong> Edit any field below to update your profile
             </div>
+            {accountNumber && (
+              <div style={{ fontSize: '14px', color: '#0B1F3A', marginBottom: '8px', padding: '8px 12px', background: 'rgba(10, 147, 150, 0.15)', borderRadius: 6, border: '1px dashed rgba(10, 147, 150, 0.3)' }}>
+                <strong>Account ID:</strong> <span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 16, color: '#0A9396' }}>{accountNumber}</span>
+                <div style={{ fontSize: 12, color: '#64748b', marginTop: 2 }}>Use this ID to receive transfers from other users</div>
+              </div>
+            )}
             {name && (
               <div style={{ fontSize: '12px', color: '#0B1F3A' }}>
                 <strong>Name:</strong> {name}

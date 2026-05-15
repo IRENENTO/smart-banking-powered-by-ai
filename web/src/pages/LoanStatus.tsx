@@ -1,36 +1,52 @@
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, X, Calculator, FileText, TrendingUp, Shield, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Plus, Calculator, Shield, Clock, CheckCircle, AlertCircle, Calendar, DollarSign, RotateCcw } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
 import { loanService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 
 const LoanStatus: React.FC = () => {
+    const navigate = useNavigate();
+    const { t } = useLanguage();
     const [loans, setLoans] = useState<any[]>([]);
-    const [showRequestForm, setShowRequestForm] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [extendingLoan, setExtendingLoan] = useState<number | null>(null);
+    const [extensionDays, setExtensionDays] = useState('');
+    const [extensionResult, setExtensionResult] = useState<{ loanId: number; approved: boolean; reason?: string } | null>(null);
     const { theme } = useTheme();
     const darkMode = theme === 'dark';
-
-    // Loan request form state
-    const [loanRequest, setLoanRequest] = useState({
-        amount: '',
-        purpose: '',
-        duration: '',
-        income: '',
-        employment: '',
-        collateral: '',
-        description: ''
-    });
+    const toast = useToast();
 
     useEffect(() => {
         const loadLoans = async () => {
             setLoading(true);
             try {
                 const response = await loanService.getLoans();
-                setLoans(response.data.loans || []);
+                const rawLoans = response.data.loans || [];
+                const normalized = rawLoans.map((loan: any) => {
+                    const ai = loan.aiDecision || loan.ai_decision || {};
+                    const totalAmt = loan.total_amount || loan.amount * (1 + (loan.interest_rate || 10) / 100);
+                    const paidAmt = parseFloat(loan.paid_amount || 0);
+                    const paidPct = totalAmt > 0 ? Math.min(100, Math.round((paidAmt / totalAmt) * 100)) : 0;
+                    return {
+                        ...loan,
+                        aiDecision: {
+                            riskScore: ai.riskScore ?? ai.risk_score ?? 50,
+                            confidence: ai.confidence ?? (ai.risk_score ? `${100 - ai.risk_score}%` : '50%'),
+                            explanation: ai.explanation || ai.reason || 'Application is being processed.'
+                        },
+                        status: loan.status.charAt(0).toUpperCase() + loan.status.slice(1),
+                        paid_amount: paidAmt,
+                        total_amount: totalAmt,
+                        paid_percentage: paidPct
+                    };
+                });
+                setLoans(normalized);
             } catch (err) {
                 setLoans([]);
             } finally {
@@ -41,51 +57,48 @@ const LoanStatus: React.FC = () => {
         loadLoans();
     }, []);
 
-    const handleInputChange = (field: string, value: string) => {
-        setLoanRequest(prev => ({ ...prev, [field]: value }));
-    };
-
-    const handleSubmitLoan = async () => {
-        setLoading(true);
+    const handleExtension = async (loanId: number) => {
+        if (!extensionDays || parseInt(extensionDays) < 1) return;
         try {
-            const response = await loanService.apply({
-                amount: Number(loanRequest.amount),
-                purpose: loanRequest.purpose,
-                duration: Number(loanRequest.duration),
-                monthlyIncome: Number(loanRequest.income),
-                existingDebt: 0
+            const response = await loanService.requestExtension(loanId, parseInt(extensionDays));
+            const approved = response.data.data?.approved || false;
+            setExtensionResult({ loanId, approved, reason: response.data.data?.reason });
+            setExtendingLoan(null);
+            setExtensionDays('');
+            if (approved) {
+                toast.success('Extension approved!');
+            } else {
+                toast.error('Extension denied — less than 50% paid');
+            }
+            // Reload loans
+            const resp = await loanService.getLoans();
+            const rawLoans = resp.data.loans || [];
+            const normalized = rawLoans.map((loan: any) => {
+                const ai = loan.aiDecision || loan.ai_decision || {};
+                const totalAmt = loan.total_amount || loan.amount * (1 + (loan.interest_rate || 10) / 100);
+                const paidAmt = parseFloat(loan.paid_amount || 0);
+                const paidPct = totalAmt > 0 ? Math.min(100, Math.round((paidAmt / totalAmt) * 100)) : 0;
+                return {
+                    ...loan,
+                    aiDecision: {
+                        riskScore: ai.riskScore ?? ai.risk_score ?? 50,
+                        confidence: ai.confidence ?? (ai.risk_score ? `${100 - ai.risk_score}%` : '50%'),
+                        explanation: ai.explanation || ai.reason || 'Application is being processed.'
+                    },
+                    status: loan.status.charAt(0).toUpperCase() + loan.status.slice(1),
+                    paid_amount: paidAmt,
+                    total_amount: totalAmt,
+                    paid_percentage: paidPct
+                };
             });
-
-            const newLoan = response.data.loan;
-            setLoans(prev => [newLoan, ...prev]);
-            setLoanRequest({
-                amount: '',
-                purpose: '',
-                duration: '',
-                income: '',
-                employment: '',
-                collateral: '',
-                description: ''
-            });
-            setShowRequestForm(false);
-        } catch (err: any) {
-            console.error('Loan submission failed:', err);
-        } finally {
-            setLoading(false);
+            setLoans(normalized);
+        } catch (err) {
+            setExtensionResult({ loanId, approved: false, reason: 'Failed to process extension request' });
         }
     };
 
     return (
         <>
-            <style>{`
-                .loan-modal-scroll::-webkit-scrollbar {
-                    display: none;
-                }
-                .loan-modal-scroll {
-                    -ms-overflow-style: none;
-                    scrollbar-width: none;
-                }
-            `}</style>
             <div style={{ minHeight: '100vh', background: darkMode ? '#0f172a' : '#eef7fb' }}>
             <Navbar authenticated={!!localStorage.getItem('token')} />
             
@@ -132,7 +145,7 @@ const LoanStatus: React.FC = () => {
                         </div>
                         
                         <LoadingButton
-                            onClick={() => setShowRequestForm(true)}
+                            onClick={() => navigate('/apply-loan')}
                             variant="primary"
                             size="lg"
                             style={{
@@ -146,6 +159,17 @@ const LoanStatus: React.FC = () => {
                         </LoadingButton>
                     </div>
                 </motion.div>
+
+                {/* Empty State */}
+                {!loading && loans.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: 60, color: darkMode ? '#94a3b8' : '#64748b' }}>
+                        <AlertCircle size={48} style={{ marginBottom: 16, opacity: 0.4 }} />
+                        <h3 style={{ color: darkMode ? '#f1f5f9' : '#1e293b', marginBottom: 8 }}>{t('loanStatus.noLoans')}</h3>
+                        <LoadingButton onClick={() => navigate('/apply-loan')} variant="primary">
+                            <Plus size={18} /> {t('common.applyLoan')}
+                        </LoadingButton>
+                    </div>
+                )}
 
                 {/* Loan Applications Grid */}
                 <div style={{ display: 'grid', gap: 24, marginBottom: 32 }}>
@@ -246,6 +270,118 @@ const LoanStatus: React.FC = () => {
                                             <Shield size={14} style={{ marginRight: 6, color: '#0A9396' }} />
                                             {loan.aiDecision.explanation}
                                         </div>
+
+                                        {loan.status === 'Approved' && loan.deduction_amount && (
+                                            <>
+                                                <div style={{ marginTop: 20, borderTop: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0', paddingTop: 16 }}>
+                                                    <div style={{ fontWeight: 700, fontSize: 16, color: darkMode ? '#f1f5f9' : '#1e293b', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <DollarSign size={18} style={{ color: '#0A9396' }} />
+                                                        {t('loanStatus.progress')}
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: 24, marginBottom: 12 }}>
+                                                        <div>
+                                                            <div style={{ fontSize: 12, color: darkMode ? '#94a3b8' : '#64748b' }}>{t('loanStatus.paidPercentage')}</div>
+                                                            <div style={{ fontSize: 20, fontWeight: 700, color: loan.paid_percentage >= 100 ? '#10b981' : '#0A9396' }}>
+                                                                {loan.paid_percentage}%
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontSize: 12, color: darkMode ? '#94a3b8' : '#64748b' }}>{t('loanStatus.remainingAmount')}</div>
+                                                            <div style={{ fontSize: 20, fontWeight: 700, color: darkMode ? '#f1f5f9' : '#1e293b' }}>
+                                                                RWF {(loan.total_amount - loan.paid_amount).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontSize: 12, color: darkMode ? '#94a3b8' : '#64748b' }}>{t('loanStatus.nextDeduction')}</div>
+                                                            <div style={{ fontSize: 14, fontWeight: 600, color: darkMode ? '#f1f5f9' : '#1e293b' }}>
+                                                                {loan.next_deduction_date || 'N/A'}
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontSize: 12, color: darkMode ? '#94a3b8' : '#64748b' }}>
+                                                                <Calendar size={14} style={{ marginRight: 4, color: '#0A9396' }} />
+                                                                {t('loanStatus.daysRemaining')}
+                                                            </div>
+                                                            <div style={{ fontSize: 20, fontWeight: 700, color: '#f59e0b' }}>
+                                                                {(() => {
+                                                                    if (!loan.due_date) return 'N/A';
+                                                                    const due = new Date(loan.due_date);
+                                                                    const now = new Date();
+                                                                    return Math.max(0, Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+                                                                })()}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ height: 10, background: darkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0', borderRadius: 999, marginBottom: 16 }}>
+                                                        <div style={{
+                                                            width: `${Math.min(100, loan.paid_percentage)}%`,
+                                                            height: '100%',
+                                                            background: loan.paid_percentage >= 100 ? '#10b981' : 'linear-gradient(90deg, #0A9396, #059669)',
+                                                            borderRadius: 999,
+                                                            transition: 'width 0.5s ease'
+                                                        }} />
+                                                    </div>
+                                                </div>
+
+                                                {/* Extension UI */}
+                                                {extendingLoan === loan.id ? (
+                                                    <div style={{ marginTop: 16, padding: 16, background: darkMode ? 'rgba(30,41,59,0.8)' : 'rgba(248,250,252,0.8)', borderRadius: 12, border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #e2e8f0' }}>
+                                                        <div style={{ fontWeight: 600, marginBottom: 12, color: darkMode ? '#f1f5f9' : '#1e293b' }}>{t('loanStatus.extensionRequest')}</div>
+                                                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                                            <input
+                                                                type="number"
+                                                                value={extensionDays}
+                                                                onChange={(e) => setExtensionDays(e.target.value)}
+                                                                placeholder={t('loanStatus.extensionDays')}
+                                                                min="1"
+                                                                max="365"
+                                                                style={{ flex: 1, padding: 10, borderRadius: 8, border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: darkMode ? 'rgba(0,0,0,0.2)' : 'white', color: darkMode ? '#f1f5f9' : '#1e293b' }}
+                                                            />
+                                                            <LoadingButton
+                                                                onClick={() => handleExtension(loan.id)}
+                                                                variant="primary"
+                                                                style={{ background: '#0A9396', border: 'none', whiteSpace: 'nowrap' }}
+                                                            >
+                                                                {t('loanStatus.extend')}
+                                                            </LoadingButton>
+                                                            <button
+                                                                onClick={() => { setExtendingLoan(null); setExtensionResult(null); }}
+                                                                style={{ padding: '10px 16px', background: 'transparent', border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', borderRadius: 8, cursor: 'pointer', color: darkMode ? '#f1f5f9' : '#1e293b' }}
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
+                                                        <LoadingButton
+                                                            onClick={() => { setExtendingLoan(loan.id); setExtensionResult(null); }}
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            style={{ border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', color: darkMode ? '#f1f5f9' : '#1e293b' }}
+                                                        >
+                                                            <RotateCcw size={14} style={{ marginRight: 6 }} />
+                                                            {t('loanStatus.extend')}
+                                                        </LoadingButton>
+                                                    </div>
+                                                )}
+
+                                                {extensionResult && extensionResult.loanId === loan.id && (
+                                                    <div style={{
+                                                        marginTop: 12,
+                                                        padding: 12,
+                                                        borderRadius: 8,
+                                                        background: extensionResult.approved ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                        color: extensionResult.approved ? '#10b981' : '#ef4444',
+                                                        fontWeight: 600,
+                                                        fontSize: 14
+                                                    }}>
+                                                        {extensionResult.approved ? t('loanStatus.extensionApproved') : t('loanStatus.extensionDenied')}
+                                                        {extensionResult.reason && <div style={{ fontWeight: 400, marginTop: 4, color: darkMode ? '#94a3b8' : '#64748b' }}>{extensionResult.reason}</div>}
+                                                    </div>
+                                                )}
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </SectionCard>
@@ -253,380 +389,6 @@ const LoanStatus: React.FC = () => {
                     ))}
                 </div>
             </motion.div>
-
-            {/* Loan Request Modal */}
-            <AnimatePresence>
-                {showRequestForm && (
-                    <>
-                        {/* Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            onClick={() => setShowRequestForm(false)}
-                            style={{
-                                position: 'fixed',
-                                top: 0,
-                                left: 0,
-                                right: 0,
-                                bottom: 0,
-                                background: 'rgba(0, 0, 0, 0.5)',
-                                zIndex: 999,
-                                backdropFilter: 'blur(4px)'
-                            }}
-                        />
-
-                        {/* Modal */}
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            style={{
-                                position: 'fixed',
-                                top: 0,
-                                left: 0,
-                                width: '100vw',
-                                height: '100vh',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                zIndex: 1000,
-                                padding: '20px',
-                                boxSizing: 'border-box'
-                            }}
-                        >
-                            <div style={{
-                                width: '100%',
-                                maxWidth: '600px',
-                                maxHeight: '90vh',
-                                position: 'relative'
-                            }}>
-                                <SectionCard 
-                                className="loan-modal-scroll"
-                                style={{
-                                background: darkMode 
-                                    ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(51, 65, 85, 0.98))'
-                                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98))',
-                                border: darkMode 
-                                    ? '1px solid rgba(255, 255, 255, 0.1)'
-                                    : '1px solid rgba(255, 255, 255, 0.5)',
-                                width: '100%',
-                                maxWidth: '600px',
-                                maxHeight: '90vh',
-                                overflowY: 'auto',
-                                padding: '24px',
-                                margin: 0,
-                                boxSizing: 'border-box'
-                            }}>
-                                {/* Modal Header */}
-                                <div style={{ 
-                                    display: 'flex', 
-                                    justifyContent: 'space-between', 
-                                    alignItems: 'center',
-                                    marginBottom: 24,
-                                    paddingBottom: 16,
-                                    borderBottom: `1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                        <div style={{
-                                            width: 40,
-                                            height: 40,
-                                            borderRadius: '10px',
-                                            background: 'linear-gradient(135deg, #0A9396, #059669)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}>
-                                            <FileText size={20} style={{ color: 'white' }} />
-                                        </div>
-                                        <div>
-                                            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: darkMode ? '#f1f5f9' : '#1e293b' }}>
-                                                Request New Loan
-                                            </h2>
-                                            <p style={{ margin: 0, fontSize: '14px', color: darkMode ? '#94a3b8' : '#64748b' }}>
-                                                Fill in the details below
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <motion.button
-                                        whileHover={{ scale: 1.1, rotate: 90 }}
-                                        whileTap={{ scale: 0.9 }}
-                                        onClick={() => setShowRequestForm(false)}
-                                        style={{
-                                            width: 32,
-                                            height: 32,
-                                            borderRadius: '8px',
-                                            background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-                                            border: 'none',
-                                            color: darkMode ? '#f1f5f9' : '#1e293b',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}
-                                    >
-                                        <X size={18} />
-                                    </motion.button>
-                                </div>
-
-                                {/* Loan Request Form */}
-                                <div style={{ 
-                                    display: 'grid', 
-                                    gap: 20,
-                                    maxHeight: 'calc(85vh - 120px)',
-                                    overflowY: 'auto',
-                                    paddingRight: '8px'
-                                }}>
-                                    <div>
-                                        <label style={{ 
-                                            display: 'block', 
-                                            marginBottom: 8, 
-                                            fontSize: '14px', 
-                                            fontWeight: 600,
-                                            color: darkMode ? '#f1f5f9' : '#1e293b'
-                                        }}>
-                                            Loan Amount (RWF)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={loanRequest.amount}
-                                            onChange={(e) => handleInputChange('amount', e.target.value)}
-                                            placeholder="Enter amount"
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px 16px',
-                                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
-                                                borderRadius: '8px',
-                                                background: darkMode ? 'rgba(0,0,0,0.2)' : 'white',
-                                                color: darkMode ? '#f1f5f9' : '#1e293b',
-                                                fontSize: '14px'
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label style={{ 
-                                            display: 'block', 
-                                            marginBottom: 8, 
-                                            fontSize: '14px', 
-                                            fontWeight: 600,
-                                            color: darkMode ? '#f1f5f9' : '#1e293b'
-                                        }}>
-                                            Loan Purpose
-                                        </label>
-                                        <select
-                                            value={loanRequest.purpose}
-                                            onChange={(e) => handleInputChange('purpose', e.target.value)}
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px 16px',
-                                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
-                                                borderRadius: '8px',
-                                                background: darkMode ? 'rgba(0,0,0,0.2)' : 'white',
-                                                color: darkMode ? '#f1f5f9' : '#1e293b',
-                                                fontSize: '14px'
-                                            }}
-                                        >
-                                            <option value="">Select purpose</option>
-                                            <option value="Business Expansion">Business Expansion</option>
-                                            <option value="Education">Education</option>
-                                            <option value="Home Purchase">Home Purchase</option>
-                                            <option value="Vehicle Purchase">Vehicle Purchase</option>
-                                            <option value="Medical Emergency">Medical Emergency</option>
-                                            <option value="Debt Consolidation">Debt Consolidation</option>
-                                            <option value="Personal">Personal</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label style={{ 
-                                            display: 'block', 
-                                            marginBottom: 8, 
-                                            fontSize: '14px', 
-                                            fontWeight: 600,
-                                            color: darkMode ? '#f1f5f9' : '#1e293b'
-                                        }}>
-                                            Loan Duration (months)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={loanRequest.duration}
-                                            onChange={(e) => handleInputChange('duration', e.target.value)}
-                                            placeholder="Enter duration in months"
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px 16px',
-                                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
-                                                borderRadius: '8px',
-                                                background: darkMode ? 'rgba(0,0,0,0.2)' : 'white',
-                                                color: darkMode ? '#f1f5f9' : '#1e293b',
-                                                fontSize: '14px'
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label style={{ 
-                                            display: 'block', 
-                                            marginBottom: 8, 
-                                            fontSize: '14px', 
-                                            fontWeight: 600,
-                                            color: darkMode ? '#f1f5f9' : '#1e293b'
-                                        }}>
-                                            Monthly Income (RWF)
-                                        </label>
-                                        <input
-                                            type="number"
-                                            value={loanRequest.income}
-                                            onChange={(e) => handleInputChange('income', e.target.value)}
-                                            placeholder="Enter monthly income"
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px 16px',
-                                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
-                                                borderRadius: '8px',
-                                                background: darkMode ? 'rgba(0,0,0,0.2)' : 'white',
-                                                color: darkMode ? '#f1f5f9' : '#1e293b',
-                                                fontSize: '14px'
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label style={{ 
-                                            display: 'block', 
-                                            marginBottom: 8, 
-                                            fontSize: '14px', 
-                                            fontWeight: 600,
-                                            color: darkMode ? '#f1f5f9' : '#1e293b'
-                                        }}>
-                                            Employment Status
-                                        </label>
-                                        <select
-                                            value={loanRequest.employment}
-                                            onChange={(e) => handleInputChange('employment', e.target.value)}
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px 16px',
-                                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
-                                                borderRadius: '8px',
-                                                background: darkMode ? 'rgba(0,0,0,0.2)' : 'white',
-                                                color: darkMode ? '#f1f5f9' : '#1e293b',
-                                                fontSize: '14px'
-                                            }}
-                                        >
-                                            <option value="">Select status</option>
-                                            <option value="Employed">Employed</option>
-                                            <option value="Self-Employed">Self-Employed</option>
-                                            <option value="Business Owner">Business Owner</option>
-                                            <option value="Student">Student</option>
-                                            <option value="Retired">Retired</option>
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label style={{ 
-                                            display: 'block', 
-                                            marginBottom: 8, 
-                                            fontSize: '14px', 
-                                            fontWeight: 600,
-                                            color: darkMode ? '#f1f5f9' : '#1e293b'
-                                        }}>
-                                            Collateral (optional)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={loanRequest.collateral}
-                                            onChange={(e) => handleInputChange('collateral', e.target.value)}
-                                            placeholder="Describe any collateral"
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px 16px',
-                                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
-                                                borderRadius: '8px',
-                                                background: darkMode ? 'rgba(0,0,0,0.2)' : 'white',
-                                                color: darkMode ? '#f1f5f9' : '#1e293b',
-                                                fontSize: '14px'
-                                            }}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label style={{ 
-                                            display: 'block', 
-                                            marginBottom: 8, 
-                                            fontSize: '14px', 
-                                            fontWeight: 600,
-                                            color: darkMode ? '#f1f5f9' : '#1e293b'
-                                        }}>
-                                            Additional Information
-                                        </label>
-                                        <textarea
-                                            value={loanRequest.description}
-                                            onChange={(e) => handleInputChange('description', e.target.value)}
-                                            placeholder="Provide any additional information about your loan request"
-                                            rows={3}
-                                            style={{
-                                                width: '100%',
-                                                padding: '12px 16px',
-                                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}`,
-                                                borderRadius: '8px',
-                                                background: darkMode ? 'rgba(0,0,0,0.2)' : 'white',
-                                                color: darkMode ? '#f1f5f9' : '#1e293b',
-                                                fontSize: '14px',
-                                                resize: 'vertical'
-                                            }}
-                                        />
-                                    </div>
-
-                                    </div>
-
-                                {/* Sticky Submit Button */}
-                                <div style={{
-                                    position: 'sticky',
-                                    bottom: 0,
-                                    background: darkMode 
-                                        ? 'linear-gradient(135deg, rgba(30, 41, 59, 0.98), rgba(51, 65, 85, 0.98))'
-                                        : 'linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98))',
-                                    padding: '20px 0 0 0',
-                                    marginTop: '20px',
-                                    borderTop: `1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
-                                }}>
-                                    <div style={{ display: 'flex', gap: 12 }}>
-                                        <LoadingButton
-                                            onClick={handleSubmitLoan}
-                                            loading={loading}
-                                            variant="primary"
-                                            size="lg"
-                                            style={{
-                                                flex: 1,
-                                                background: 'linear-gradient(135deg, #0A9396, #059669)',
-                                                border: 'none',
-                                                boxShadow: '0 4px 15px rgba(10, 147, 150, 0.3)'
-                                            }}
-                                        >
-                                            <CheckCircle size={20} />
-                                            Submit Loan Request
-                                        </LoadingButton>
-                                        <LoadingButton
-                                            onClick={() => setShowRequestForm(false)}
-                                            variant="outline"
-                                            size="lg"
-                                            style={{
-                                                flex: 1,
-                                                borderColor: darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'
-                                            }}
-                                        >
-                                            Cancel
-                                        </LoadingButton>
-                                    </div>
-                                </div>
-                            </SectionCard>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
         </div>
         </>
     );

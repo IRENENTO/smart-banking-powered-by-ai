@@ -8,6 +8,7 @@ const { swaggerUi, specs } = require('./config/swagger');
 const errorHandler = require('./middleware/error.middleware');
 
 const { startPaymentStatusChecker } = require('./services/paymentStatusChecker');
+const { startDeductionScheduler } = require('./services/deductionScheduler');
 
 // Disable MongoDB connection attempts
 process.env.MONGODB_URI = 'disabled';
@@ -59,6 +60,8 @@ app.use('/api/insights', require('./routes/insights.routes'));
 app.use('/api/payment', require('./routes/payment.routes'));
 app.use('/api/investments', require('./routes/investment.routes'));
 app.use('/api/settings', require('./routes/settings.routes'));
+app.use('/api/goals', require('./routes/goals.routes'));
+app.use('/api/schedules', require('./routes/schedules.routes'));
 app.use('/api/admin', require('./routes/admin.routes'));
 
 // API Info endpoint
@@ -98,6 +101,7 @@ if (require.main === module) {
         console.log(`Server started on port ${PORT}`);
         console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
         startPaymentStatusChecker();
+        startDeductionScheduler();
     });
 
     server.on('error', (err) => {

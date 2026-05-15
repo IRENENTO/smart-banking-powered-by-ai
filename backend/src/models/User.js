@@ -152,8 +152,12 @@ class User {
     // Find user by phone
     async findByPhone(phone) {
         const connection = this.getConnection();
+        const digits = phone.replace(/\D/g, '');
         const [rows] = await connection.execute('SELECT * FROM users WHERE phone = ?', [phone]);
-        return this.wrapUser(rows[0]);
+        if (rows.length) return this.wrapUser(rows[0]);
+
+        const [byDigits] = await connection.execute('SELECT * FROM users WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone, "+", ""), " ", ""), "-", ""), "(", "") LIKE ?', [`%${digits}`]);
+        return this.wrapUser(byDigits[0]);
     }
 
     // Find user by account number

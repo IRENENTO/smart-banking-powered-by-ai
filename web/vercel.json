@@ -1,0 +1,12 @@
+{
+  "framework": "create-react-app",
+  "buildCommand": "craco build",
+  "outputDirectory": "build",
+  "devCommand": "craco start",
+  "installCommand": "npm install --legacy-peer-deps",
+  "environment": {
+    "REACT_APP_API_URL": "https://your-backend.onrender.com/api",
+    "REACT_APP_SUPABASE_URL": "@supabase_url",
+    "REACT_APP_SUPABASE_ANON_KEY": "@supabase_anon_key"
+  }
+}

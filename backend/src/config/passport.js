@@ -2,7 +2,27 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const TwitterStrategy = require('passport-twitter').Strategy;
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+const { JWT_SECRET } = require('./env');
 const User = require('../models/User');
+
+const jwtOpts = {
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: JWT_SECRET
+};
+
+passport.use(new JwtStrategy(jwtOpts, async (jwtPayload, done) => {
+    try {
+        const user = await User.findById(jwtPayload.user.id);
+        if (user) {
+            return done(null, user);
+        }
+        return done(null, false);
+    } catch (err) {
+        return done(err, false);
+    }
+}));
 
 passport.serializeUser((user, done) => {
     done(null, user.id);

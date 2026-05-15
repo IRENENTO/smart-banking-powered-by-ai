@@ -2,7 +2,7 @@ const Loan = require('../models/Loan');
 const aiService = require('../services/ai.service');
 
 exports.applyForLoan = async (req, res) => {
-    const { amount, purpose, duration, monthlyIncome, existingDebt } = req.body;
+    const { amount, purpose, duration, monthlyIncome, existingDebt, deductionAmount, deductionPeriod } = req.body;
     try {
         if (!amount || amount <= 0) {
             return res.status(400).json({ msg: 'Invalid loan amount' });
@@ -12,7 +12,6 @@ exports.applyForLoan = async (req, res) => {
             return res.status(400).json({ msg: 'Invalid loan duration' });
         }
 
-        // Get AI Decision
         const aiResult = await aiService.analyzeLoanRisk({
             amount,
             duration,
@@ -20,18 +19,33 @@ exports.applyForLoan = async (req, res) => {
             existingDebt: existingDebt || 0
         });
 
-        // Create loan application
+        const isApproved = aiResult.approval_status === 'APPROVED';
+        let nextDeductionDate = null;
+        if (isApproved && deductionAmount && deductionPeriod) {
+            const d = new Date();
+            switch (deductionPeriod) {
+                case 'daily': d.setDate(d.getDate() + 1); break;
+                case 'weekly': d.setDate(d.getDate() + 7); break;
+                case 'monthly': d.setMonth(d.getMonth() + 1); break;
+            }
+            nextDeductionDate = d.toISOString().split('T')[0];
+        }
+
         const loan = await Loan.create({
             user_id: req.user.id,
             amount,
             purpose: purpose || 'General',
             duration,
-            status: aiResult.approval_status === 'APPROVED' ? 'approved' : 
+            status: isApproved ? 'approved' : 
                     aiResult.approval_status === 'REJECTED' ? 'rejected' : 'pending',
             risk_score: aiResult.risk_score,
             monthly_income: monthlyIncome || 0,
             existing_debt: existingDebt || 0,
-            ai_decision: aiResult
+            ai_decision: aiResult,
+            deduction_amount: isApproved ? (deductionAmount || null) : null,
+            deduction_period: isApproved ? (deductionPeriod || null) : null,
+            paid_amount: 0,
+            next_deduction_date: nextDeductionDate
         });
 
         res.status(201).json({
@@ -45,6 +59,9 @@ exports.applyForLoan = async (req, res) => {
                 status: loan.status,
                 risk_score: parseFloat(loan.risk_score),
                 ai_decision: loan.ai_decision,
+                deduction_amount: loan.deduction_amount ? parseFloat(loan.deduction_amount) : null,
+                deduction_period: loan.deduction_period,
+                next_deduction_date: loan.next_deduction_date,
                 created_at: loan.created_at
             }
         });
@@ -68,6 +85,13 @@ exports.getLoans = async (req, res) => {
                 status: loan.status,
                 risk_score: parseFloat(loan.risk_score),
                 ai_decision: loan.ai_decision,
+                deduction_amount: loan.deduction_amount ? parseFloat(loan.deduction_amount) : null,
+                deduction_period: loan.deduction_period,
+                paid_amount: parseFloat(loan.paid_amount || 0),
+                next_deduction_date: loan.next_deduction_date,
+                total_amount: parseFloat(loan.total_amount || (parseFloat(loan.amount) * (1 + parseFloat(loan.interest_rate || 10) / 100))),
+                interest_rate: parseFloat(loan.interest_rate || 10),
+                due_date: loan.due_date,
                 created_at: loan.created_at
             }))
         });
@@ -96,6 +120,13 @@ exports.getLoanById = async (req, res) => {
                 status: loan.status,
                 risk_score: parseFloat(loan.risk_score),
                 ai_decision: loan.ai_decision,
+                deduction_amount: loan.deduction_amount ? parseFloat(loan.deduction_amount) : null,
+                deduction_period: loan.deduction_period,
+                paid_amount: parseFloat(loan.paid_amount || 0),
+                next_deduction_date: loan.next_deduction_date,
+                total_amount: parseFloat(loan.total_amount || (parseFloat(loan.amount) * (1 + parseFloat(loan.interest_rate || 10) / 100))),
+                interest_rate: parseFloat(loan.interest_rate || 10),
+                due_date: loan.due_date,
                 created_at: loan.created_at
             }
         });
@@ -105,7 +136,6 @@ exports.getLoanById = async (req, res) => {
     }
 };
 
-// Admin endpoint to update loan status
 exports.updateLoanStatus = async (req, res) => {
     try {
         const { loanId, status, riskScore } = req.body;
@@ -180,6 +210,88 @@ exports.checkEligibility = async (req, res) => {
         });
     } catch (err) {
         console.error('Check eligibility error:', err);
+        res.status(500).json({ msg: `Server Error: ${err.message}` });
+    }
+};
+
+exports.requestExtension = async (req, res) => {
+    try {
+        const { loanId } = req.params;
+        const { extraDays } = req.body;
+
+        if (!extraDays || extraDays <= 0 || extraDays > 365) {
+            return res.status(400).json({ msg: 'Invalid extension days (1-365)' });
+        }
+
+        const loan = await Loan.findById(loanId);
+        if (!loan || loan.user_id !== req.user.id) {
+            return res.status(404).json({ msg: 'Loan not found' });
+        }
+
+        if (loan.status !== 'approved' && loan.status !== 'disbursed') {
+            return res.status(400).json({ msg: 'Can only extend active loans' });
+        }
+
+        const result = await Loan.requestExtension(loanId, extraDays);
+
+        res.json({
+            msg: result.approved ? 'Extension approved' : 'Extension denied',
+            data: result
+        });
+    } catch (err) {
+        console.error('Request extension error:', err);
+        res.status(500).json({ msg: `Server Error: ${err.message}` });
+    }
+};
+
+exports.getLoanProgress = async (req, res) => {
+    try {
+        const { loanId } = req.params;
+        const loan = await Loan.getWithProgress(loanId);
+
+        if (!loan || loan.user_id !== req.user.id) {
+            return res.status(404).json({ msg: 'Loan not found' });
+        }
+
+        res.json({ data: loan });
+    } catch (err) {
+        console.error('Get loan progress error:', err);
+        res.status(500).json({ msg: `Server Error: ${err.message}` });
+    }
+};
+
+exports.getPaymentHistory = async (req, res) => {
+    try {
+        const { loanId } = req.params;
+        const loan = await Loan.findById(loanId);
+
+        if (!loan || loan.user_id !== req.user.id) {
+            return res.status(404).json({ msg: 'Loan not found' });
+        }
+
+        const connection = global.dbConnection;
+        const [payments] = await connection.execute(`
+            SELECT id, amount, type, status, description, reference_number, created_at
+            FROM transactions
+            WHERE user_id = ? AND type = 'loan_repayment' AND description LIKE ?
+            ORDER BY created_at DESC
+        `, [req.user.id, `%Loan #${loanId}%`]);
+
+        const [repayments] = await connection.execute(`
+            SELECT id, amount, payment_date AS created_at, method, status
+            FROM loan_repayments
+            WHERE loan_id = ?
+            ORDER BY payment_date DESC
+        `, [loanId]);
+
+        res.json({
+            data: {
+                transactions: payments,
+                repayments: repayments
+            }
+        });
+    } catch (err) {
+        console.error('Get payment history error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });
     }
 };

@@ -58,7 +58,10 @@ export const loanService = {
     getLoans: () => api.get('/loans'),
     getLoanById: (loanId: number) => api.get(`/loans/${loanId}`),
     deleteLoan: (loanId: number) => api.delete(`/loans/${loanId}`),
-    checkEligibility: (loanData: any) => api.post('/loans/check-eligibility', loanData)
+    checkEligibility: (loanData: any) => api.post('/loans/check-eligibility', loanData),
+    requestExtension: (loanId: number, extraDays: number) => api.post(`/loans/${loanId}/extend`, { extraDays }),
+    getLoanProgress: (loanId: number) => api.get(`/loans/${loanId}/progress`),
+    getPaymentHistory: (loanId: number) => api.get(`/loans/${loanId}/payments`)
 };
 
 export const bankService = {
@@ -74,7 +77,17 @@ export const aiService = {
 
 export const savingsService = {
     createGoal: (goalData: any) => api.post('/goals', goalData),
-    getGoals: () => api.get('/goals')
+    getGoals: () => api.get('/goals'),
+    updateGoal: (goalId: number, data: any) => api.put(`/goals/${goalId}`, data),
+    deleteGoal: (goalId: number) => api.delete(`/goals/${goalId}`)
+};
+
+export const scheduleService = {
+    getSchedules: () => api.get('/schedules'),
+    createSchedule: (data: any) => api.post('/schedules', data),
+    updateSchedule: (scheduleId: number, data: any) => api.put(`/schedules/${scheduleId}`, data),
+    pauseSchedule: (scheduleId: number, action: 'pause' | 'resume') => api.patch(`/schedules/${scheduleId}/status`, { action }),
+    deleteSchedule: (scheduleId: number) => api.delete(`/schedules/${scheduleId}`)
 };
 
 export const paymentService = {

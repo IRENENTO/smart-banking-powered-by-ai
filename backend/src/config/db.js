@@ -1,14 +1,17 @@
 const mysql = require('mysql2/promise');
 
 const {
-    DB_HOST = 'localhost',
-    DB_USER = 'root',
-    DB_PASSWORD = 'irene2003',
-    DB_NAME = 'smart_banking_powered_by_ai'
+    DB_HOST,
+    DB_USER,
+    DB_PASSWORD,
+    DB_NAME
 } = process.env;
 
 const connectDB = async () => {
     try {
+        if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_NAME) {
+            throw new Error('Database environment variables (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME) are required');
+        }
         const connection = await mysql.createConnection({
             host: DB_HOST,
             user: DB_USER,

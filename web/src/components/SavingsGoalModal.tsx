@@ -19,6 +19,7 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({ isOpen, onClose, on
     deadline: ''
   });
   const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,15 +40,10 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({ isOpen, onClose, on
         onSuccess?.();
         onClose();
       }, 2000);
-    } catch (error) {
-      console.error('Error creating goal:', error);
-      setSuccess(true);
-      setTimeout(() => {
-        setSuccess(false);
-        setFormData({ name: '', target: '', current: '', deadline: '' });
-        onSuccess?.();
-        onClose();
-      }, 2000);
+    } catch (error: any) {
+      const msg = error.response?.data?.msg || error.response?.data?.message || 'Failed to create goal. Make sure the backend server is running.';
+      setErrorMsg(msg);
+      setTimeout(() => setErrorMsg(''), 4000);
     } finally {
       setLoading(false);
     }
@@ -72,6 +68,11 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({ isOpen, onClose, on
         </motion.div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-5">
+          {errorMsg && (
+            <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {errorMsg}
+            </div>
+          )}
           <label className="block">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
               Goal Name *

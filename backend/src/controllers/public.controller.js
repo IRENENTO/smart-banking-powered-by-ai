@@ -48,47 +48,21 @@ exports.getContactUs = async (req, res) => {
             contactMethods: [
                 {
                     type: "Phone",
-                    value: "+250 788 123 456",
+                    value: "0787427123",
                     description: "Available 24/7 for customer support",
                     icon: "phone"
                 },
                 {
                     type: "Email",
-                    value: "support@aibanking.rw",
+                    value: "smartbankingpoweredbyai@gmail.com",
                     description: "We'll respond within 24 hours",
                     icon: "email"
                 },
                 {
                     type: "WhatsApp",
-                    value: "+250 788 123 456",
-                    description: "Chat with us instantly",
+                    value: "0787427123",
+                    description: "Chat with us instantly on WhatsApp",
                     icon: "whatsapp"
-                },
-                {
-                    type: "Physical Address",
-                    value: "KG 7 Ave, Kigali, Rwanda",
-                    description: "Visit our headquarters Monday-Friday 8AM-5PM",
-                    icon: "location"
-                }
-            ],
-            branches: [
-                {
-                    name: "Kigali Main Branch",
-                    address: "KG 7 Ave, Kigali City",
-                    phone: "+250 788 123 456",
-                    hours: "Mon-Fri: 8AM-5PM, Sat: 9AM-1PM"
-                },
-                {
-                    name: "Remera Branch",
-                    address: "KN 4 Rd, Kigali",
-                    phone: "+250 788 123 457",
-                    hours: "Mon-Fri: 8AM-5PM"
-                },
-                {
-                    name: "Nyabugogo Branch",
-                    address: "KN 2 Rd, Kigali",
-                    phone: "+250 788 123 458",
-                    hours: "Mon-Fri: 8AM-5PM"
                 }
             ],
             socialMedia: [

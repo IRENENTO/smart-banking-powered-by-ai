@@ -37,6 +37,13 @@ const loanController = require('../controllers/loan.controller');
  *               existingDebt:
  *                 type: number
  *                 example: 5000
+ *               deductionAmount:
+ *                 type: number
+ *                 example: 5000
+ *               deductionPeriod:
+ *                 type: string
+ *                 enum: [daily, weekly, monthly]
+ *                 example: monthly
  *     responses:
  *       201:
  *         description: Loan application submitted
@@ -202,5 +209,97 @@ router.put('/status', auth, loanController.updateLoanStatus);
  *         description: Server error
  */
 router.delete('/:loanId', auth, loanController.deleteLoan);
+
+/**
+ * @swagger
+ * /api/loans/{loanId}/extend:
+ *   post:
+ *     summary: Request loan extension
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: loanId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - extraDays
+ *             properties:
+ *               extraDays:
+ *                 type: integer
+ *                 example: 30
+ *     responses:
+ *       200:
+ *         description: Extension decision returned
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Loan not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/:loanId/extend', auth, loanController.requestExtension);
+
+/**
+ * @swagger
+ * /api/loans/{loanId}/progress:
+ *   get:
+ *     summary: Get loan progress with payment info
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: loanId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Loan progress retrieved
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Loan not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:loanId/progress', auth, loanController.getLoanProgress);
+
+/**
+ * @swagger
+ * /api/loans/{loanId}/payments:
+ *   get:
+ *     summary: Get payment history for a loan
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: loanId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Payment history retrieved
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Loan not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:loanId/payments', auth, loanController.getPaymentHistory);
 
 module.exports = router;

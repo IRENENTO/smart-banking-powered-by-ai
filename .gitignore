@@ -1,1 +1,39 @@
-node_modules
+# Dependencies
+node_modules/
+
+# Build outputs
+web/build/
+backend/dist/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Testing
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variable example files
+!*.env.example
+
+# Supabase
+supabase/.temp
+
+# Vercel
+.vercel

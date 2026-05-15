@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Sparkles, Heart, Mail, Phone, MapPin, Globe, MessageCircle, Users } from 'lucide-react';
+import { Sparkles, Heart, Mail, Phone, Globe, MessageCircle, Users } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const Footer: React.FC = () => {
@@ -226,7 +226,7 @@ const Footer: React.FC = () => {
                             >
                                 <Mail size={16} />
                                 <a
-                                    href="mailto:support@asmartlend.com"
+                                    href="mailto:smartbankingpoweredbyai@gmail.com"
                                     style={{
                                         color: 'rgba(255,255,255,0.8)',
                                         textDecoration: 'none',
@@ -240,7 +240,7 @@ const Footer: React.FC = () => {
                                         e.currentTarget.style.color = 'rgba(255,255,255,0.8)';
                                     }}
                                 >
-                                    support@asmartlend.com
+                                    smartbankingpoweredbyai@gmail.com
                                 </a>
                             </motion.div>
                             <motion.div
@@ -249,7 +249,7 @@ const Footer: React.FC = () => {
                             >
                                 <Phone size={16} />
                                 <a
-                                    href="tel:+250788123456"
+                                    href="tel:0787427123"
                                     style={{
                                         color: 'rgba(255,255,255,0.8)',
                                         textDecoration: 'none',
@@ -263,15 +263,8 @@ const Footer: React.FC = () => {
                                         e.currentTarget.style.color = 'rgba(255,255,255,0.8)';
                                     }}
                                 >
-                                    +250 788 123 456
+                                    0787427123
                                 </a>
-                            </motion.div>
-                            <motion.div
-                                whileHover={{ x: 4 }}
-                                style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'rgba(255,255,255,0.8)' }}
-                            >
-                                <MapPin size={16} />
-                                <span style={{ fontSize: '14px' }}>Kigali, Rwanda</span>
                             </motion.div>
                         </div>
                     </motion.div>
