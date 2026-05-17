@@ -1,4 +1,4 @@
-const AIInsight = require('../models/AIInsight');
+const AIInsight = require('../models/AiInsight');
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const aiService = require('../services/ai.service');
