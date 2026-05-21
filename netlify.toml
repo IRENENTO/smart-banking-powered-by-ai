@@ -1,3 +1,8 @@
+[build]
+  base = "web"
+  publish = "build"
+  command = "npm run build"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -10,4 +15,3 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "same-origin"
-    Content-Security-Policy = "upgrade-insecure-requests"
