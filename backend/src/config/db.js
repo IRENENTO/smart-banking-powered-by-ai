@@ -1,18 +1,24 @@
 const mysql = require('mysql2/promise');
 
-const {
-    DB_HOST,
-    DB_USER,
-    DB_PASSWORD,
-    DB_NAME
-} = process.env;
+let connection = null;
 
 const connectDB = async () => {
+    if (connection) return connection;
+
+    // Destructure environment variables inside the function to ensure they are loaded
+    const {
+        DB_HOST,
+        DB_USER,
+        DB_PASSWORD,
+        DB_NAME
+    } = process.env;
+
     try {
         if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_NAME) {
             throw new Error('Database environment variables (DB_HOST, DB_USER, DB_PASSWORD, DB_NAME) are required');
         }
-        const connection = await mysql.createConnection({
+
+        connection = await mysql.createConnection({
             host: DB_HOST,
             user: DB_USER,
             password: DB_PASSWORD,
@@ -31,8 +37,13 @@ const connectDB = async () => {
 
         return connection;
     } catch (err) {
-        console.error('Database connection error:', err.message);
-        process.exit(1);
+        // Log the full error object for better diagnostics
+        console.error('Database connection error:', err);
+        // Only exit if not in test environment to allow tests to fail gracefully or use mocks
+        if (process.env.NODE_ENV !== 'test') {
+            process.exit(1);
+        }
+        throw err;
     }
 };
 
