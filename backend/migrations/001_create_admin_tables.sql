@@ -179,15 +179,19 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     INDEX idx_entity_type (entity_type)
 );
 
--- Insert default admin user (password: admin@123)
+-- Insert default admin user (password: irene12003)
 INSERT INTO admins (email, password_hash, name, role, status) 
 VALUES (
     'smartbankingpoweredbyai@gmail.com',
-    '$2a$10$Y5G7VvXHZvJvF8m0O4w8J.DjlHZvUZvUZvUZvUZvUZvUZvUZvUZvU', -- bcrypt hash of "admin@123"
+    '$2a$10$O48qKRkN3cxbsv3MWoISAO8.NRHd1vJGtFIyVCBVZDf8tAddl47k.', -- bcrypt hash of "irene12003"
     'Admin User',
     'super_admin',
     'active'
-) ON DUPLICATE KEY UPDATE email=email;
+) ON DUPLICATE KEY UPDATE
+    password_hash = '$2a$10$O48qKRkN3cxbsv3MWoISAO8.NRHd1vJGtFIyVCBVZDf8tAddl47k.',
+    name = 'Admin User',
+    role = 'super_admin',
+    status = 'active';
 
 -- Create indexes for performance optimization
 CREATE INDEX idx_admins_created_at ON admins(created_at);

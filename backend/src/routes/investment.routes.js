@@ -78,6 +78,49 @@ router.post('/', requireEmailVerified, investmentController.createInvestment);
  *       404:
  *         description: Investment not found
  */
+/**
+ * @swagger
+ * /api/investments/types:
+ *   get:
+ *     summary: Get available investment types
+ *     tags: [Investments]
+ *     responses:
+ *       200:
+ *         description: Investment types retrieved successfully
+ */
+router.get('/types', investmentController.getInvestmentTypes);
+
+/**
+ * @swagger
+ * /api/investments/calculate-returns:
+ *   post:
+ *     summary: Calculate investment returns
+ *     tags: [Investments]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - type
+ *               - amount
+ *               - duration
+ *             properties:
+ *               type:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               duration:
+ *                 type: number
+ *               risk_level:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Returns calculated successfully
+ */
+router.post('/calculate-returns', investmentController.calculateReturns);
+
 router.get('/:id', requireEmailVerified, investmentController.getInvestmentById);
 
 /**
@@ -138,18 +181,6 @@ router.put('/:id', requireEmailVerified, investmentController.updateInvestment);
  *         description: Investment not found
  */
 router.delete('/:id', requireEmailVerified, investmentController.deleteInvestment);
-
-/**
- * @swagger
- * /api/investments/types:
- *   get:
- *     summary: Get available investment types
- *     tags: [Investments]
- *     responses:
- *       200:
- *         description: Investment types retrieved successfully
- */
-router.get('/types', investmentController.getInvestmentTypes);
 
 /**
  * @swagger

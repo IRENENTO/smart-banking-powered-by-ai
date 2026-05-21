@@ -93,7 +93,7 @@ const superAdminOnly = (req, res, next) => {
  * Audit logging middleware
  * Logs admin actions for audit trail
  */
-const auditLog = async (req, res, next) => {
+const auditLog = (req, res, next) => {
     // Store original send method
     const originalSend = res.send;
 

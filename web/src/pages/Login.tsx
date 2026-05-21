@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { authService } from '../services/api';
 import { useTranslation } from 'react-i18next';
-import { Mail, Lock, Eye, EyeOff, Fingerprint, Smartphone } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -25,11 +25,14 @@ const Login: React.FC = () => {
         setError('');
         setIsLoading(true);
         try {
+            // Try regular user login first
             const res = await authService.login({ email, password });
             
             // Store token and user data
             localStorage.setItem('token', res.data.token);
             localStorage.setItem('user', JSON.stringify(res.data.user));
+            localStorage.removeItem('isAdmin');
+            window.dispatchEvent(new Event('auth-change'));
             
             const user = res.data.user;
             if (!user.email_verified) {
@@ -42,10 +45,27 @@ const Login: React.FC = () => {
             } else {
                 navigate(returnPath);
             }
-        } catch (err: any) {
-            const errorMsg = err.response?.data?.msg || err.response?.data?.message || t('Invalid email or password. Please try again.');
-            setError(errorMsg);
-            toastError(errorMsg);
+        } catch (userErr: any) {
+            // If user login fails, try admin login
+            const errMsg = userErr.response?.data?.msg || userErr.response?.data?.message || '';
+            if (errMsg.toLowerCase().includes('invalid credentials') || errMsg.toLowerCase().includes('invalid email')) {
+                try {
+                    const adminRes = await authService.adminLogin({ email, password });
+                    localStorage.setItem('admin_token', adminRes.data.token);
+                    localStorage.setItem('admin', JSON.stringify(adminRes.data.admin));
+                    localStorage.setItem('isAdmin', 'true');
+                    toastSuccess('Admin login successful');
+                    navigate('/admin');
+                    return;
+                } catch (adminErr: any) {
+                    const finalMsg = adminErr.response?.data?.error || adminErr.response?.data?.msg || t('Invalid email or password. Please try again.');
+                    setError(finalMsg);
+                    toastError(finalMsg);
+                }
+            } else {
+                setError(errMsg);
+                toastError(errMsg);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -109,7 +129,7 @@ const Login: React.FC = () => {
                             </div>
 
                             <div className="flex justify-end">
-                                <a href="#" className="text-sm font-medium text-[#0A9396] hover:text-[#087F82] transition-colors">{t('Forgot Password ?')}</a>
+                                <Link to="/forgot-password" className="text-sm font-medium text-[#0A9396] hover:text-[#087F82] transition-colors">{t('Forgot Password ?')}</Link>
                             </div>
 
                             {error && (
@@ -148,53 +168,6 @@ const Login: React.FC = () => {
                                     <svg className="h-5 w-5 fill-gray-600 group-hover:fill-[#1DA1F2] dark:fill-gray-400 dark:group-hover:fill-[#1DA1F2] transition-colors" viewBox="0 0 512 512">
                                         <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z" />
                                     </svg>
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Biometric Authentication */}
-                        <div className="mt-6">
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white dark:bg-[#0B1F3A] text-gray-500 dark:text-gray-400">{t('Or use biometric')}</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-4 grid grid-cols-2 gap-3">
-                                <button
-                                    onClick={() => {
-                                        // Simulate fingerprint authentication
-                                        if ('Fingerprint' in window || navigator.credentials) {
-                                            toastInfo('Fingerprint authentication not available in this browser. Using demo mode.');
-                                            localStorage.setItem('token', 'demo-token');
-                                            toastSuccess('Logged in with demo credentials.');
-                                            navigate('/dashboard');
-                                        } else {
-                                            toastWarning('Fingerprint authentication not supported on this device.');
-                                        }
-                                    }}
-                                    className="flex flex-col items-center justify-center py-4 px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
-                                    title="Fingerprint Authentication"
-                                >
-                                    <Fingerprint size={24} className="text-gray-600 group-hover:text-[#0A9396] dark:text-gray-400 dark:group-hover:text-[#0A9396] transition-colors mb-2" />
-                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400 group-hover:text-[#0A9396] transition-colors">Fingerprint</span>
-                                </button>
-                                <button
-                                    onClick={() => {
-                                        // Simulate face ID authentication
-                                        toastInfo('Face ID authentication not available in this browser. Using demo mode.');
-                                        localStorage.setItem('token', 'demo-token');
-                                        toastSuccess('Logged in with demo credentials.');
-                                        navigate('/dashboard');
-                                    }}
-                                    className="flex flex-col items-center justify-center py-4 px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group"
-                                    title="Face ID Authentication"
-                                >
-                                    <Smartphone size={24} className="text-gray-600 group-hover:text-[#0A9396] dark:text-gray-400 dark:group-hover:text-[#0A9396] transition-colors mb-2" />
-                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400 group-hover:text-[#0A9396] transition-colors">Face ID</span>
                                 </button>
                             </div>
                         </div>

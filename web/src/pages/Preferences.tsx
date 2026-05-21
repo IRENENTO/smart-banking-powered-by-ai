@@ -4,7 +4,9 @@ import AppShell from '../components/AppShell';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
 import { settingsService } from '../services/settingsService';
-import { Globe, Calendar, Palette, Clock } from 'lucide-react';
+import { Globe, Calendar, Palette, Clock, Accessibility, Check } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 interface UserPreferences {
   currency: string;
@@ -12,15 +14,21 @@ interface UserPreferences {
   timezone: string;
   date_format: string;
   theme: string;
+  large_text: boolean;
+  high_contrast: boolean;
 }
 
 const Preferences: React.FC = () => {
+  const { setLanguage: setAppLanguage } = useLanguage();
+  const { theme: currentTheme, toggleTheme } = useTheme();
   const [preferences, setPreferences] = useState<UserPreferences>({
     currency: 'RWF',
     language: 'en',
     timezone: 'Africa/Kigali',
     date_format: 'DD/MM/YYYY',
-    theme: 'light'
+    theme: 'light',
+    large_text: false,
+    high_contrast: false
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -34,7 +42,8 @@ const Preferences: React.FC = () => {
       try {
         const response = await settingsService.getUserPreferences();
         if (response.data.success) {
-          setPreferences(response.data.data);
+          // Merge with defaults in case new fields (accessibility) are missing from DB
+          setPreferences(prev => ({ ...prev, ...response.data.data }));
         }
       } catch (err: any) {
         setError(err.response?.data?.msg || 'Failed to load preferences');
@@ -56,12 +65,35 @@ const Preferences: React.FC = () => {
       const response = await settingsService.updateUserPreferences(preferences);
       if (response.data.success) {
         setSuccess('Preferences updated successfully');
-        // Apply theme change immediately
-        if (preferences.theme === 'dark') {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
+        
+        // Apply Language change immediately
+        if (preferences.language === 'rw' || preferences.language === 'en' || preferences.language === 'fr') {
+          setAppLanguage(preferences.language as 'rw' | 'en' | 'fr');
         }
+
+        // Apply theme change immediately
+        if (preferences.theme !== 'auto') {
+            const root = window.document.documentElement;
+            if (preferences.theme !== currentTheme) {
+                toggleTheme();
+            }
+        }
+
+        // Apply Accessibility changes
+        const body = document.body;
+        if (preferences.large_text) {
+          body.style.fontSize = '1.2rem';
+        } else {
+          body.style.fontSize = '';
+        }
+
+        if (preferences.high_contrast) {
+          body.classList.add('high-contrast');
+        } else {
+          body.classList.remove('high-contrast');
+        }
+
+        setTimeout(() => setSuccess(''), 3000);
       }
     } catch (err: any) {
       setError(err.response?.data?.msg || 'Failed to update preferences');
@@ -70,7 +102,7 @@ const Preferences: React.FC = () => {
     }
   };
 
-  const handlePreferenceChange = (field: keyof UserPreferences, value: string) => {
+  const handlePreferenceChange = (field: keyof UserPreferences, value: any) => {
     setPreferences(prev => ({ ...prev, [field]: value }));
   };
 
@@ -84,30 +116,12 @@ const Preferences: React.FC = () => {
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'fr', name: 'Français' },
-    { code: 'rw', name: 'Kinyarwanda' },
-    { code: 'sw', name: 'Swahili' }
-  ];
-
-  const timezones = [
-    { value: 'Africa/Kigali', name: 'Kigali (GMT+2)' },
-    { value: 'Africa/Nairobi', name: 'Nairobi (GMT+3)' },
-    { value: 'Africa/Johannesburg', name: 'Johannesburg (GMT+2)' },
-    { value: 'Europe/London', name: 'London (GMT+0)' },
-    { value: 'Europe/Paris', name: 'Paris (GMT+1)' },
-    { value: 'America/New_York', name: 'New York (GMT-5)' }
-  ];
-
-  const dateFormats = [
-    { value: 'DD/MM/YYYY', name: '31/12/2024' },
-    { value: 'MM/DD/YYYY', name: '12/31/2024' },
-    { value: 'YYYY-MM-DD', name: '2024-12-31' },
-    { value: 'DD-MM-YYYY', name: '31-12-2024' }
+    { code: 'rw', name: 'Kinyarwanda' }
   ];
 
   const themes = [
     { value: 'light', name: 'Light Mode', icon: '☀️' },
-    { value: 'dark', name: 'Dark Mode', icon: '🌙' },
-    { value: 'auto', name: 'Auto Mode', icon: '🌓' }
+    { value: 'dark', name: 'Dark Mode', icon: '🌙' }
   ];
 
   return (
@@ -120,15 +134,15 @@ const Preferences: React.FC = () => {
         {error && <div className="toast toast-error">{error}</div>}
         {success && <div className="toast toast-success">{success}</div>}
 
-        <SectionCard 
-          title="Regional Settings"
-          subtitle="Configure your regional preferences"
-          headerRight={
-            <Globe size={24} style={{ color: '#0A9396' }} />
-          }
-        >
-          <form onSubmit={handleSavePreferences} style={{ display: 'grid', gap: 16, marginTop: 16 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
+        <form onSubmit={handleSavePreferences} style={{ display: 'grid', gap: 24 }}>
+          <SectionCard 
+            title="Regional Settings"
+            subtitle="Configure your regional preferences"
+            headerRight={
+              <Globe size={24} style={{ color: '#0A9396' }} />
+            }
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16, marginTop: 16 }}>
               <div style={{ display: 'grid', gap: 8 }}>
                 <label style={{ display: 'grid', gap: 8 }}>
                   <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Currency</span>
@@ -150,9 +164,6 @@ const Preferences: React.FC = () => {
                     ))}
                   </select>
                 </label>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>
-                  This affects all displayed amounts
-                </div>
               </div>
 
               <div style={{ display: 'grid', gap: 8 }}>
@@ -176,9 +187,6 @@ const Preferences: React.FC = () => {
                     ))}
                   </select>
                 </label>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>
-                  Changes interface language
-                </div>
               </div>
 
               <div style={{ display: 'grid', gap: 8 }}>
@@ -195,56 +203,23 @@ const Preferences: React.FC = () => {
                       fontSize: '14px'
                     }}
                   >
-                    {timezones.map(timezone => (
-                      <option key={timezone.value} value={timezone.value}>
-                        {timezone.name}
-                      </option>
-                    ))}
+                    <option value="Africa/Kigali">Kigali (GMT+2)</option>
+                    <option value="Africa/Nairobi">Nairobi (GMT+3)</option>
+                    <option value="Europe/London">London (GMT+0)</option>
                   </select>
                 </label>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>
-                  Affects transaction timestamps
-                </div>
               </div>
             </div>
-          </form>
-        </SectionCard>
+          </SectionCard>
 
-        <SectionCard 
-          title="Display Settings"
-          subtitle="Customize how information is displayed"
-          headerRight={
-            <Palette size={24} style={{ color: '#0A9396' }} />
-          }
-        >
-          <form onSubmit={handleSavePreferences} style={{ display: 'grid', gap: 16, marginTop: 16 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16 }}>
-              <div style={{ display: 'grid', gap: 8 }}>
-                <label style={{ display: 'grid', gap: 8 }}>
-                  <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Date Format</span>
-                  <select
-                    value={preferences.date_format}
-                    onChange={(e) => handlePreferenceChange('date_format', e.target.value)}
-                    style={{ 
-                      padding: 12, 
-                      borderRadius: 8, 
-                      border: '1px solid #cbd5e1',
-                      background: '#f8fafc',
-                      fontSize: '14px'
-                    }}
-                  >
-                    {dateFormats.map(format => (
-                      <option key={format.value} value={format.value}>
-                        {format.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>
-                  Changes how dates appear
-                </div>
-              </div>
-
+          <SectionCard 
+            title="Display & Appearance"
+            subtitle="Customize the look and feel"
+            headerRight={
+              <Palette size={24} style={{ color: '#0A9396' }} />
+            }
+          >
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16, marginTop: 16 }}>
               <div style={{ display: 'grid', gap: 8 }}>
                 <label style={{ display: 'grid', gap: 8 }}>
                   <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Theme</span>
@@ -266,55 +241,156 @@ const Preferences: React.FC = () => {
                     ))}
                   </select>
                 </label>
-                <div style={{ fontSize: '12px', color: '#64748b' }}>
-                  Changes app appearance
-                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 8 }}>
+                <label style={{ display: 'grid', gap: 8 }}>
+                  <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Date Format</span>
+                  <select
+                    value={preferences.date_format}
+                    onChange={(e) => handlePreferenceChange('date_format', e.target.value)}
+                    style={{ 
+                      padding: 12, 
+                      borderRadius: 8, 
+                      border: '1px solid #cbd5e1',
+                      background: '#f8fafc',
+                      fontSize: '14px'
+                    }}
+                  >
+                    <option value="DD/MM/YYYY">31/12/2024</option>
+                    <option value="MM/DD/YYYY">12/31/2024</option>
+                    <option value="YYYY-MM-DD">2024-12-31</option>
+                  </select>
+                </label>
               </div>
             </div>
+          </SectionCard>
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-              <LoadingButton
-                type="submit"
-                disabled={saving}
-                loading={saving}
-                variant="primary"
-                style={{ minWidth: '150px' }}
-              >
-                {saving ? 'Saving...' : 'Save Preferences'}
-              </LoadingButton>
+          <SectionCard 
+            title="Accessibility"
+            subtitle="Make the app easier to use"
+            headerRight={
+              <Accessibility size={24} style={{ color: '#0A9396' }} />
+            }
+          >
+            <div style={{ display: 'grid', gap: 16, marginTop: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', borderRadius: 12 }}>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#0B1F3A', marginBottom: 4 }}>Large Text</div>
+                  <div style={{ color: '#64748b', fontSize: '14px' }}>Increase font size for better readability</div>
+                </div>
+                <label style={{ position: 'relative', display: 'inline-block' }}>
+                  <input
+                    type="checkbox"
+                    checked={preferences.large_text}
+                    onChange={(e) => handlePreferenceChange('large_text', e.target.checked)}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                  />
+                  <div style={{
+                    width: 50,
+                    height: 26,
+                    background: preferences.large_text ? '#0A9396' : '#cbd5e1',
+                    borderRadius: 13,
+                    position: 'relative',
+                    cursor: 'pointer',
+                    transition: 'background 0.3s'
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      top: 3,
+                      left: preferences.large_text ? 27 : 3,
+                      width: 20,
+                      height: 20,
+                      background: 'white',
+                      borderRadius: '50%',
+                      transition: 'left 0.3s'
+                    }} />
+                  </div>
+                </label>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', borderRadius: 12 }}>
+                <div>
+                  <div style={{ fontWeight: 600, color: '#0B1F3A', marginBottom: 4 }}>High Contrast</div>
+                  <div style={{ color: '#64748b', fontSize: '14px' }}>Increase contrast for better visibility</div>
+                </div>
+                <label style={{ position: 'relative', display: 'inline-block' }}>
+                  <input
+                    type="checkbox"
+                    checked={preferences.high_contrast}
+                    onChange={(e) => handlePreferenceChange('high_contrast', e.target.checked)}
+                    style={{ opacity: 0, width: 0, height: 0 }}
+                  />
+                  <div style={{
+                    width: 50,
+                    height: 26,
+                    background: preferences.high_contrast ? '#0A9396' : '#cbd5e1',
+                    borderRadius: 13,
+                    position: 'relative',
+                    cursor: 'pointer',
+                    transition: 'background 0.3s'
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      top: 3,
+                      left: preferences.high_contrast ? 27 : 3,
+                      width: 20,
+                      height: 20,
+                      background: 'white',
+                      borderRadius: '50%',
+                      transition: 'left 0.3s'
+                    }} />
+                  </div>
+                </label>
+              </div>
             </div>
-          </form>
-        </SectionCard>
+          </SectionCard>
+
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+            <LoadingButton
+              type="submit"
+              disabled={saving}
+              loading={saving}
+              variant="primary"
+              style={{ minWidth: '200px', padding: '16px' }}
+            >
+              {saving ? 'Saving...' : 'Save All Preferences'}
+            </LoadingButton>
+          </div>
+        </form>
 
         <SectionCard 
-          title="Quick Actions"
-          subtitle="Common preference shortcuts"
+          title="Interface Preview"
+          subtitle="How your choices affect the application"
           headerRight={
-            <Clock size={24} style={{ color: '#64748b' }} />
+            <Palette size={24} style={{ color: '#0A9396' }} />
           }
         >
-          <div style={{ display: 'grid', gap: 16, marginTop: 16 }}>
-            <LoadingButton
-              onClick={() => navigate('/language')}
-              variant="secondary"
-              style={{ width: '100%' }}
-            >
-              🌐 Change Language
-            </LoadingButton>
-            <LoadingButton
-              onClick={() => navigate('/accessibility')}
-              variant="secondary"
-              style={{ width: '100%' }}
-            >
-              ♿ Accessibility Settings
-            </LoadingButton>
-            <LoadingButton
-              onClick={() => navigate('/export-preferences')}
-              variant="ghost"
-              style={{ width: '100%' }}
-            >
-              📤 Export Preferences
-            </LoadingButton>
+          <div style={{ marginTop: 16, display: 'grid', gap: 16 }}>
+            <div style={{ 
+              padding: '30px', 
+              background: preferences.theme === 'dark' ? '#0B1F3A' : '#f8fafc', 
+              border: preferences.high_contrast ? '3px solid black' : '1px solid #e2e8f0', 
+              borderRadius: 16, 
+              textAlign: 'center',
+              fontSize: preferences.large_text ? '1.2em' : '1em'
+            }}>
+              <div style={{ fontSize: '12px', color: '#64748b', marginBottom: 8, fontWeight: 700 }}>LIVE PREVIEW</div>
+              <div style={{ fontSize: '28px', fontWeight: 800, color: preferences.theme === 'dark' ? 'white' : '#0B1F3A' }}>
+                {new Intl.NumberFormat(preferences.language === 'fr' ? 'fr-RW' : preferences.language === 'rw' ? 'rw-RW' : 'en-RW', {
+                  style: 'currency',
+                  currency: preferences.currency,
+                  minimumFractionDigits: 0
+                }).format(1250000)}
+              </div>
+              <div style={{ fontSize: '16px', color: '#64748b', marginTop: 8, fontWeight: 500 }}>
+                {new Date().toLocaleDateString(preferences.language, { dateStyle: 'full' })}
+              </div>
+              <div style={{ marginTop: 20, display: 'flex', justifyContent: 'center', gap: 8 }}>
+                <span style={{ padding: '4px 12px', background: '#0A9396', color: 'white', borderRadius: 20, fontSize: '12px', fontWeight: 700 }}>SMART BANKING</span>
+                <span style={{ padding: '4px 12px', background: '#059669', color: 'white', borderRadius: 20, fontSize: '12px', fontWeight: 700 }}>PREMIUM</span>
+              </div>
+            </div>
           </div>
         </SectionCard>
       </div>

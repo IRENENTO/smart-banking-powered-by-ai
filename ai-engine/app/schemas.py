@@ -147,6 +147,82 @@ class EconomicForecast(BaseModel):
     recommendations: list
 
 
+# ─── SPENDING ANALYTICS ───────────────────────────────────────────────────────
+class SpendingAnalysisRequest(BaseModel):
+    transactions: List[dict] = Field(default=[], description="List of transaction objects with amount, category, date")
+    monthly_income: float = Field(default=300000, ge=0)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "transactions": [
+                    {"amount": 50000, "category": "food", "date": "2026-01-15"},
+                    {"amount": 200000, "category": "rent", "date": "2026-01-01"},
+                    {"amount": 30000, "category": "transport", "date": "2026-01-10"},
+                    {"amount": 150000, "category": "shopping", "date": "2026-01-20"},
+                    {"amount": 25000, "category": "entertainment", "date": "2026-01-25"}
+                ],
+                "monthly_income": 500000
+            }
+        }
+
+
+class CategoryBreakdown(BaseModel):
+    category: str
+    amount: float
+    percentage: float
+    transaction_count: int
+
+
+class SpendingAnalysisResponse(BaseModel):
+    success: bool
+    total_spent: float
+    monthly_income: float
+    savings_rate: float
+    top_category: str
+    category_breakdown: List[CategoryBreakdown]
+    spending_insight: str
+    recommendations: List[str]
+
+
+# ─── RECOMMENDATIONS ──────────────────────────────────────────────────────────
+class RecommendationRequest(BaseModel):
+    age: int = Field(default=30, ge=18, le=80)
+    monthly_income: float = Field(default=300000, ge=0)
+    monthly_expenses: float = Field(default=150000, ge=0)
+    existing_savings: float = Field(default=0, ge=0)
+    debt_payments: float = Field(default=0, ge=0)
+    investment_amount: float = Field(default=0, ge=0)
+    employment_type: str = Field(default="employed")
+    risk_tolerance: str = Field(default="moderate", description="low | moderate | high")
+    financial_goals: List[str] = Field(default=["savings"], description="e.g. savings, investment, debt, home, education")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "age": 28,
+                "monthly_income": 500000,
+                "monthly_expenses": 280000,
+                "existing_savings": 200000,
+                "debt_payments": 50000,
+                "investment_amount": 30000,
+                "employment_type": "employed",
+                "risk_tolerance": "moderate",
+                "financial_goals": ["savings", "investment", "home"]
+            }
+        }
+
+
+class RecommendationResponse(BaseModel):
+    success: bool
+    financial_health_summary: str
+    savings_recommendation: dict
+    investment_recommendation: dict
+    budgeting_recommendation: dict
+    sector_recommendations: List[dict]
+    priority_actions: List[str]
+
+
 # ─── RETRAIN ──────────────────────────────────────────────────────────────────
 class RetrainResponse(BaseModel):
     success: bool

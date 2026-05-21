@@ -255,6 +255,27 @@ const PrivacySettings: React.FC = () => {
         </SectionCard>
 
         <SectionCard 
+          title="Regulatory Compliance"
+          subtitle="How we protect your data in Rwanda"
+          headerRight={
+            <Shield size={24} style={{ color: '#059669' }} />
+          }
+        >
+          <div style={{ marginTop: 16, display: 'grid', gap: 12 }}>
+            {[
+              { label: 'Data Protection Law', desc: 'Fully compliant with Rwanda Law N° 058/2021 relating to the protection of personal data and privacy.' },
+              { label: 'Data Locality', desc: 'All sensitive financial data is stored securely within designated regional infrastructure.' },
+              { label: 'AI Transparency', desc: 'Our AI insights are generated using anonymized data sets to ensure individual privacy.' }
+            ].map((item, i) => (
+              <div key={i} style={{ padding: '12px', borderLeft: '3px solid #059669', background: '#f0fdf4', borderRadius: '0 8px 8px 0' }}>
+                <div style={{ fontWeight: 700, fontSize: '14px', color: '#065f46', marginBottom: 4 }}>{item.label}</div>
+                <div style={{ fontSize: '13px', color: '#047857' }}>{item.desc}</div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard 
           title="Marketing Preferences"
           subtitle="Control promotional communications"
           headerRight={

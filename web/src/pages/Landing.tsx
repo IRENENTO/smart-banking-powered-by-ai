@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Shield, TrendingUp, Zap, Heart, Star, Rocket } from 'lucide-react';
+import { ArrowRight, Shield, TrendingUp, Zap, Heart, Star, Rocket, Smartphone, BarChart3 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
 import Footer from '../components/Footer';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
+import { useTheme } from '../context/ThemeContext';
 import { publicService } from '../services/publicService';
 
 const Landing: React.FC = () => {
@@ -18,6 +20,9 @@ const Landing: React.FC = () => {
     const [dataLoading, setDataLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!localStorage.getItem('token'));
     const { t } = useLanguage();
+    const { info } = useToast();
+    const { theme } = useTheme();
+    const darkMode = theme === 'dark';
     
     useEffect(() => {
         const updateAuth = () => setIsAuthenticated(!!localStorage.getItem('token'));
@@ -71,7 +76,7 @@ const Landing: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #071B2F 0%, #0B1F3A 50%, #0A9396 100%)',
+                    background: 'linear-gradient(135deg, #0B1F3A 0%, #0B1F3A 50%, #0A9396 100%)',
                     color: 'white',
                     padding: '80px 20px',
                     position: 'relative',
@@ -187,7 +192,7 @@ const Landing: React.FC = () => {
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 0.8 }}
                 viewport={{ once: true }}
-                style={{ padding: '80px 20px', background: 'linear-gradient(180deg, #f8fafc 0%, #e0f2fe 100%)' }}
+                style={{ padding: '80px 20px', background: darkMode ? 'linear-gradient(180deg, #0B1F3A 0%, #0B1F3A 100%)' : 'linear-gradient(180deg, #f8fafc 0%, #e0f2fe 100%)' }}
             >
                 <div style={{ maxWidth: 1200, margin: '0 auto' }}>
                     <motion.div 
@@ -200,42 +205,56 @@ const Landing: React.FC = () => {
                         <h2 style={{ fontSize: '36px', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                             Why Choose AI Smart Banking?
                         </h2>
-                        <p style={{ color: '#475569', fontSize: '18px', marginTop: 16 }}>
+                        <p style={{ color: darkMode ? '#cfeff5' : '#475569', fontSize: '18px', marginTop: 16 }}>
                             Experience the future of banking with our innovative features
                         </p>
                     </motion.div>
                     
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 24, marginBottom: 60 }}>
                         <Link to={isAuthenticated ? "/accounts" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                            <SectionCard title="Smart Accounts" subtitle="Manage your checking and savings with guaranteed clarity and AI-powered insights.">
-                                <motion.div
-                                    whileHover={{ scale: 1.1, rotate: 5 }}
-                                    style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}
-                                >
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(15, 23, 42, 0.15)' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 28, borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
+                            >
+                                <motion.div whileHover={{ scale: 1.1, rotate: 5 }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                                     <Shield size={48} style={{ color: '#0A9396' }} />
                                 </motion.div>
-                            </SectionCard>
+                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>Smart Accounts</h3>
+                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 14, lineHeight: 1.5, textAlign: 'center' }}>Manage your checking and savings with guaranteed clarity and AI-powered insights.</p>
+                            </motion.div>
                         </Link>
                         <Link to={isAuthenticated ? "/payments" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                            <SectionCard title="Instant Payments" subtitle="Fast transfers, mobile money, and scheduled payments from one beautiful dashboard.">
-                                <motion.div
-                                    whileHover={{ scale: 1.1 }}
-                                    style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}
-                                >
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(15, 23, 42, 0.15)' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 28, borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
+                            >
+                                <motion.div whileHover={{ scale: 1.1 }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                                     <Zap size={48} style={{ color: '#F4A261' }} />
                                 </motion.div>
-                            </SectionCard>
+                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>Instant Payments</h3>
+                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 14, lineHeight: 1.5, textAlign: 'center' }}>Fast transfers, mobile money, and scheduled payments from one beautiful dashboard.</p>
+                            </motion.div>
                         </Link>
                         <Link to={isAuthenticated ? "/ai-insights" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                            <SectionCard title="AI Insights" subtitle="Get intelligent spending guidance and personalised financial alerts that learn from you.">
-                                <motion.div
-                                    animate={{ rotate: [0, 10, -10, 0] }}
-                                    transition={{ duration: 4, repeat: Infinity }}
-                                    style={{ marginTop: 16, display: 'flex', justifyContent: 'center' }}
-                                >
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ duration: 0.6, ease: 'easeOut' }}
+                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(15, 23, 42, 0.15)' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 28, borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
+                            >
+                                <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 4, repeat: Infinity }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                                     <Star size={48} style={{ color: '#0A9396' }} />
                                 </motion.div>
-                            </SectionCard>
+                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>AI Insights</h3>
+                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 14, lineHeight: 1.5, textAlign: 'center' }}>Get intelligent spending guidance and personalised financial alerts that learn from you.</p>
+                            </motion.div>
                         </Link>
                     </div>
                     
@@ -510,7 +529,7 @@ const Landing: React.FC = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                     viewport={{ once: true }}
-                    style={{ padding: '80px 20px', background: '#f8fafc' }}
+                    style={{ padding: '80px 20px', background: darkMode ? '#0B1F3A' : '#f8fafc' }}
                 >
                     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
                         <motion.div
@@ -520,10 +539,10 @@ const Landing: React.FC = () => {
                             viewport={{ once: true }}
                             style={{ textAlign: 'center', marginBottom: '60px' }}
                         >
-                            <h2 style={{ fontSize: '48px', fontWeight: 'bold', color: '#0B1F3A', marginBottom: '20px' }}>
+                            <h2 style={{ fontSize: '48px', fontWeight: 'bold', color: darkMode ? 'white' : '#0B1F3A', marginBottom: '20px' }}>
                                 {aboutData.title}
                             </h2>
-                            <p style={{ fontSize: '20px', color: '#64748b', maxWidth: '800px', margin: '0 auto', lineHeight: 1.6 }}>
+                            <p style={{ fontSize: '20px', color: darkMode ? '#cfeff5' : '#64748b', maxWidth: '800px', margin: '0 auto', lineHeight: 1.6 }}>
                                 {aboutData.description}
                             </p>
                         </motion.div>
@@ -538,17 +557,18 @@ const Landing: React.FC = () => {
                                     viewport={{ once: true }}
                                     whileHover={{ scale: 1.05, y: -8 }}
                                     style={{ 
-                                        background: 'white', 
+                                        background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', 
                                         padding: '40px', 
                                         borderRadius: '20px', 
-                                        boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                                        textAlign: 'center'
+                                        boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(0,0,0,0.1)',
+                                        textAlign: 'center',
+                                        border: darkMode ? '1px solid rgba(255,255,255,0.1)' : 'none'
                                     }}
                                 >
                                     <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#0A9396', marginBottom: '16px' }}>
                                         {value.title}
                                     </h3>
-                                    <p style={{ color: '#64748b', lineHeight: 1.6 }}>
+                                    <p style={{ color: darkMode ? '#cfeff5' : '#64748b', lineHeight: 1.6 }}>
                                         {value.description}
                                     </p>
                                 </motion.div>
@@ -568,7 +588,7 @@ const Landing: React.FC = () => {
                                     <div style={{ fontSize: '36px', fontWeight: 'bold', color: '#0A9396', marginBottom: '8px' }}>
                                         {stat.value}
                                     </div>
-                                    <div style={{ color: '#64748b', fontSize: '16px' }}>
+                                    <div style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: '16px' }}>
                                         {stat.label}
                                     </div>
                                 </motion.div>
@@ -578,67 +598,198 @@ const Landing: React.FC = () => {
                 </motion.section>
             )}
 
-            {/* Services Section */}
-            {servicesData && (
-                <motion.section
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    viewport={{ once: true }}
-                    style={{ padding: '80px 20px', background: 'white' }}
-                >
-                    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.2 }}
-                            viewport={{ once: true }}
-                            style={{ textAlign: 'center', marginBottom: '60px' }}
-                        >
-                            <h2 style={{ fontSize: '48px', fontWeight: 'bold', color: '#0B1F3A', marginBottom: '20px' }}>
-                                {servicesData.title}
-                            </h2>
-                            <p style={{ fontSize: '20px', color: '#64748b', maxWidth: '800px', margin: '0 auto', lineHeight: 1.6 }}>
-                                {servicesData.description}
-                            </p>
-                        </motion.div>
+            {/* Our Services */}
+            <motion.section
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+                style={{ padding: '80px 20px', background: darkMode ? '#0B1F3A' : 'white' }}
+            >
+                <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+                    <motion.div
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                        viewport={{ once: true }}
+                        style={{ textAlign: 'center', marginBottom: '60px' }}
+                    >
+                        <h2 style={{ fontSize: '48px', fontWeight: 'bold', color: darkMode ? 'white' : '#0B1F3A', marginBottom: '20px' }}>
+                            Our Services
+                        </h2>
+                        <p style={{ fontSize: '20px', color: darkMode ? '#cfeff5' : '#64748b', maxWidth: '800px', margin: '0 auto', lineHeight: 1.6 }}>
+                            Discover our comprehensive range of AI-powered banking services designed to meet your financial needs:
+                        </p>
+                    </motion.div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '40px' }}>
-                            {servicesData.services?.map((service: any, index: number) => (
-                                <motion.div
-                                    key={index}
-                                    initial={{ opacity: 0, y: 30 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.3 + index * 0.1 }}
-                                    viewport={{ once: true }}
-                                    whileHover={{ scale: 1.02, y: -8 }}
-                                    style={{ 
-                                        background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', 
-                                        padding: '40px', 
-                                        borderRadius: '20px', 
-                                        boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                                        border: '1px solid #e2e8f0'
-                                    }}
-                                >
-                                    <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: '#0B1F3A', marginBottom: '16px' }}>
-                                        {service.title}
-                                    </h3>
-                                    <p style={{ color: '#64748b', lineHeight: 1.6, marginBottom: '24px' }}>
-                                        {service.description}
-                                    </p>
-                                    <ul style={{ listStyle: 'none', padding: 0 }}>
-                                        {service.features?.map((feature: string, idx: number) => (
-                                            <li key={idx} style={{ color: '#059669', marginBottom: '8px', display: 'flex', alignItems: 'center' }}>
-                                                <span style={{ marginRight: '8px' }}>✓</span> {feature}
-                                            </li>
-                                        ))}
-                                    </ul>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 28 }}>
+                        {/* Smart Savings */}
+                        <Link to={isAuthenticated ? "/savings" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                whileHover={{ y: -8, scale: 1.02 }}
+                                style={{ background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', borderRadius: 20, padding: 32, boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(10,147,150,0.08)', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(10,147,150,0.1)', height: '100%' }}
+                            >
+                                <motion.div whileHover={{ scale: 1.1 }} style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                                    <TrendingUp size={40} style={{ color: '#10b981' }} />
                                 </motion.div>
-                            ))}
+                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Smart Savings</h3>
+                                <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+                                    AI-powered savings accounts that help you save smarter with personalized recommendations and automated savings goals.
+                                </p>
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    {['AI Savings Insights', 'Goal-based Savings', 'Automated Transfers', 'Competitive Interest Rates'].map((f, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
+                                            <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </Link>
+
+                        {/* Digital Loans */}
+                        <Link to={isAuthenticated ? "/loans" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.05 }}
+                                whileHover={{ y: -8, scale: 1.02 }}
+                                style={{ background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', borderRadius: 20, padding: 32, boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(10,147,150,0.08)', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(10,147,150,0.1)', height: '100%' }}
+                            >
+                                <motion.div whileHover={{ scale: 1.1 }} style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                                    <Zap size={40} style={{ color: '#0A9396' }} />
+                                </motion.div>
+                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Digital Loans</h3>
+                                <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+                                    Quick and easy loan approvals powered by AI credit scoring. Get funds within minutes.
+                                </p>
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    {['Instant Approval', 'Flexible Terms', 'Low Interest Rates', 'No Collateral Required'].map((f, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
+                                            <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </Link>
+
+                        {/* Mobile Banking */}
+                        <div onClick={() => info('Mobile banking is coming soon. Stay tuned!', { title: 'Mobile Banking' })} style={{ textDecoration: 'none', color: 'inherit', display: 'block', cursor: 'pointer' }}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.1 }}
+                                whileHover={{ y: -8, scale: 1.02 }}
+                                style={{ background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', borderRadius: 20, padding: 32, boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(10,147,150,0.08)', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(10,147,150,0.1)', height: '100%', position: 'relative' }}
+                            >
+                                <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                                    <motion.div whileHover={{ scale: 1.1 }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                                        <Smartphone size={40} style={{ color: '#8b5cf6' }} />
+                                    </motion.div>
+                                    <span style={{ position: 'absolute', top: -20, right: 0, padding: '2px 8px', borderRadius: 999, background: 'linear-gradient(135deg, #f59e0b, #ef4444)', color: 'white', fontSize: 10, fontWeight: 700, lineHeight: '18px' }}>
+                                        Coming Soon
+                                    </span>
+                                </div>
+                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Mobile Banking</h3>
+                                <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+                                    Complete banking services on your mobile device. Bank anytime, anywhere.
+                                </p>
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    {['24/7 Access', 'Bill Payments', 'Money Transfers', 'Mobile Top-up'].map((f, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
+                                            <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </div>
+
+                        {/* Investment Services */}
+                        <Link to={isAuthenticated ? "/investments" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.15 }}
+                                whileHover={{ y: -8, scale: 1.02 }}
+                                style={{ background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', borderRadius: 20, padding: 32, boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(10,147,150,0.08)', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(10,147,150,0.1)', height: '100%' }}
+                            >
+                                <motion.div whileHover={{ scale: 1.1 }} style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                                    <TrendingUp size={40} style={{ color: '#F4A261' }} />
+                                </motion.div>
+                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Investment Services</h3>
+                                <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+                                    AI-driven investment recommendations tailored to your risk profile and financial goals.
+                                </p>
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    {['AI Portfolio Management', 'Risk Assessment', 'Market Insights', 'Diversified Options'].map((f, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
+                                            <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </Link>
+
+                        {/* Business Banking */}
+                        <Link to={isAuthenticated ? "/business-banking" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.2 }}
+                                whileHover={{ y: -8, scale: 1.02 }}
+                                style={{ background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', borderRadius: 20, padding: 32, boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(10,147,150,0.08)', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(10,147,150,0.1)', height: '100%' }}
+                            >
+                                <motion.div whileHover={{ scale: 1.1 }} style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                                    <BarChart3 size={40} style={{ color: '#059669' }} />
+                                </motion.div>
+                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Business Banking</h3>
+                                <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+                                    Comprehensive banking solutions for businesses of all sizes in Rwanda.
+                                </p>
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    {['Business Accounts', 'Payroll Services', 'Trade Finance', 'Business Loans'].map((f, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
+                                            <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </Link>
+
+                        {/* Insurance Products */}
+                        <div onClick={() => info('Insurance products are coming soon. Stay tuned!', { title: 'Insurance Products' })} style={{ textDecoration: 'none', color: 'inherit', display: 'block', cursor: 'pointer' }}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.25 }}
+                                whileHover={{ y: -8, scale: 1.02 }}
+                                style={{ background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', borderRadius: 20, padding: 32, boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(10,147,150,0.08)', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(10,147,150,0.1)', height: '100%', position: 'relative' }}
+                            >
+                                <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+                                    <motion.div whileHover={{ scale: 1.1 }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+                                        <Shield size={40} style={{ color: '#ef4444' }} />
+                                    </motion.div>
+                                    <span style={{ position: 'absolute', top: -20, right: 0, padding: '2px 8px', borderRadius: 999, background: 'linear-gradient(135deg, #f59e0b, #ef4444)', color: 'white', fontSize: 10, fontWeight: 700, lineHeight: '18px' }}>
+                                        Coming Soon
+                                    </span>
+                                </div>
+                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Insurance Products</h3>
+                                <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+                                    Protect what matters most with our range of insurance products.
+                                </p>
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    {['Life Insurance', 'Health Insurance', 'Property Insurance', 'Vehicle Insurance'].map((f, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
+                                            <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
                         </div>
                     </div>
-                </motion.section>
-            )}
+                </div>
+            </motion.section>
 
             {/* Contact Us Section */}
             {contactData && (

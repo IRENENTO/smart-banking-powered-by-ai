@@ -1,37 +1,32 @@
+const db = require('../config/db');
+
 class UserProfile {
     constructor() {
         this.table = 'user_profiles';
     }
 
-    getConnection() {
-        return global.dbConnection;
-    }
-
     async findByUserId(userId) {
-        const connection = this.getConnection();
-        const [rows] = await connection.execute(
-            'SELECT * FROM user_profiles WHERE user_id = ?',
+        const result = await db.query(
+            'SELECT * FROM user_profiles WHERE user_id = $1',
             [userId]
         );
-        return rows[0] || null;
+        return result.rows[0] || null;
     }
 
     async create(userId, profileData) {
-        const connection = this.getConnection();
-        await connection.execute(
+        await db.query(
             `INSERT INTO user_profiles (user_id, date_of_birth, address, national_id)
-             VALUES (?, ?, ?, ?)`,
+             VALUES ($1, $2, $3, $4)`,
             [userId, profileData.dateOfBirth, profileData.address, profileData.nationalId]
         );
         return this.findByUserId(userId);
     }
 
     async update(userId, profileData) {
-        const connection = this.getConnection();
-        await connection.execute(
+        await db.query(
             `UPDATE user_profiles
-             SET date_of_birth = ?, address = ?, national_id = ?, updated_at = CURRENT_TIMESTAMP
-             WHERE user_id = ?`,
+             SET date_of_birth = $1, address = $2, national_id = $3, updated_at = CURRENT_TIMESTAMP
+             WHERE user_id = $4`,
             [profileData.dateOfBirth, profileData.address, profileData.nationalId, userId]
         );
         return this.findByUserId(userId);
@@ -46,9 +41,8 @@ class UserProfile {
     }
 
     async deleteByUserId(userId) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute('DELETE FROM user_profiles WHERE user_id = ?', [userId]);
-        return result.affectedRows > 0;
+        const result = await db.query('DELETE FROM user_profiles WHERE user_id = $1', [userId]);
+        return result.rowCount > 0;
     }
 }
 

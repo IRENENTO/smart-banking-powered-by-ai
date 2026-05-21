@@ -10,47 +10,47 @@ const getStats = async (req, res) => {
         const connection = global.dbConnection;
 
         // Total users
-        const [usersCount] = await connection.execute(
+        const [usersCount] = await connection.query(
             'SELECT COUNT(*) as total FROM users'
         );
 
         // Total transactions
-        const [transactionsData] = await connection.execute(
+        const [transactionsData] = await connection.query(
             'SELECT COUNT(*) as total, SUM(amount) as total_amount FROM transactions'
         );
 
         // Active users (logged in today)
-        const [activeUsers] = await connection.execute(
+        const [activeUsers] = await connection.query(
             `SELECT COUNT(DISTINCT user_id) as total 
              FROM login_history 
              WHERE DATE(created_at) = CURDATE()`
         );
 
         // Total accounts
-        const [accountsCount] = await connection.execute(
+        const [accountsCount] = await connection.query(
             'SELECT COUNT(*) as total FROM accounts'
         );
 
         // Pending loans
-        const [pendingLoans] = await connection.execute(
+        const [pendingLoans] = await connection.query(
             `SELECT COUNT(*) as total, SUM(amount) as total_amount 
              FROM loans WHERE status = 'pending'`
         );
 
         // Total savings
-        const [savingsData] = await connection.execute(
+        const [savingsData] = await connection.query(
             'SELECT SUM(current_amount) as total FROM savings_goals'
         );
 
         // Fraud alerts
-        const [fraudAlerts] = await connection.execute(
+        const [fraudAlerts] = await connection.query(
             `SELECT COUNT(*) as total FROM fraud_alerts WHERE status = 'pending'`
         );
 
         // Monthly transactions growth
-        const [monthlyGrowth] = await connection.execute(
+        const [monthlyGrowth] = await connection.query(
             `SELECT 
-                DATE_TRUNC(DATE(created_at), MONTH) as month,
+                DATE_FORMAT(created_at, '%Y-%m-01') as month,
                 COUNT(*) as count,
                 SUM(amount) as total
              FROM transactions
@@ -61,7 +61,7 @@ const getStats = async (req, res) => {
         );
 
         // Revenue (sum of successful transactions)
-        const [revenueData] = await connection.execute(
+        const [revenueData] = await connection.query(
             `SELECT SUM(amount) as total FROM transactions WHERE status = 'completed'`
         );
 
@@ -115,7 +115,7 @@ const getUsers = async (req, res) => {
         query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
         params.push(limit, offset);
 
-        const [users] = await connection.execute(query, params);
+        const [users] = await connection.query(query, params);
 
         // Get total count
         let countQuery = 'SELECT COUNT(*) as total FROM users WHERE 1=1';
@@ -131,7 +131,7 @@ const getUsers = async (req, res) => {
             countParams.push(status);
         }
 
-        const [countResult] = await connection.execute(countQuery, countParams);
+        const [countResult] = await connection.query(countQuery, countParams);
 
         res.json({
             success: true,
@@ -146,8 +146,8 @@ const getUsers = async (req, res) => {
             }
         });
     } catch (err) {
-        console.error('Error fetching users:', err);
-        res.status(500).json({ error: 'Failed to fetch users' });
+        console.error('Error fetching users:', err.message, err.sqlMessage || '');
+        res.status(500).json({ error: 'Failed to fetch users: ' + (err.sqlMessage || err.message) });
     }
 };
 
@@ -159,7 +159,7 @@ const getUserDetails = async (req, res) => {
         const connection = global.dbConnection;
         const userId = req.params.id;
 
-        const [users] = await connection.execute(
+        const [users] = await connection.query(
             'SELECT * FROM users WHERE id = ?',
             [userId]
         );
@@ -171,13 +171,13 @@ const getUserDetails = async (req, res) => {
         const user = users[0];
 
         // Get user accounts
-        const [accounts] = await connection.execute(
+        const [accounts] = await connection.query(
             'SELECT * FROM accounts WHERE user_id = ?',
             [userId]
         );
 
         // Get user transactions
-        const [transactions] = await connection.execute(
+        const [transactions] = await connection.query(
             `SELECT * FROM transactions 
              WHERE sender_id = ? OR receiver_id = ? 
              ORDER BY created_at DESC LIMIT 10`,
@@ -185,7 +185,7 @@ const getUserDetails = async (req, res) => {
         );
 
         // Get user loans
-        const [loans] = await connection.execute(
+        const [loans] = await connection.query(
             'SELECT * FROM loans WHERE user_id = ? ORDER BY created_at DESC',
             [userId]
         );
@@ -218,7 +218,7 @@ const updateUserStatus = async (req, res) => {
             return res.status(400).json({ error: 'Invalid status' });
         }
 
-        await connection.execute(
+        await connection.query(
             'UPDATE users SET status = ? WHERE id = ?',
             [status, userId]
         );
@@ -261,7 +261,7 @@ const getTransactions = async (req, res) => {
         query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
         params.push(limit, offset);
 
-        const [transactions] = await connection.execute(query, params);
+        const [transactions] = await connection.query(query, params);
 
         // Get total count
         let countQuery = 'SELECT COUNT(*) as total FROM transactions WHERE 1=1';
@@ -277,7 +277,7 @@ const getTransactions = async (req, res) => {
             countParams.push(type);
         }
 
-        const [countResult] = await connection.execute(countQuery, countParams);
+        const [countResult] = await connection.query(countQuery, countParams);
 
         res.json({
             success: true,
@@ -307,12 +307,12 @@ const getPayments = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
-        const [payments] = await connection.execute(
+        const [payments] = await connection.query(
             `SELECT * FROM payments ORDER BY created_at DESC LIMIT ? OFFSET ?`,
             [limit, offset]
         );
 
-        const [countResult] = await connection.execute(
+        const [countResult] = await connection.query(
             'SELECT COUNT(*) as total FROM payments'
         );
 
@@ -344,14 +344,14 @@ const getLoans = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
-        const [loans] = await connection.execute(
+        const [loans] = await connection.query(
             `SELECT l.*, u.email, u.name FROM loans l
              LEFT JOIN users u ON l.user_id = u.id
              ORDER BY l.created_at DESC LIMIT ? OFFSET ?`,
             [limit, offset]
         );
 
-        const [countResult] = await connection.execute(
+        const [countResult] = await connection.query(
             'SELECT COUNT(*) as total FROM loans'
         );
 
@@ -383,14 +383,14 @@ const getSavings = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
-        const [savings] = await connection.execute(
+        const [savings] = await connection.query(
             `SELECT s.*, u.email, u.name FROM savings_goals s
              LEFT JOIN users u ON s.user_id = u.id
              ORDER BY s.created_at DESC LIMIT ? OFFSET ?`,
             [limit, offset]
         );
 
-        const [countResult] = await connection.execute(
+        const [countResult] = await connection.query(
             'SELECT COUNT(*) as total FROM savings_goals'
         );
 
@@ -420,7 +420,7 @@ const getAIInsights = async (req, res) => {
     try {
         const connection = global.dbConnection;
 
-        const [insights] = await connection.execute(
+        const [insights] = await connection.query(
             `SELECT * FROM ai_market_insights ORDER BY created_at DESC LIMIT 50`
         );
 
@@ -446,14 +446,14 @@ const getFraudAlerts = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
-        const [alerts] = await connection.execute(
+        const [alerts] = await connection.query(
             `SELECT f.*, u.email, u.name FROM fraud_alerts f
              LEFT JOIN users u ON f.user_id = u.id
              ORDER BY f.created_at DESC LIMIT ? OFFSET ?`,
             [limit, offset]
         );
 
-        const [countResult] = await connection.execute(
+        const [countResult] = await connection.query(
             'SELECT COUNT(*) as total FROM fraud_alerts'
         );
 
@@ -488,7 +488,7 @@ const reviewFraudAlert = async (req, res) => {
             return res.status(400).json({ error: 'Invalid status' });
         }
 
-        await connection.execute(
+        await connection.query(
             `UPDATE fraud_alerts SET status = ?, reviewed_by = ?, reviewed_at = NOW(), action_taken = ? WHERE id = ?`,
             [status, req.admin.id, action_taken || null, alertId]
         );
@@ -513,14 +513,14 @@ const getActivityLogs = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
-        const [logs] = await connection.execute(
+        const [logs] = await connection.query(
             `SELECT l.*, u.email FROM user_activity_logs l
              LEFT JOIN users u ON l.user_id = u.id
              ORDER BY l.created_at DESC LIMIT ? OFFSET ?`,
             [limit, offset]
         );
 
-        const [countResult] = await connection.execute(
+        const [countResult] = await connection.query(
             'SELECT COUNT(*) as total FROM user_activity_logs'
         );
 
@@ -552,14 +552,14 @@ const getLoginHistory = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
-        const [history] = await connection.execute(
+        const [history] = await connection.query(
             `SELECT l.*, u.email FROM login_history l
              LEFT JOIN users u ON l.user_id = u.id
              ORDER BY l.created_at DESC LIMIT ? OFFSET ?`,
             [limit, offset]
         );
 
-        const [countResult] = await connection.execute(
+        const [countResult] = await connection.query(
             'SELECT COUNT(*) as total FROM login_history'
         );
 
@@ -591,14 +591,14 @@ const getAuditLogs = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
-        const [logs] = await connection.execute(
+        const [logs] = await connection.query(
             `SELECT l.*, a.name FROM audit_logs l
              LEFT JOIN admins a ON l.admin_id = a.id
              ORDER BY l.created_at DESC LIMIT ? OFFSET ?`,
             [limit, offset]
         );
 
-        const [countResult] = await connection.execute(
+        const [countResult] = await connection.query(
             'SELECT COUNT(*) as total FROM audit_logs'
         );
 
@@ -628,7 +628,7 @@ const getAnalytics = async (req, res) => {
         const connection = global.dbConnection;
 
         // User growth over time
-        const [userGrowth] = await connection.execute(
+        const [userGrowth] = await connection.query(
             `SELECT 
                 DATE(created_at) as date,
                 COUNT(*) as users_created
@@ -639,7 +639,7 @@ const getAnalytics = async (req, res) => {
         );
 
         // Transaction trends
-        const [transactionTrends] = await connection.execute(
+        const [transactionTrends] = await connection.query(
             `SELECT 
                 DATE(created_at) as date,
                 COUNT(*) as transaction_count,
@@ -651,12 +651,12 @@ const getAnalytics = async (req, res) => {
         );
 
         // Loan distribution
-        const [loanDistribution] = await connection.execute(
+        const [loanDistribution] = await connection.query(
             `SELECT status, COUNT(*) as count FROM loans GROUP BY status`
         );
 
         // Savings distribution
-        const [savingsDistribution] = await connection.execute(
+        const [savingsDistribution] = await connection.query(
             `SELECT status, COUNT(*) as count FROM savings_goals GROUP BY status`
         );
 
@@ -685,11 +685,23 @@ const getNotifications = async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
 
-        const [notifications] = await connection.execute(
-            `SELECT * FROM notifications WHERE admin_id = ?
-             ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-            [req.admin.id, limit, offset]
+        // Check if admin_id column exists in notifications table
+        const [columns] = await connection.query(
+            "SHOW COLUMNS FROM notifications LIKE 'admin_id'"
         );
+        let columnExists = columns.length > 0;
+
+        let notificationsQuery, notificationsParams;
+        if (columnExists) {
+            notificationsQuery = 'SELECT * FROM notifications WHERE admin_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?';
+            notificationsParams = [req.admin.id, limit, offset];
+        } else {
+            // Fallback: get all notifications
+            notificationsQuery = 'SELECT * FROM notifications ORDER BY created_at DESC LIMIT ? OFFSET ?';
+            notificationsParams = [limit, offset];
+        }
+
+        const [notifications] = await connection.query(notificationsQuery, notificationsParams);
 
         res.json({
             success: true,
@@ -715,7 +727,7 @@ const markNotificationAsRead = async (req, res) => {
         const connection = global.dbConnection;
         const notifId = req.params.id;
 
-        await connection.execute(
+        await connection.query(
             'UPDATE notifications SET is_read = 1 WHERE id = ?',
             [notifId]
         );
@@ -743,7 +755,7 @@ const createAdmin = async (req, res) => {
         }
 
         // Check if admin already exists
-        const [existing] = await connection.execute(
+        const [existing] = await connection.query(
             'SELECT id FROM admins WHERE email = ?',
             [email]
         );
@@ -756,7 +768,7 @@ const createAdmin = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Create admin
-        await connection.execute(
+        await connection.query(
             'INSERT INTO admins (email, password_hash, name, role) VALUES (?, ?, ?, ?)',
             [email, hashedPassword, name, role || 'admin']
         );
@@ -778,7 +790,7 @@ const getAdmins = async (req, res) => {
     try {
         const connection = global.dbConnection;
 
-        const [admins] = await connection.execute(
+        const [admins] = await connection.query(
             'SELECT id, email, name, role, status, last_login, created_at FROM admins'
         );
 
@@ -807,7 +819,7 @@ const updateAdminRole = async (req, res) => {
             return res.status(400).json({ error: 'Invalid role' });
         }
 
-        await connection.execute(
+        await connection.query(
             'UPDATE admins SET role = ? WHERE id = ?',
             [role, adminId]
         );
@@ -822,18 +834,445 @@ const updateAdminRole = async (req, res) => {
     }
 };
 
+/**
+ * Get AI analytics dashboard data
+ */
+const getAIAnalytics = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const aiService = require('../services/ai.service');
+
+        const [predictionCounts] = await connection.query(`
+            SELECT 
+                COUNT(*) as total_predictions,
+                SUM(CASE WHEN JSON_EXTRACT(ai_decision, '$.approval_status') = 'APPROVED' THEN 1 ELSE 0 END) as approved_count,
+                SUM(CASE WHEN JSON_EXTRACT(ai_decision, '$.approval_status') = 'REJECTED' THEN 1 ELSE 0 END) as rejected_count
+            FROM loans WHERE ai_decision IS NOT NULL
+        `);
+
+        const [fraudAlertCounts] = await connection.query(`
+            SELECT status, COUNT(*) as count FROM fraud_alerts GROUP BY status
+        `);
+
+        const [recentAiActivity] = await connection.query(`
+            SELECT id, user_id, amount, risk_score, ai_decision, created_at 
+            FROM loans 
+            WHERE ai_decision IS NOT NULL 
+            ORDER BY created_at DESC 
+            LIMIT 20
+        `);
+
+        const modelStatus = await aiService.getModelStatus().catch(() => ({
+            success: false,
+            models: [],
+            status: 'offline'
+        }));
+
+        res.json({
+            success: true,
+            data: {
+                prediction_counts: predictionCounts[0] || { total_predictions: 0, approved_count: 0, rejected_count: 0 },
+                fraud_alert_counts: fraudAlertCounts,
+                recent_ai_activity: recentAiActivity,
+                model_status: modelStatus
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching AI analytics:', err);
+        res.status(500).json({ error: 'Failed to fetch AI analytics' });
+    }
+};
+
+/**
+ * Get risk analysis summary
+ */
+const getRiskAnalysis = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+
+        const [loanRiskDistribution] = await connection.query(`
+            SELECT 
+                CASE 
+                    WHEN risk_score < 30 THEN 'low'
+                    WHEN risk_score < 60 THEN 'medium'
+                    ELSE 'high'
+                END as risk_level,
+                COUNT(*) as count,
+                SUM(amount) as total_amount
+            FROM loans 
+            WHERE risk_score IS NOT NULL
+            GROUP BY risk_level
+        `);
+
+        const [highRiskLoans] = await connection.query(`
+            SELECT l.*, u.email, u.name 
+            FROM loans l
+            LEFT JOIN users u ON l.user_id = u.id
+            WHERE l.risk_score > 60
+            ORDER BY l.risk_score DESC
+            LIMIT 10
+        `);
+
+        res.json({
+            success: true,
+            data: {
+                risk_distribution: loanRiskDistribution,
+                high_risk_loans: highRiskLoans
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching risk analysis:', err);
+        res.status(500).json({ error: 'Failed to fetch risk analysis' });
+    }
+};
+
+/**
+ * Get financial insights summary from AI predictions
+ */
+const getFinancialInsights = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+
+        const [totalSavings] = await connection.query(
+            'SELECT COALESCE(SUM(current_amount), 0) as total FROM savings_goals'
+        );
+        const [totalLoans] = await connection.query(
+            'SELECT COALESCE(SUM(amount), 0) as total FROM loans WHERE status IN (\'approved\', \'disbursed\')'
+        );
+        const [totalDeposits] = await connection.query(
+            "SELECT COALESCE(SUM(amount), 0) as total FROM transactions WHERE type = 'deposit' AND status = 'completed'"
+        );
+        const [avgTransaction] = await connection.query(
+            'SELECT COALESCE(AVG(amount), 0) as average FROM transactions WHERE status = \'completed\''
+        );
+
+        res.json({
+            success: true,
+            data: {
+                total_savings: totalSavings[0].total,
+                total_active_loans: totalLoans[0].total,
+                total_deposits: totalDeposits[0].total,
+                average_transaction: avgTransaction[0].average,
+                generated_at: new Date().toISOString()
+            }
+        });
+    } catch (err) {
+        console.error('Error fetching financial insights:', err);
+        res.status(500).json({ error: 'Failed to fetch financial insights' });
+    }
+};
+
+// ===== CRUD: Users =====
+
+const createUser = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const { name, email, phone, password, role, status, balance } = req.body;
+        if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password are required' });
+
+        const [existing] = await connection.query('SELECT id FROM users WHERE email = ?', [email]);
+        if (existing.length > 0) return res.status(400).json({ error: 'User with this email already exists' });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const account_number = 'ACC' + Math.floor(100000 + Math.random() * 900000).toString();
+        const [result] = await connection.query(
+            'INSERT INTO users (name, email, phone, password, role, status, balance, account_number) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [name, email, phone || null, hashedPassword, role || 'user', status || 'active', balance || 0, account_number]
+        );
+
+        res.json({ success: true, message: 'User created successfully', data: { id: result.insertId } });
+    } catch (err) {
+        console.error('Error creating user:', err);
+        res.status(500).json({ error: 'Failed to create user' });
+    }
+};
+
+const updateUser = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const userId = req.params.id;
+        const { name, email, phone, role, status, balance } = req.body;
+
+        const [existing] = await connection.query('SELECT * FROM users WHERE id = ?', [userId]);
+        if (existing.length === 0) return res.status(404).json({ error: 'User not found' });
+
+        const fields = [];
+        const params = [];
+        if (name !== undefined) { fields.push('name = ?'); params.push(name); }
+        if (email !== undefined) { fields.push('email = ?'); params.push(email); }
+        if (phone !== undefined) { fields.push('phone = ?'); params.push(phone); }
+        if (role !== undefined) { fields.push('role = ?'); params.push(role); }
+        if (status !== undefined) { fields.push('status = ?'); params.push(status); }
+        if (balance !== undefined) { fields.push('balance = ?'); params.push(balance); }
+
+        if (fields.length === 0) return res.status(400).json({ error: 'No fields to update' });
+
+        params.push(userId);
+        await connection.query(`UPDATE users SET ${fields.join(', ')} WHERE id = ?`, params);
+
+        res.json({ success: true, message: 'User updated successfully' });
+    } catch (err) {
+        console.error('Error updating user:', err);
+        res.status(500).json({ error: 'Failed to update user' });
+    }
+};
+
+const deleteUser = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const userId = req.params.id;
+
+        const [existing] = await connection.query('SELECT id FROM users WHERE id = ?', [userId]);
+        if (existing.length === 0) return res.status(404).json({ error: 'User not found' });
+
+        await connection.query('DELETE FROM transactions WHERE sender_id = ? OR receiver_id = ?', [userId, userId]);
+        await connection.query('DELETE FROM loans WHERE user_id = ?', [userId]);
+        await connection.query('DELETE FROM accounts WHERE user_id = ?', [userId]);
+        await connection.query('DELETE FROM users WHERE id = ?', [userId]);
+
+        res.json({ success: true, message: 'User and all associated data deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting user:', err);
+        res.status(500).json({ error: 'Failed to delete user' });
+    }
+};
+
+// ===== CRUD: Transactions =====
+
+const createTransaction = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const { sender_id, receiver_id, amount, type, status, description } = req.body;
+        if (!amount || !type) return res.status(400).json({ error: 'Amount and type are required' });
+
+        const reference_number = 'TXN' + Date.now().toString();
+        const [result] = await connection.query(
+            'INSERT INTO transactions (sender_id, receiver_id, amount, type, status, description, reference_number) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [sender_id || null, receiver_id || null, amount, type, status || 'completed', description || null, reference_number]
+        );
+
+        res.json({ success: true, message: 'Transaction created successfully', data: { id: result.insertId, reference_number } });
+    } catch (err) {
+        console.error('Error creating transaction:', err);
+        res.status(500).json({ error: 'Failed to create transaction' });
+    }
+};
+
+const deleteTransaction = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const txId = req.params.id;
+
+        const [existing] = await connection.query('SELECT id FROM transactions WHERE id = ?', [txId]);
+        if (existing.length === 0) return res.status(404).json({ error: 'Transaction not found' });
+
+        await connection.query('DELETE FROM transactions WHERE id = ?', [txId]);
+        res.json({ success: true, message: 'Transaction deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting transaction:', err);
+        res.status(500).json({ error: 'Failed to delete transaction' });
+    }
+};
+
+// ===== CRUD: Loans =====
+
+const createLoan = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const { user_id, amount, duration, interest_rate, status, purpose } = req.body;
+        if (!user_id || !amount) return res.status(400).json({ error: 'User ID and amount are required' });
+
+        const [result] = await connection.query(
+            'INSERT INTO loans (user_id, amount, duration, interest_rate, status, purpose) VALUES (?, ?, ?, ?, ?, ?)',
+            [user_id, amount, duration || 12, interest_rate || 5.0, status || 'pending', purpose || null]
+        );
+
+        res.json({ success: true, message: 'Loan created successfully', data: { id: result.insertId } });
+    } catch (err) {
+        console.error('Error creating loan:', err);
+        res.status(500).json({ error: 'Failed to create loan' });
+    }
+};
+
+const updateLoan = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const loanId = req.params.id;
+        const { amount, duration, interest_rate, status, purpose } = req.body;
+
+        const [existing] = await connection.query('SELECT id FROM loans WHERE id = ?', [loanId]);
+        if (existing.length === 0) return res.status(404).json({ error: 'Loan not found' });
+
+        const fields = [];
+        const params = [];
+        if (amount !== undefined) { fields.push('amount = ?'); params.push(amount); }
+        if (duration !== undefined) { fields.push('duration = ?'); params.push(duration); }
+        if (interest_rate !== undefined) { fields.push('interest_rate = ?'); params.push(interest_rate); }
+        if (status !== undefined) { fields.push('status = ?'); params.push(status); }
+        if (purpose !== undefined) { fields.push('purpose = ?'); params.push(purpose); }
+
+        if (fields.length === 0) return res.status(400).json({ error: 'No fields to update' });
+
+        params.push(loanId);
+        await connection.query(`UPDATE loans SET ${fields.join(', ')} WHERE id = ?`, params);
+
+        res.json({ success: true, message: 'Loan updated successfully' });
+    } catch (err) {
+        console.error('Error updating loan:', err);
+        res.status(500).json({ error: 'Failed to update loan' });
+    }
+};
+
+const deleteLoan = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const loanId = req.params.id;
+
+        const [existing] = await connection.query('SELECT id FROM loans WHERE id = ?', [loanId]);
+        if (existing.length === 0) return res.status(404).json({ error: 'Loan not found' });
+
+        await connection.query('DELETE FROM loans WHERE id = ?', [loanId]);
+        res.json({ success: true, message: 'Loan deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting loan:', err);
+        res.status(500).json({ error: 'Failed to delete loan' });
+    }
+};
+
+// ===== CRUD: Fraud Alerts =====
+
+const createFraudAlert = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const { user_id, alert_type, description, severity, status } = req.body;
+        if (!user_id || !alert_type) return res.status(400).json({ error: 'User ID and alert type are required' });
+
+        const [result] = await connection.query(
+            'INSERT INTO fraud_alerts (user_id, alert_type, description, severity, status) VALUES (?, ?, ?, ?, ?)',
+            [user_id, alert_type, description || null, severity || 'medium', status || 'pending']
+        );
+
+        res.json({ success: true, message: 'Fraud alert created successfully', data: { id: result.insertId } });
+    } catch (err) {
+        console.error('Error creating fraud alert:', err);
+        res.status(500).json({ error: 'Failed to create fraud alert' });
+    }
+};
+
+const deleteFraudAlert = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const alertId = req.params.id;
+
+        const [existing] = await connection.query('SELECT id FROM fraud_alerts WHERE id = ?', [alertId]);
+        if (existing.length === 0) return res.status(404).json({ error: 'Fraud alert not found' });
+
+        await connection.query('DELETE FROM fraud_alerts WHERE id = ?', [alertId]);
+        res.json({ success: true, message: 'Fraud alert deleted successfully' });
+    } catch (err) {
+        console.error('Error deleting fraud alert:', err);
+        res.status(500).json({ error: 'Failed to delete fraud alert' });
+    }
+};
+
+// ===== CMS: Website Content Management =====
+
+const getCmsSections = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const [sections] = await connection.query(
+            'SELECT * FROM cms_sections ORDER BY page, section'
+        );
+        res.json({ success: true, data: { sections } });
+    } catch (err) {
+        console.error('Error fetching CMS sections:', err);
+        res.status(500).json({ error: 'Failed to fetch CMS sections' });
+    }
+};
+
+const getCmsByPage = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const { page } = req.params;
+        const [sections] = await connection.query(
+            'SELECT * FROM cms_sections WHERE page = ?',
+            [page]
+        );
+        res.json({ success: true, data: { sections } });
+    } catch (err) {
+        console.error('Error fetching CMS page:', err);
+        res.status(500).json({ error: 'Failed to fetch CMS page' });
+    }
+};
+
+const updateCmsSection = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const { page, section } = req.params;
+        const { content } = req.body;
+
+        if (!content) return res.status(400).json({ error: 'Content is required' });
+
+        await connection.query(
+            `INSERT INTO cms_sections (page, section, content, updated_by) 
+             VALUES (?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE content = VALUES(content), updated_by = VALUES(updated_by)`,
+            [page, section, JSON.stringify(content), req.admin.id]
+        );
+
+        res.json({ success: true, message: 'Content updated successfully' });
+    } catch (err) {
+        console.error('Error updating CMS section:', err);
+        res.status(500).json({ error: 'Failed to update CMS section' });
+    }
+};
+
+const bulkUpdateCms = async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        const { sections } = req.body;
+
+        if (!sections || !Array.isArray(sections)) return res.status(400).json({ error: 'Sections array is required' });
+
+        for (const item of sections) {
+            if (!item.page || !item.section || !item.content) continue;
+            await connection.query(
+                `INSERT INTO cms_sections (page, section, content, updated_by) 
+                 VALUES (?, ?, ?, ?)
+                 ON DUPLICATE KEY UPDATE content = VALUES(content), updated_by = VALUES(updated_by)`,
+                [item.page, item.section, JSON.stringify(item.content), req.admin.id]
+            );
+        }
+
+        res.json({ success: true, message: 'All sections updated successfully' });
+    } catch (err) {
+        console.error('Error bulk updating CMS:', err);
+        res.status(500).json({ error: 'Failed to bulk update CMS' });
+    }
+};
+
 module.exports = {
     getStats,
     getUsers,
     getUserDetails,
     updateUserStatus,
+    createUser,
+    updateUser,
+    deleteUser,
     getTransactions,
     getPayments,
+    createTransaction,
+    deleteTransaction,
     getLoans,
     getSavings,
+    createLoan,
+    updateLoan,
+    deleteLoan,
     getAIInsights,
     getFraudAlerts,
     reviewFraudAlert,
+    createFraudAlert,
+    deleteFraudAlert,
     getActivityLogs,
     getLoginHistory,
     getAuditLogs,
@@ -842,5 +1281,12 @@ module.exports = {
     markNotificationAsRead,
     createAdmin,
     getAdmins,
-    updateAdminRole
+    updateAdminRole,
+    getAIAnalytics,
+    getRiskAnalysis,
+    getFinancialInsights,
+    getCmsSections,
+    getCmsByPage,
+    updateCmsSection,
+    bulkUpdateCms
 };

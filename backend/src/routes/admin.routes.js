@@ -204,9 +204,66 @@ router.get('/notifications', adminController.getNotifications);
  */
 router.patch('/notifications/:id/read', adminController.markNotificationAsRead);
 
+// CRUD Users
+router.post('/users', adminController.createUser);
+router.put('/users/:id', adminController.updateUser);
+router.delete('/users/:id', adminController.deleteUser);
+
+// CRUD Transactions
+router.post('/transactions', adminController.createTransaction);
+router.delete('/transactions/:id', adminController.deleteTransaction);
+
+// CRUD Loans
+router.post('/loans', adminController.createLoan);
+router.put('/loans/:id', adminController.updateLoan);
+router.delete('/loans/:id', adminController.deleteLoan);
+
+// CRUD Fraud Alerts
+router.post('/fraud-alerts', adminController.createFraudAlert);
+router.delete('/fraud-alerts/:id', adminController.deleteFraudAlert);
+
+// CMS Routes
+router.get('/cms', adminController.getCmsSections);
+router.get('/cms/:page', adminController.getCmsByPage);
+router.put('/cms/:page/:section', adminController.updateCmsSection);
+router.put('/cms/bulk', adminController.bulkUpdateCms);
+
 // Super admin only routes
 router.post('/admins', superAdminOnly, adminController.createAdmin);
 router.get('/admins', superAdminOnly, adminController.getAdmins);
 router.patch('/admins/:id/role', superAdminOnly, adminController.updateAdminRole);
+
+/**
+ * @swagger
+ * /api/admin/ai/analytics:
+ *   get:
+ *     summary: Get AI analytics dashboard data
+ *     tags: [Admin AI]
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get('/ai/analytics', adminController.getAIAnalytics);
+
+/**
+ * @swagger
+ * /api/admin/ai/risk-analysis:
+ *   get:
+ *     summary: Get risk analysis summary
+ *     tags: [Admin AI]
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get('/ai/risk-analysis', adminController.getRiskAnalysis);
+
+/**
+ * @swagger
+ * /api/admin/ai/financial-insights:
+ *   get:
+ *     summary: Get financial insights from AI predictions
+ *     tags: [Admin AI]
+ *     security:
+ *       - BearerAuth: []
+ */
+router.get('/ai/financial-insights', adminController.getFinancialInsights);
 
 module.exports = router;

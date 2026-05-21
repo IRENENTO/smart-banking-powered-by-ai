@@ -184,44 +184,6 @@ INSERT INTO users (name, email, phone, password, role, email_verified, profile_c
 VALUES ('Admin User', 'admin@aibanking.com', '+250000000000', '$2a$10$rOQJjQJQJQJQJQJQJQJQJuQJQJQJQJQJQJQJQJQJQJQJQJQJQJQJQJQ', 'admin', TRUE, TRUE, TRUE, 0.00, 'ADMIN001')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
--- Create triggers for automatic balance updates
-DELIMITER //
-
-CREATE TRIGGER update_balance_after_deposit 
-AFTER INSERT ON transactions
-FOR EACH ROW
-BEGIN
-    IF NEW.type = 'deposit' AND NEW.status = 'completed' THEN
-        UPDATE users 
-        SET balance = balance + NEW.amount 
-        WHERE id = NEW.user_id;
-    END IF;
-END//
-
-CREATE TRIGGER update_balance_after_withdrawal 
-AFTER INSERT ON transactions
-FOR EACH ROW
-BEGIN
-    IF NEW.type = 'withdrawal' AND NEW.status = 'completed' THEN
-        UPDATE users 
-        SET balance = balance - NEW.amount 
-        WHERE id = NEW.user_id;
-    END IF;
-END//
-
-CREATE TRIGGER update_balance_after_payment 
-AFTER INSERT ON transactions
-FOR EACH ROW
-BEGIN
-    IF NEW.type = 'payment' AND NEW.status = 'completed' THEN
-        UPDATE users 
-        SET balance = balance - NEW.amount 
-        WHERE id = NEW.user_id;
-    END IF;
-END//
-
-DELIMITER ;
-
 -- Create view for user dashboard summary
 CREATE OR REPLACE VIEW user_dashboard AS
 SELECT 
@@ -241,21 +203,3 @@ LEFT JOIN transactions t ON u.id = t.user_id
 LEFT JOIN loans l ON u.id = l.user_id
 LEFT JOIN savings_goals sg ON u.id = sg.user_id
 GROUP BY u.id, u.name, u.email, u.balance, u.account_number, u.created_at;
-
--- Create stored procedure for generating account numbers
-DELIMITER //
-
-CREATE PROCEDURE GenerateAccountNumber()
-BEGIN
-    DECLARE account_num VARCHAR(20);
-    DECLARE exists_count INT;
-    
-    REPEAT
-        SET account_num = CONCAT('ACC', LPAD(FLOOR(RAND() * 1000000), 6, '0'));
-        SELECT COUNT(*) INTO exists_count FROM users WHERE account_number = account_num;
-    UNTIL exists_count = 0 END REPEAT;
-    
-    SELECT account_num;
-END//
-
-DELIMITER ;

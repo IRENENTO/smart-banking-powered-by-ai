@@ -1,3 +1,5 @@
+const db = require('../config/db');
+
 class Payment {
     constructor() {
         this.table = 'payments';
@@ -16,50 +18,41 @@ class Payment {
         return Number.isFinite(limParsed) && limParsed > 0 ? Math.min(maxLimit, limParsed) : defaultLimit;
     }
 
-    // Get database connection
-    getConnection() {
-        return global.dbConnection;
-    }
-
-    // Generate reference number
     generateReferenceNumber() {
         const timestamp = Date.now().toString();
         const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
         return `PAY${timestamp}${random}`;
     }
 
-    // Create new payment
     async create(paymentData) {
-        const connection = this.getConnection();
         const referenceNumber = this.generateReferenceNumber();
 
-        const [result] = await connection.execute(`
-            INSERT INTO payments (user_id, payment_type, provider, provider_reference, account_or_phone, amount, currency, status, description, metadata, transaction_reference, balance_before, balance_after)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-            paymentData.user_id,
-            paymentData.payment_type,
-            paymentData.provider,
-            paymentData.provider_reference || null,
-            paymentData.account_or_phone || null,
-            paymentData.amount,
-            paymentData.currency || 'RWF',
-            paymentData.status || 'pending',
-            paymentData.description || null,
-            paymentData.metadata ? JSON.stringify(paymentData.metadata) : null,
-            paymentData.transaction_reference || null,
-            paymentData.balance_before || 0,
-            paymentData.balance_after || 0
-        ]);
+        const result = await db.query(
+            `INSERT INTO payments (user_id, payment_type, provider, provider_reference, account_or_phone, amount, currency, status, description, metadata, transaction_reference, balance_before, balance_after)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+            [
+                paymentData.user_id,
+                paymentData.payment_type,
+                paymentData.provider,
+                paymentData.provider_reference || null,
+                paymentData.account_or_phone || null,
+                paymentData.amount,
+                paymentData.currency || 'RWF',
+                paymentData.status || 'pending',
+                paymentData.description || null,
+                paymentData.metadata ? JSON.stringify(paymentData.metadata) : null,
+                paymentData.transaction_reference || null,
+                paymentData.balance_before || 0,
+                paymentData.balance_after || 0
+            ]
+        );
 
-        return this.findById(result.insertId);
+        return this.findById(result.rows[0].id);
     }
 
-    // Find payment by ID
     async findById(id) {
-        const connection = this.getConnection();
-        const [rows] = await connection.execute('SELECT * FROM payments WHERE id = ?', [id]);
-        const payment = rows[0] || null;
+        const result = await db.query('SELECT * FROM payments WHERE id = $1', [id]);
+        const payment = result.rows[0] || null;
         if (payment && payment.metadata) {
             try {
                 payment.metadata = JSON.parse(payment.metadata);
@@ -68,11 +61,9 @@ class Payment {
         return payment;
     }
 
-    // Find payment by transaction reference
     async findByTransactionReference(reference) {
-        const connection = this.getConnection();
-        const [rows] = await connection.execute('SELECT * FROM payments WHERE transaction_reference = ?', [reference]);
-        const payment = rows[0] || null;
+        const result = await db.query('SELECT * FROM payments WHERE transaction_reference = $1', [reference]);
+        const payment = result.rows[0] || null;
         if (payment && payment.metadata) {
             try {
                 payment.metadata = JSON.parse(payment.metadata);
@@ -81,18 +72,16 @@ class Payment {
         return payment;
     }
 
-    // Get payments by user ID
     async findByUserId(userId, limit = 50, offset = 0) {
-        const connection = this.getConnection();
         const [lim, off] = this._clampLimitOffset(limit, offset);
-        const [rows] = await connection.query(
+        const result = await db.query(
             `SELECT * FROM payments 
-            WHERE user_id = ? 
+            WHERE user_id = $1 
             ORDER BY created_at DESC 
-            LIMIT ${lim} OFFSET ${off}`,
-            [userId]
+            LIMIT $2 OFFSET $3`,
+            [userId, lim, off]
         );
-        return rows.map(row => {
+        return result.rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
             }
@@ -100,18 +89,16 @@ class Payment {
         });
     }
 
-    // Get payments by user ID and type
     async findByUserIdAndType(userId, paymentType, limit = 50, offset = 0) {
-        const connection = this.getConnection();
         const [lim, off] = this._clampLimitOffset(limit, offset);
-        const [rows] = await connection.query(
+        const result = await db.query(
             `SELECT * FROM payments 
-            WHERE user_id = ? AND payment_type = ? 
+            WHERE user_id = $1 AND payment_type = $2 
             ORDER BY created_at DESC 
-            LIMIT ${lim} OFFSET ${off}`,
-            [userId, paymentType]
+            LIMIT $3 OFFSET $4`,
+            [userId, paymentType, lim, off]
         );
-        return rows.map(row => {
+        return result.rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
             }
@@ -119,18 +106,16 @@ class Payment {
         });
     }
 
-    // Get payments by user ID and status
     async findByUserIdAndStatus(userId, status, limit = 50, offset = 0) {
-        const connection = this.getConnection();
         const [lim, off] = this._clampLimitOffset(limit, offset);
-        const [rows] = await connection.query(
+        const result = await db.query(
             `SELECT * FROM payments 
-            WHERE user_id = ? AND status = ? 
+            WHERE user_id = $1 AND status = $2 
             ORDER BY created_at DESC 
-            LIMIT ${lim} OFFSET ${off}`,
-            [userId, status]
+            LIMIT $3 OFFSET $4`,
+            [userId, status, lim, off]
         );
-        return rows.map(row => {
+        return result.rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
             }
@@ -138,18 +123,16 @@ class Payment {
         });
     }
 
-    // Get pending PayPack payments for a user
     async findPendingPaypackByUserId(userId, limit = 50, offset = 0) {
-        const connection = this.getConnection();
         const [lim, off] = this._clampLimitOffset(limit, offset);
-        const [rows] = await connection.query(
+        const result = await db.query(
             `SELECT * FROM payments
-            WHERE user_id = ? AND status = 'pending' AND provider = 'paypack'
+            WHERE user_id = $1 AND status = 'pending' AND provider = 'paypack'
             ORDER BY created_at DESC
-            LIMIT ${lim} OFFSET ${off}`,
-            [userId]
+            LIMIT $2 OFFSET $3`,
+            [userId, lim, off]
         );
-        return rows.map(row => {
+        return result.rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
             }
@@ -157,57 +140,50 @@ class Payment {
         });
     }
 
-    // Update payment status
     async updateStatus(id, status, userId) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute(
-            'UPDATE payments SET status = ?, updated_at = CURRENT_TIMESTAMP, paid_at = CASE WHEN ? = "completed" AND paid_at IS NULL THEN CURRENT_TIMESTAMP ELSE paid_at END WHERE id = ? AND user_id = ?',
+        const result = await db.query(
+            `UPDATE payments SET status = $1, updated_at = CURRENT_TIMESTAMP, paid_at = CASE WHEN $2 = 'completed' AND paid_at IS NULL THEN CURRENT_TIMESTAMP ELSE paid_at END WHERE id = $3 AND user_id = $4`,
             [status, status, id, userId]
         );
-        return result.affectedRows > 0;
+        return result.rowCount > 0;
     }
 
-    // Delete payment by ID (only if not completed)
     async delete(id, userId) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute(
-            'DELETE FROM payments WHERE id = ? AND user_id = ? AND status IN ("pending", "failed", "cancelled")',
+        const result = await db.query(
+            `DELETE FROM payments WHERE id = $1 AND user_id = $2 AND status IN ('pending', 'failed', 'cancelled')`,
             [id, userId]
         );
-        return result.affectedRows > 0;
+        return result.rowCount > 0;
     }
 
-    // Get payment statistics for user
     async getPaymentStats(userId) {
-        const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT 
-                COUNT(*) as total_payments,
+        const result = await db.query(
+            `SELECT 
+                COUNT(*)::int as total_payments,
                 SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as total_amount,
                 SUM(CASE WHEN payment_type = 'bill' AND status = 'completed' THEN amount ELSE 0 END) as total_bills,
                 SUM(CASE WHEN payment_type = 'merchant' AND status = 'completed' THEN amount ELSE 0 END) as total_merchant,
                 SUM(CASE WHEN payment_type = 'subscription' AND status = 'completed' THEN amount ELSE 0 END) as total_subscriptions,
                 SUM(CASE WHEN payment_type = 'top_up' AND status = 'completed' THEN amount ELSE 0 END) as total_top_ups,
-                COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_payments,
-                COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_payments
+                COUNT(CASE WHEN status = 'pending' THEN 1 END)::int as pending_payments,
+                COUNT(CASE WHEN status = 'failed' THEN 1 END)::int as failed_payments
             FROM payments 
-            WHERE user_id = ?
-        `, [userId]);
-        return rows[0] || {};
-    }
-
-    // Get recent payments
-    async getRecentPayments(userId, limit = 10) {
-        const connection = this.getConnection();
-        const lim = this._clampLimit(limit, 10, 100);
-        const [rows] = await connection.query(
-            `SELECT * FROM payments 
-            WHERE user_id = ? 
-            ORDER BY created_at DESC 
-            LIMIT ${lim}`,
+            WHERE user_id = $1`,
             [userId]
         );
-        return rows.map(row => {
+        return result.rows[0] || {};
+    }
+
+    async getRecentPayments(userId, limit = 10) {
+        const lim = this._clampLimit(limit, 10, 100);
+        const result = await db.query(
+            `SELECT * FROM payments 
+            WHERE user_id = $1 
+            ORDER BY created_at DESC 
+            LIMIT $2`,
+            [userId, lim]
+        );
+        return result.rows.map(row => {
             if (row.metadata) {
                 try { row.metadata = JSON.parse(row.metadata); } catch (e) {}
             }

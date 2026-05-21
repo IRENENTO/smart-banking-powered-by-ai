@@ -8,7 +8,9 @@ if (!process.env.JWT_SECRET) {
 module.exports = {
     PORT: process.env.PORT || 5000,
     JWT_SECRET: process.env.JWT_SECRET,
-    AI_ENGINE_URL: process.env.AI_ENGINE_URL || 'http://localhost:8000',
+    DATABASE_URL: process.env.DATABASE_URL,
+    AI_ENGINE_URL: process.env.AI_ENGINE_URL || 'http://localhost:8000/api/ai',
+    AI_ENGINE_API_KEY: process.env.AI_ENGINE_API_KEY || 'dev-key-change-in-production',
     PAYPACK_CLIENT_ID: process.env.PAYPACK_CLIENT_ID,
     PAYPACK_CLIENT_SECRET: process.env.PAYPACK_CLIENT_SECRET,
     PAYPACK_BASE_URL: process.env.PAYPACK_BASE_URL || 'https://payments.paypack.rw/api',

@@ -4,6 +4,7 @@
   "outputDirectory": "build",
   "devCommand": "craco start",
   "installCommand": "npm install --legacy-peer-deps",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
   "environment": {
     "REACT_APP_API_URL": "https://your-backend.onrender.com/api",
     "REACT_APP_SUPABASE_URL": "@supabase_url",

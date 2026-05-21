@@ -151,6 +151,37 @@ const TransactionLimits: React.FC = () => {
         </SectionCard>
 
         <SectionCard 
+          title="Limit Usage"
+          subtitle="Real-time tracking of your spending"
+          headerRight={
+            <TrendingUp size={24} style={{ color: '#0A9396' }} />
+          }
+        >
+          <div style={{ marginTop: 16, display: 'grid', gap: 20 }}>
+            {[
+              { label: 'Daily Limit', used: 250000, max: limits.daily_limit },
+              { label: 'Weekly Limit', used: 1200000, max: limits.weekly_limit }
+            ].map((item, i) => (
+              <div key={i}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: '14px' }}>
+                  <span style={{ fontWeight: 600, color: '#0B1F3A' }}>{item.label}</span>
+                  <span style={{ color: '#64748b' }}>{formatCurrency(item.used)} / {formatCurrency(item.max)}</span>
+                </div>
+                <div style={{ height: '10px', background: '#e2e8f0', borderRadius: '5px', overflow: 'hidden' }}>
+                  <div style={{ 
+                    height: '100%', 
+                    width: `${Math.min((item.used / item.max) * 100, 100)}%`, 
+                    background: (item.used / item.max) > 0.8 ? '#ef4444' : '#0A9396',
+                    borderRadius: '5px',
+                    transition: 'width 0.3s ease'
+                  }} />
+                </div>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+
+        <SectionCard 
           title="Update Limits"
           subtitle="Adjust your transaction limits"
           headerRight={

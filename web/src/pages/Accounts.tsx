@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
 import { accountService } from '../services/api';
 import { useBanking } from '../context/BankingContext';
@@ -37,9 +38,9 @@ const Accounts: React.FC = () => {
     const userEmail = account?.user?.email ?? profile?.email ?? '';
 
     return (
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Navbar authenticated={!!localStorage.getItem('token')} />
-            <div style={{ padding: 24, minHeight: 'calc(100vh - 48px)', background: isDark ? '#071B2F' : '#eef7fb' }}>
+            <div style={{ flex: 1, padding: 24, background: isDark ? '#0B1F3A' : '#f8fafc' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
                     <div>
                         <h1>My Accounts</h1>
@@ -57,7 +58,8 @@ const Accounts: React.FC = () => {
                                 <div>
                                     <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? '#7dd3fc' : '#0B1F3A' }}>Savings</div>
                                     <div style={{ marginTop: 8, fontSize: 22, fontWeight: 700, color: isDark ? '#e2e8f0' : 'inherit' }}>{userName}</div>
-                                </div>
+            <Footer />
+        </div>
                                 <div style={{ background: '#0A9396', borderRadius: 12, color: 'white', padding: '8px 12px', fontSize: 14 }}>Active</div>
                             </div>
                             <div style={{ marginTop: 24 }}>

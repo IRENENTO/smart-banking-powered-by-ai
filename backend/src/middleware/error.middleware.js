@@ -1,6 +1,13 @@
-// Global error handling middleware
+const logger = require('../services/logger');
+
 const errorHandler = (err, req, res, next) => {
-    console.error('Error:', err);
+    logger.error('Unhandled error', {
+        method: req.method,
+        path: req.path,
+        statusCode: err.statusCode || 500,
+        message: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+    });
 
     // Default error
     let statusCode = err.statusCode || 500;

@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 const Payment = require('../models/Payment');
 const paypack = require('../services/paypack.service');
+const aiService = require('../services/ai.service');
 
 // Deposit money
 exports.deposit = async (req, res) => {
@@ -130,6 +131,36 @@ exports.withdraw = async (req, res) => {
 
         if (parseFloat(currentBalance) < amountValue) {
             return res.status(400).json({ msg: 'Insufficient balance' });
+        }
+
+        // Fraud detection before withdrawal
+        try {
+            const fraudResult = await aiService.detectFraud({
+                amount: amountValue,
+                location: req.ip || 'unknown',
+                device: req.headers['user-agent'] || 'unknown',
+                frequency: 1,
+                transaction_time: new Date().toISOString()
+            });
+
+            if (fraudResult.action_required) {
+                const connection = global.dbConnection;
+                await connection.execute(
+                    `INSERT INTO fraud_alerts (user_id, transaction_type, amount, risk_level, risk_score, status, description, created_at)
+                     VALUES (?, 'withdrawal', ?, ?, ?, 'pending', ?, NOW())`,
+                    [userId, amountValue, fraudResult.fraud_risk, fraudResult.risk_percentage,
+                     `Suspicious withdrawal flagged by AI. Risk: ${fraudResult.risk_percentage}%`]
+                );
+
+                return res.status(403).json({
+                    msg: 'Withdrawal blocked due to suspicious activity. Please contact support.',
+                    fraud_alert: true,
+                    risk_level: fraudResult.fraud_risk,
+                    risk_percentage: fraudResult.risk_percentage
+                });
+            }
+        } catch (fraudErr) {
+            console.warn('[Fraud Detection] Skipped — AI Engine unavailable');
         }
 
         // External withdrawal via PayPack (send to mobile money)
@@ -266,6 +297,36 @@ exports.payment = async (req, res) => {
             return res.status(400).json({ msg: 'Cannot pay your own account' });
         }
 
+        // Fraud detection before processing payment
+        try {
+            const fraudResult = await aiService.detectFraud({
+                amount: amountValue,
+                location: req.ip || 'unknown',
+                device: req.headers['user-agent'] || 'unknown',
+                frequency: 1,
+                transaction_time: new Date().toISOString()
+            });
+
+            if (fraudResult.action_required) {
+                const connection = global.dbConnection;
+                await connection.execute(
+                    `INSERT INTO fraud_alerts (user_id, transaction_type, amount, risk_level, risk_score, status, description, created_at)
+                     VALUES (?, 'payment', ?, ?, ?, 'pending', ?, NOW())`,
+                    [userId, amountValue, fraudResult.fraud_risk, fraudResult.risk_percentage,
+                     `Suspicious payment flagged by AI. Risk: ${fraudResult.risk_percentage}%`]
+                );
+
+                return res.status(403).json({
+                    msg: 'Payment blocked due to suspicious activity. Please contact support.',
+                    fraud_alert: true,
+                    risk_level: fraudResult.fraud_risk,
+                    risk_percentage: fraudResult.risk_percentage
+                });
+            }
+        } catch (fraudErr) {
+            console.warn('[Fraud Detection] Skipped — AI Engine unavailable');
+        }
+
         const newBalance = parseFloat(currentBalance) - amountValue;
         const recipientNewBalance = parseFloat(recipient.balance) + amountValue;
 
@@ -353,6 +414,36 @@ exports.transfer = async (req, res) => {
         // Check if transferring to own account
         if (recipient.id === userId) {
             return res.status(400).json({ msg: 'Cannot transfer to your own account' });
+        }
+
+        // Fraud detection before processing transfer
+        try {
+            const fraudResult = await aiService.detectFraud({
+                amount: amountValue,
+                location: req.ip || 'unknown',
+                device: req.headers['user-agent'] || 'unknown',
+                frequency: 1,
+                transaction_time: new Date().toISOString()
+            });
+
+            if (fraudResult.action_required) {
+                const connection = global.dbConnection;
+                await connection.execute(
+                    `INSERT INTO fraud_alerts (user_id, transaction_type, amount, risk_level, risk_score, status, description, created_at)
+                     VALUES (?, 'transfer', ?, ?, ?, 'pending', ?, NOW())`,
+                    [userId, amountValue, fraudResult.fraud_risk, fraudResult.risk_percentage,
+                     `Suspicious transfer flagged by AI. Risk: ${fraudResult.risk_percentage}%`]
+                );
+
+                return res.status(403).json({
+                    msg: 'Transaction blocked due to suspicious activity. Please contact support.',
+                    fraud_alert: true,
+                    risk_level: fraudResult.fraud_risk,
+                    risk_percentage: fraudResult.risk_percentage
+                });
+            }
+        } catch (fraudErr) {
+            console.warn('[Fraud Detection] Skipped — AI Engine unavailable');
         }
 
         const newBalance = parseFloat(currentBalance) - amountValue;

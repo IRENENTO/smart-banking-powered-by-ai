@@ -1,8 +1,10 @@
 const express = require('express');
+const { body } = require('express-validator');
 const router = express.Router();
 const { requireProfileCompleted } = require('../middleware/auth');
 const auth = require('../middleware/auth.middleware');
 const loanController = require('../controllers/loan.controller');
+const validate = require('../middleware/validate');
 
 /**
  * @swagger
@@ -54,39 +56,16 @@ const loanController = require('../controllers/loan.controller');
  *       500:
  *         description: Server error
  */
-router.post('/apply', requireProfileCompleted, loanController.applyForLoan);
+router.post('/apply', [
+    body('amount').isFloat({ min: 1 }).withMessage('Loan amount must be a positive number'),
+    body('duration').isInt({ min: 1 }).withMessage('Duration must be at least 1 month'),
+    body('purpose').optional().trim().isLength({ max: 500 }),
+], validate, requireProfileCompleted, loanController.applyForLoan);
 
-/**
- * @swagger
- * /api/loans/check-eligibility:
- *   post:
- *     summary: Check loan eligibility
- *     tags: [Loans]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - monthlyIncome
- *               - existingDebt
- *             properties:
- *               monthlyIncome:
- *                 type: number
- *               existingDebt:
- *                 type: number
- *     responses:
- *       200:
- *         description: Eligibility checked
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-router.post('/check-eligibility', requireProfileCompleted, loanController.checkEligibility);
+router.post('/check-eligibility', [
+    body('monthlyIncome').isFloat({ min: 0 }).withMessage('Monthly income must be a non-negative number'),
+    body('existingDebt').optional().isFloat({ min: 0 }),
+], validate, requireProfileCompleted, loanController.checkEligibility);
 
 /**
  * @swagger

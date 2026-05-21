@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_URL = process.env.REACT_APP_API_URL || '/api';
 
 const api = axios.create({
     baseURL: API_URL,
@@ -50,7 +50,15 @@ api.interceptors.response.use(
 
 export const authService = {
     login: (credentials: any) => api.post('/auth/login', credentials),
-    register: (userData: any) => api.post('/auth/register', userData)
+    adminLogin: (credentials: any) => api.post('/admin/auth/login', credentials),
+    register: (userData: any) => api.post('/auth/register', userData),
+    forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+    resetPassword: (email: string, otp: string, newPassword: string) => api.post('/auth/reset-password', { email, otp, newPassword })
+};
+
+export const otpService = {
+    sendOTP: (email: string) => api.post('/otp/send-otp', { email }),
+    verifyOTP: (email: string, otp: string) => api.post('/otp/verify-otp', { email, otp })
 };
 
 export const loanService = {
@@ -72,7 +80,17 @@ export const bankService = {
 export const aiService = {
     getInsights: () => api.get('/insights'),
     generateInsights: () => api.post('/insights/generate'),
-    chat: (message: string) => api.post('/chat', { message })
+    chat: (message: string) => api.post('/chat', { message }),
+
+    // AI Engine endpoints
+    predictLoan: (data: any) => api.post('/ai/predict-loan', data),
+    detectFraud: (data: any) => api.post('/ai/detect-fraud', data),
+    predictSavings: (data: any) => api.post('/ai/predict-savings', data),
+    analyzeSpending: (transactions: any[], monthlyIncome?: number) =>
+        api.post('/ai/spending-analysis', { transactions, monthly_income: monthlyIncome }),
+    getRecommendations: (data: any) => api.post('/ai/recommendations', data),
+    getModelStatus: () => api.get('/ai/model-status'),
+    retrainModel: (model?: string) => api.post('/ai/retrain', { model }),
 };
 
 export const savingsService = {
@@ -124,6 +142,18 @@ export const profileService = {
     getIdentification: () => api.get('/profile/identification')
 };
 
+export const uploadService = {
+    uploadProfilePicture: (file: File) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        return api.post('/upload/profile-picture', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    }
+};
+
 export const accountService = {
     getAccount: () => api.get('/account'),
     getBalance: () => api.get('/account/balance'),
@@ -133,6 +163,15 @@ export const accountService = {
 export const securityService = {
     setPin: (pin: string) => api.post('/security/set-pin', { transactionPin: pin }),
     verifyPin: (pin: string) => api.post('/security/verify-pin', { pin })
+};
+
+export const marketService = {
+    predictMarket: (data: any) => api.post('/market/predict', data),
+    getTrends: () => api.get('/market/trends'),
+    getSectors: () => api.get('/market/sectors'),
+    getRecommendations: () => api.get('/market/recommendations'),
+    getRiskAnalysis: () => api.get('/market/risk-analysis'),
+    getFraudAlerts: () => api.get('/market/fraud-alerts'),
 };
 
 export const investmentService = {

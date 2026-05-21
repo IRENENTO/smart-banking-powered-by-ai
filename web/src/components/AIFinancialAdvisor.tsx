@@ -30,7 +30,7 @@ const quickSuggestions: Suggestion[] = [
   { icon: TrendingUp, text: 'Analyze spending patterns', category: 'analytics' },
   { icon: Lightbulb, text: 'Optimize your budget', category: 'budget' },
   { icon: Shield, text: 'Investment recommendations', category: 'investment' },
-  { icon: PiggyBank, text: 'Savings strategies', category: 'savings' }
+  { icon: PiggyBank, text: 'Business growth advice', category: 'business' }
 ];
 
 const statCards = [
@@ -56,6 +56,22 @@ const statCards = [
 
 const generateAIResponse = (userInput: string): AIResponse => {
   const input = userInput.toLowerCase();
+  
+  if (input.includes('business') || input.includes('growth') || input.includes('startup') || input.includes('shop')) {
+    return {
+      text: "For business growth in Rwanda: \n1. **Digital Presence**: Use Mobile Money for all payments to build a digital credit trail.\n2. **Inventory Management**: Track stock levels daily to avoid overstocking.\n3. **Marketing**: Leverage social media for low-cost local reach.\n4. **Loan Readiness**: Keep your Debt-to-Income ratio below 40% to qualify for business expansion loans.",
+      type: 'success',
+      suggestion: "🚀 Growth Tip: Reinvest 30% of your profits back into the business for sustainable scaling."
+    };
+  }
+
+  if (input.includes('market') || input.includes('trend')) {
+    return {
+      text: "Current market trends show high growth in: \n• **Agri-tech**: 15% increase in efficiency.\n• **E-commerce**: 25% growth in mobile transactions.\n• **Clean Energy**: Government incentives for solar startups.",
+      type: 'text',
+      suggestion: "📈 Check the 'Market Insights' tab for detailed sector performance."
+    };
+  }
   
   if (input.includes('spend') || input.includes('budget')) {
     return {

@@ -281,4 +281,16 @@ router.get('/preferences', settingsController.getUserPreferences);
  */
 router.put('/preferences', settingsController.updateUserPreferences);
 
+// Cards
+router.get('/cards', settingsController.getCards);
+router.post('/cards', settingsController.addCard);
+router.delete('/cards/:id', settingsController.deleteCard);
+router.put('/cards/:id/status', settingsController.updateCardStatus);
+router.put('/cards/:id/default', settingsController.setDefaultCard);
+
+// Statements
+router.get('/statements', settingsController.getStatements);
+router.post('/statements/generate', settingsController.generateStatement);
+router.put('/statements/:id/download', settingsController.incrementDownloadCount);
+
 module.exports = router;

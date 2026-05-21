@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Footer from './Footer';
 import Navbar from './Navbar';
+import { useTheme } from '../context/ThemeContext';
 
 interface PageLayoutProps {
   title: string;
@@ -10,8 +11,11 @@ interface PageLayoutProps {
 }
 
 const PageLayout: React.FC<PageLayoutProps> = ({ title, subtitle, children }) => {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: 'linear-gradient(135deg, #f8fafc 0%, #f0f9ff 100%)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: isDark ? '#0B1F3A' : '#f8fafc' }}>
       <Navbar />
       
       <main style={{ flex: 1, padding: '40px 20px', maxWidth: 1200, margin: '0 auto', width: '100%' }}>

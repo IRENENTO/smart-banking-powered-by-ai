@@ -148,11 +148,23 @@ async function processSavingsGoals(connection) {
                 [amount, goal.account_id, amount]
             );
 
-            await connection.execute(`
-                UPDATE savings_goals
-                SET current_amount = ?, last_deduction_date = CURDATE(), status = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            `, [newCurrent, isCompleted ? 'completed' : 'active', goal.id]);
+            try {
+                await connection.execute(`
+                    UPDATE savings_goals
+                    SET current_amount = ?, last_deduction_date = CURDATE(), status = ?, updated_at = CURRENT_TIMESTAMP
+                    WHERE id = ?
+                `, [newCurrent, isCompleted ? 'completed' : 'active', goal.id]);
+            } catch (innerErr) {
+                if (innerErr.message.includes('Unknown column')) {
+                    await connection.execute(`
+                        UPDATE savings_goals
+                        SET current_amount = ?, last_deduction_date = CURDATE(), status = ?
+                        WHERE id = ?
+                    `, [newCurrent, isCompleted ? 'completed' : 'active', goal.id]);
+                } else {
+                    throw innerErr;
+                }
+            }
 
             const refNumber = `AUTO-GOAL-${goal.id}-${Date.now()}`;
             await connection.execute(`

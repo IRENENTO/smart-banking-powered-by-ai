@@ -1,103 +1,87 @@
+const db = require('../config/db');
+
 class Account {
     constructor() {
         this.table = 'accounts';
     }
 
-    // Get database connection
-    getConnection() {
-        return global.dbConnection;
-    }
-
-    // Create new account
     async create(accountData) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute(`
-            INSERT INTO accounts (user_id, balance, currency, account_type)
-            VALUES (?, ?, ?, ?)
-        `, [
-            accountData.user_id,
-            accountData.balance || 0.00,
-            accountData.currency || 'RWF',
-            accountData.account_type || 'savings'
-        ]);
+        const result = await db.query(
+            `INSERT INTO accounts (user_id, balance, currency, account_type)
+            VALUES ($1, $2, $3, $4) RETURNING id`,
+            [
+                accountData.user_id,
+                accountData.balance || 0.00,
+                accountData.currency || 'RWF',
+                accountData.account_type || 'savings'
+            ]
+        );
 
-        return this.findById(result.insertId);
+        return this.findById(result.rows[0].id);
     }
 
-    // Find account by ID
     async findById(id) {
-        const connection = this.getConnection();
-        const [rows] = await connection.execute('SELECT * FROM accounts WHERE id = ?', [id]);
-        return rows[0] || null;
+        const result = await db.query('SELECT * FROM accounts WHERE id = $1', [id]);
+        return result.rows[0] || null;
     }
 
-    // Find account by user ID
     async findByUserId(userId) {
-        const connection = this.getConnection();
-        const [rows] = await connection.execute('SELECT * FROM accounts WHERE user_id = ?', [userId]);
-        return rows[0] || null;
+        const result = await db.query('SELECT * FROM accounts WHERE user_id = $1', [userId]);
+        return result.rows[0] || null;
     }
 
-    // Update account balance
     async updateBalance(userId, newBalance) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute(`
-            UPDATE accounts 
-            SET balance = ?, updated_at = CURRENT_TIMESTAMP 
-            WHERE user_id = ?
-        `, [newBalance, userId]);
+        const result = await db.query(
+            `UPDATE accounts 
+            SET balance = $1, updated_at = CURRENT_TIMESTAMP 
+            WHERE user_id = $2`,
+            [newBalance, userId]
+        );
 
-        return result.affectedRows > 0;
+        return result.rowCount > 0;
     }
 
-    // Get account balance
     async getBalance(userId) {
         const account = await this.findByUserId(userId);
         return account ? account.balance : null;
     }
 
-    // Increment balance (deposit)
     async deposit(userId, amount) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute(`
-            UPDATE accounts 
-            SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP 
-            WHERE user_id = ?
-        `, [amount, userId]);
+        const result = await db.query(
+            `UPDATE accounts 
+            SET balance = balance + $1, updated_at = CURRENT_TIMESTAMP 
+            WHERE user_id = $2`,
+            [amount, userId]
+        );
 
-        return result.affectedRows > 0;
+        return result.rowCount > 0;
     }
 
-    // Decrement balance (withdraw)
     async withdraw(userId, amount) {
-        const connection = this.getConnection();
         const account = await this.findByUserId(userId);
-        
-        if (!account || account.balance < amount) {
+
+        if (!account || Number(account.balance) < amount) {
             throw new Error('Insufficient balance');
         }
 
-        const [result] = await connection.execute(`
-            UPDATE accounts 
-            SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP 
-            WHERE user_id = ?
-        `, [amount, userId]);
+        const result = await db.query(
+            `UPDATE accounts 
+            SET balance = balance - $1, updated_at = CURRENT_TIMESTAMP 
+            WHERE user_id = $2`,
+            [amount, userId]
+        );
 
-        return result.affectedRows > 0;
+        return result.rowCount > 0;
     }
 
-    // Delete account by user ID
     async deleteByUserId(userId) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute('DELETE FROM accounts WHERE user_id = ?', [userId]);
-        return result.affectedRows > 0;
+        const result = await db.query('DELETE FROM accounts WHERE user_id = $1', [userId]);
+        return result.rowCount > 0;
     }
 
-    // Delete account by ID
     async delete(id) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute('DELETE FROM accounts WHERE id = ?', [id]);
-        return result.affectedRows > 0;
+        const result = await db.query('DELETE FROM accounts WHERE id = $1', [id]);
+        return result.rowCount > 0;
     }
 }
 

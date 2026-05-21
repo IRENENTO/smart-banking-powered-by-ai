@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, Calculator, Shield, Clock, CheckCircle, AlertCircle, Calendar, DollarSign, RotateCcw } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
 import { loanService } from '../services/api';
@@ -98,8 +99,8 @@ const LoanStatus: React.FC = () => {
     };
 
     return (
-        <>
-            <div style={{ minHeight: '100vh', background: darkMode ? '#0f172a' : '#eef7fb' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <div style={{ flex: 1, background: darkMode ? '#0f172a' : '#eef7fb' }}>
             <Navbar authenticated={!!localStorage.getItem('token')} />
             
             <motion.div
@@ -390,7 +391,8 @@ const LoanStatus: React.FC = () => {
                 </div>
             </motion.div>
         </div>
-        </>
+            <Footer />
+        </div>
     );
 };
 

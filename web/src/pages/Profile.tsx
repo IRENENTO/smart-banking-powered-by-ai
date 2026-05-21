@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
-import { profileService } from '../services/api';
+import { profileService, uploadService } from '../services/api';
+
+const API_BASE = 'http://localhost:5001';
 
 const parseJSON = (value: string | null) => {
     if (!value || value === 'undefined' || value === 'null') return null;
@@ -28,6 +30,7 @@ const Profile: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,7 +50,11 @@ const Profile: React.FC = () => {
           setName(user.name || '');
           setEmail(user.email || '');
           setAccountNumber(user.account_number || '');
-          setProfilePicture(user.profile_picture || '');
+          
+          let pic = user.profile_picture || '';
+          if (pic && !pic.startsWith('http')) pic = `${API_BASE}${pic}`;
+          setProfilePicture(pic);
+          
           setProfileCompleted(user.profile_completed || false);
           
           let level = 0;
@@ -76,6 +83,28 @@ const Profile: React.FC = () => {
     loadProfile();
   }, [navigate]);
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError('');
+    setMessage('');
+
+    try {
+      const response = await uploadService.uploadProfilePicture(file);
+      if (response.data.success) {
+        const fullUrl = `${API_BASE}${response.data.imageUrl}`;
+        setProfilePicture(fullUrl);
+        setMessage('Picture uploaded successfully. Remember to save changes.');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.msg || 'Failed to upload image');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const saveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -83,7 +112,9 @@ const Profile: React.FC = () => {
     setMessage('');
 
     try {
-      const response = await profileService.updateProfile({ name, email, dateOfBirth, address, nationalId, profilePicture });
+      // Send relative path to backend
+      const relativePic = profilePicture.replace(API_BASE, '');
+      const response = await profileService.updateProfile({ name, email, dateOfBirth, address, nationalId, profilePicture: relativePic });
       const returned = response.data || {};
       setMessage('Profile updated successfully');
       setProfileCompleted(returned.user?.profile_completed ?? profileCompleted);
@@ -265,14 +296,22 @@ const Profile: React.FC = () => {
                 />
               </label>
               <label style={{ display: 'grid', gap: 8 }}>
-                <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Profile Picture URL</span>
-                <input
-                  type="text"
-                  value={profilePicture}
-                  onChange={(e) => setProfilePicture(e.target.value)}
-                  style={{ padding: 12, border: '1px solid #cbd5e1', borderRadius: 8 }}
-                  placeholder="Enter image URL"
-                />
+                <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Profile Picture</span>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    style={{ 
+                      padding: 8, 
+                      border: '1px solid #cbd5e1', 
+                      borderRadius: 8, 
+                      fontSize: '14px',
+                      width: '100%'
+                    }}
+                  />
+                  {uploading && <div style={{ fontSize: '12px', color: '#0A9396' }}>Uploading...</div>}
+                </div>
               </label>
               </div>
             {error && <div className="toast toast-error">{error}</div>}

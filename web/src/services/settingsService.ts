@@ -59,5 +59,17 @@ export const settingsService = {
 
   // User Preferences
   getUserPreferences: () => api.get('/settings/preferences'),
-  updateUserPreferences: (data: UserPreferencesData) => api.put('/settings/preferences', data)
+  updateUserPreferences: (data: UserPreferencesData) => api.put('/settings/preferences', data),
+
+  // Cards Management
+  getCards: () => api.get('/settings/cards'),
+  addCard: (data: any) => api.post('/settings/cards', data),
+  deleteCard: (id: number) => api.delete(`/settings/cards/${id}`),
+  updateCardStatus: (id: number, status: string) => api.put(`/settings/cards/${id}/status`, { status }),
+  setDefaultCard: (id: number) => api.put(`/settings/cards/${id}/default`),
+
+  // Statements Management
+  getStatements: () => api.get('/settings/statements'),
+  generateStatement: (type: string) => api.post('/settings/statements/generate', { type }),
+  incrementDownloadCount: (id: number) => api.put(`/settings/statements/${id}/download`)
 };

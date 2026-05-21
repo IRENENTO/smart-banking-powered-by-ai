@@ -175,11 +175,13 @@ const Footer: React.FC = () => {
                         <div style={{ display: 'grid', gap: 12 }}>
                             {[
                                 { label: 'Personal Banking', path: '/personal-banking' },
+                                { label: 'Smart Savings', path: '/savings' },
                                 { label: 'Business Banking', path: '/business-banking' },
-                                { label: 'Loans', path: '/loans' },
+                                { label: 'Digital Loans', path: '/loans' },
                                 { label: 'Investments', path: '/investments' },
                                 { label: 'Insurance', path: '/insurance' },
-                                { label: 'Credit Cards', path: '/credit-cards' }
+                                { label: 'Credit Cards', path: '/credit-cards' },
+                                { label: 'Mobile Banking', path: '/mobile-banking' }
                             ].map((service) => (
                                 <motion.div
                                     key={service.label}

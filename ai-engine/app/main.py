@@ -2,11 +2,13 @@
 AI Banking Intelligence Engine — FastAPI Application
 ======================================================
 Endpoints:
-  POST /api/ai/predict-loan
-  POST /api/ai/detect-fraud
-  POST /api/ai/predict-savings
-  POST /api/ai/retrain
-  GET  /api/ai/model-status
+  POST /api/ai/predict-loan         — Loan risk prediction
+  POST /api/ai/detect-fraud         — Fraud detection
+  POST /api/ai/predict-savings      — Financial health scoring
+  POST /api/ai/spending-analysis    — Spending pattern analysis
+  POST /api/ai/recommendations      — AI financial recommendations
+  POST /api/ai/retrain              — Retrain all ML models
+  GET  /api/ai/model-status         — Check trained models
   
   Legacy:
   POST /predict-risk
@@ -15,16 +17,20 @@ Endpoints:
 Swagger UI: http://localhost:8000/docs
 """
 import os
-import sys
+import time
+import logging
 from contextlib import asynccontextmanager
-from typing import Any
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+logging.basicConfig(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+logger = logging.getLogger("ai-engine")
+
 from .schemas import (
-    LoanPredictRequest, LoanPredictResponse,
-    FraudDetectRequest, FraudDetectResponse,
     SavingsPredictRequest, SavingsPredictResponse,
     LoanData, RiskPrediction, EconomicForecast,
     RetrainResponse
@@ -32,13 +38,15 @@ from .schemas import (
 from .services.risk_scoring import calculate_risk
 from .services.economic_forecast import get_forecast
 
-# ─── LIFESPAN ─────────────────────────────────────────────────────────────────
-# Pre-load models at startup so first request is fast
+from .routes.loan_routes import router as loan_router
+from .routes.fraud_routes import router as fraud_router
+from .routes.spending_routes import router as spending_router
+from .routes.recommendation_routes import router as recommendation_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Warm up models on startup."""
-    print("🚀 AI Engine starting up — loading models ...")
+    logger.info("AI Engine starting up — loading models ...")
     try:
         from .services.predict_loan    import _load_model as load_loan
         from .services.predict_fraud   import _load_model as load_fraud
@@ -47,45 +55,89 @@ async def lifespan(app: FastAPI):
         for name, loader in [("loan", load_loan), ("fraud", load_fraud), ("savings", load_savings)]:
             try:
                 loader()
-                print(f"   ✅  {name} model loaded")
+                logger.info(f"   + {name} model loaded")
             except FileNotFoundError:
-                print(f"   ⚠️   {name} model not found — run training first")
+                logger.warning(f"   - {name} model not found — run training first")
     except Exception as e:
-        print(f"   ⚠️  Model warm-up error: {e}")
-
-    yield  # app runs
-
-    print("🛑 AI Engine shutting down.")
+        logger.error(f"   Model warm-up error: {e}")
+    yield
+    logger.info("AI Engine shutting down.")
 
 
-# ─── APP ──────────────────────────────────────────────────────────────────────
+# ─── API Key Auth ──────────────────────────────────────────────────────────────
+API_KEY = os.getenv("AI_ENGINE_API_KEY", "dev-key-change-in-production")
+
+# ─── Simple in-memory rate limiter ─────────────────────────────────────────────
+_rate_limit_store: dict = {}
+RATE_LIMIT = int(os.getenv("RATE_LIMIT", "60"))
+RATE_WINDOW = int(os.getenv("RATE_WINDOW", "60"))
+
+async def check_rate_limit(request):
+    ip = request.client.host if request.client else "unknown"
+    now = time.time()
+    window_start = now - RATE_WINDOW
+    _rate_limit_store[ip] = [t for t in _rate_limit_store.get(ip, []) if t > window_start]
+    if len(_rate_limit_store[ip]) >= RATE_LIMIT:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=429, content={"detail": "Too many requests"})
+    _rate_limit_store[ip].append(now)
+    return None
+
 app = FastAPI(
     title="AI Smart Banking — Intelligence Engine",
     description=(
         "Machine-learning powered APIs for loan approval prediction, "
-        "real-time fraud detection, and financial health scoring. "
+        "real-time fraud detection, financial health scoring, "
+        "spending analytics, and AI recommendations. "
         "Built for the AI Smart Banking Platform (Rwanda)."
     ),
     version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc",
     lifespan=lifespan,
-    contact={
-        "name": "AI Banking Team",
-        "email": "ai@smartbanking.rw"
-    }
+    contact={"name": "AI Banking Team", "email": "ai@smartbanking.rw"}
 )
+
+@app.middleware("http")
+async def security_middleware(request, call_next):
+    if request.url.path in ("/", "/docs", "/redoc", "/openapi.json"):
+        return await call_next(request)
+
+    rate_resp = await check_rate_limit(request)
+    if rate_resp:
+        return rate_resp
+
+    key = request.headers.get("X-API-Key")
+    if key != API_KEY:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=403, content={"detail": "Invalid or missing API key"})
+
+    return await call_next(request)
+
+# CORS — restrict in production
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:5000",
+    "http://localhost:5001",
+    "http://127.0.0.1:3000",
+]
+if os.getenv("ALLOWED_ORIGINS"):
+    ALLOWED_ORIGINS.extend(os.getenv("ALLOWED_ORIGINS").split(","))
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["X-API-Key", "Content-Type", "Authorization"],
 )
 
+app.include_router(loan_router)
+app.include_router(fraud_router)
+app.include_router(spending_router)
+app.include_router(recommendation_router)
 
-# ─── ROOT ─────────────────────────────────────────────────────────────────────
+
 @app.get("/", tags=["Health"])
 def root():
     return {
@@ -97,18 +149,16 @@ def root():
             "loan_prediction": "/api/ai/predict-loan",
             "fraud_detection": "/api/ai/detect-fraud",
             "savings_intelligence": "/api/ai/predict-savings",
+            "spending_analysis": "/api/ai/spending-analysis",
+            "recommendations": "/api/ai/recommendations",
             "model_status": "/api/ai/model-status",
             "retrain": "/api/ai/retrain"
         }
     }
 
 
-# ─── MODEL STATUS ─────────────────────────────────────────────────────────────
-@app.get(
-    "/api/ai/model-status",
-    tags=["AI Models"],
-    summary="Check which trained models are available"
-)
+@app.get("/api/ai/model-status", tags=["AI Models"],
+         summary="Check which trained models are available")
 def model_status():
     BASE = os.path.join(os.path.dirname(__file__), 'models')
     models = {
@@ -126,113 +176,31 @@ def model_status():
     return {"success": True, "models": status}
 
 
-# ─── LOAN PREDICTION ──────────────────────────────────────────────────────────
-@app.post(
-    "/api/ai/predict-loan",
-    response_model=LoanPredictResponse,
-    tags=["AI Models"],
-    summary="Predict loan approval probability using trained ML model",
-    response_description="Loan risk score, approval decision and default probability"
-)
-def predict_loan_endpoint(request: LoanPredictRequest):
-    """
-    Predict whether a loan application should be approved.
-
-    Uses an ensemble of **RandomForestClassifier** and **XGBoostClassifier** 
-    trained on historical loan data.
-
-    Returns:
-    - `risk_score` — 0-100, higher = lower risk
-    - `loan_approval` — True/False
-    - `default_probability` — likelihood of default (0-1)
-    """
-    from .services.predict_loan import predict_loan
-    try:
-        result = predict_loan(request.model_dump())
-        return result
-    except FileNotFoundError as e:
-        raise HTTPException(status_code=503, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
-
-
-# ─── FRAUD DETECTION ──────────────────────────────────────────────────────────
-@app.post(
-    "/api/ai/detect-fraud",
-    response_model=FraudDetectResponse,
-    tags=["AI Models"],
-    summary="Real-time transaction fraud risk detection",
-    response_description="Fraud risk level, percentage and risk flags"
-)
-def detect_fraud_endpoint(request: FraudDetectRequest):
-    """
-    Analyze a transaction for fraud signals.
-
-    Uses a dual-model approach:
-    - **IsolationForest** for unsupervised anomaly detection
-    - **RandomForestClassifier** for supervised fraud probability
-
-    Returns combined risk: `LOW | MEDIUM | HIGH | CRITICAL`
-    """
-    from .services.predict_fraud import detect_fraud
-    try:
-        result = detect_fraud(request.model_dump())
-        return result
-    except FileNotFoundError as e:
-        raise HTTPException(status_code=503, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Detection error: {str(e)}")
-
-
-# ─── SAVINGS / FINANCIAL HEALTH ───────────────────────────────────────────────
-@app.post(
-    "/api/ai/predict-savings",
-    response_model=SavingsPredictResponse,
-    tags=["AI Models"],
-    summary="Predict financial health score and savings recommendations",
-    response_description="Financial health score and personalized saving advice"
-)
+@app.post("/api/ai/predict-savings", response_model=SavingsPredictResponse,
+          tags=["Financial Health"],
+          summary="Predict financial health score and savings recommendations")
 def predict_savings_endpoint(request: SavingsPredictRequest):
-    """
-    Compute financial health score and recommended monthly savings.
-
-    Uses:
-    - **GradientBoostingRegressor** for health score (0-100)
-    - **RandomForestRegressor** for savings amount recommendation
-
-    Returns:
-    - `financial_health_score` — 0 to 100
-    - `recommended_monthly_saving` — amount in RWF
-    - `recommendations` — personalized tips
-    """
     from .services.predict_savings import predict_savings
     try:
-        result = predict_savings(request.model_dump())
-        return result
+        return predict_savings(request.model_dump())
     except FileNotFoundError as e:
+        from fastapi import HTTPException
         raise HTTPException(status_code=503, detail=str(e))
     except Exception as e:
+        from fastapi import HTTPException
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 
-# ─── RETRAIN ENDPOINT ─────────────────────────────────────────────────────────
-@app.post(
-    "/api/ai/retrain",
-    response_model=RetrainResponse,
-    tags=["AI Models"],
-    summary="Trigger full model retraining in background"
-)
+@app.post("/api/ai/retrain", response_model=RetrainResponse,
+          tags=["AI Models"],
+          summary="Trigger full model retraining in background")
 def retrain_models(background_tasks: BackgroundTasks):
-    """
-    Schedule a full retraining of all three ML models.
-    Retraining runs in the background — check `/api/ai/model-status` afterwards.
-    """
     def do_retrain():
         try:
             from .training.retrain_all import retrain_all
             retrain_all()
         except Exception as e:
-            print(f"❌ Retraining error: {e}")
+            print(f"Retraining error: {e}")
 
     background_tasks.add_task(do_retrain)
     return {
@@ -242,21 +210,16 @@ def retrain_models(background_tasks: BackgroundTasks):
     }
 
 
-# ─── LEGACY ENDPOINTS (backward compat) ───────────────────────────────────────
 @app.post("/predict-risk", response_model=RiskPrediction, tags=["Legacy"])
 def predict_loan_risk_legacy(data: LoanData):
-    """Legacy endpoint — use /api/ai/predict-loan instead."""
-    result = calculate_risk(data)
-    return result
+    return calculate_risk(data)
 
 
 @app.get("/economic-forecast", response_model=EconomicForecast, tags=["Legacy"])
 def fetch_economic_forecast():
-    """Legacy endpoint — returns economic forecast data."""
     return get_forecast()
 
 
-# ─── ENTRY POINT ──────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

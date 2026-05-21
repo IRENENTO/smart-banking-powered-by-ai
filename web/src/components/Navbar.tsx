@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Moon, Sun, Bell, User, Settings, LogOut, CreditCard, TrendingUp, Globe } from 'lucide-react';
+import { Moon, Sun, Bell, User, Settings, LogOut, CreditCard, LogIn, UserPlus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationDropdown from './NotificationDropdown';
 import LanguageToggle from './LanguageToggle';
@@ -110,13 +110,14 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                 style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 4 }}
             >
                 {[
-                    { to: '/dashboard', label: t('nav.dashboard'), icon: TrendingUp },
+                    { to: '/dashboard', label: t('nav.dashboard') },
                     { to: '/transactions', label: t('nav.transactions') },
-                    { to: '/payments', label: 'Payments' },
-                    { to: '/savings', label: 'Savings' },
-                    { to: '/loan-status', label: t('nav.loans') },
-                    { to: '/ai-insights', label: 'AI Insights' },
-                    { to: '/market-insights', label: 'Market Insights', icon: Globe }
+                    { to: '/payments', label: t('nav.payments') },
+                    { to: '/savings', label: t('nav.savings') },
+                    { to: '/loans', label: t('nav.loans') },
+                    { to: '/ai-insights', label: t('nav.aiInsights') },
+                    { to: '/market-insights', label: t('nav.marketInsights') },
+                    { to: '/spending-analysis', label: t('nav.spendingAnalysis') }
                 ].map((item, index) => (
                     <motion.div
                         key={item.to}
@@ -141,7 +142,6 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                 onHoverStart={() => {}}
                                 onHoverEnd={() => {}}
                             >
-                                {item.icon && <item.icon size={16} />}
                                 <span>{item.label}</span>
                                 <motion.div
                                     style={{
@@ -178,7 +178,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                         backdropFilter: 'blur(10px)',
                         transition: 'all 0.3s ease'
                     }}
-                    title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                    title={darkMode ? t('nav.lightMode') : t('nav.darkMode')}
                 >
                     <AnimatePresence mode="wait">
                         {darkMode ? (
@@ -225,7 +225,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                             backdropFilter: 'blur(10px)',
                             transition: 'all 0.3s ease'
                         }}
-                        title="Notifications"
+                        title={t('nav.notifications')}
                     >
                         <motion.div
                             animate={unreadCount > 0 ? { rotate: [0, 10, -10, 0] } : {}}
@@ -282,7 +282,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                             backdropFilter: 'blur(10px)',
                             transition: 'all 0.3s ease'
                         }}
-                        title="User Menu"
+                        title={t('nav.profile')}
                     >
                         <User size={20} />
                     </motion.button>
@@ -331,7 +331,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                     style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}
                                 >
                                     <div style={{ fontWeight: 'bold', fontSize: '16px' }}>
-                                        {isAuthenticated ? (user?.name || user?.email || 'User') : 'Guest'}
+                                        {isAuthenticated ? (user?.name || user?.email || t('nav.user')) : 'Guest'}
                                     </div>
                                     <div style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.6)', marginTop: 4 }}>
                                         {isAuthenticated ? (user?.email || 'No email available') : 'Not signed in'}
@@ -385,7 +385,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                                         e.currentTarget.style.background = 'rgba(251, 191, 36, 0.15)';
                                                     }}
                                                 >
-                                                    Continue setup →
+                                                    {t('auth.continueSetup')} →
                                                 </Link>
                                             </motion.div>
                                         )}
@@ -440,6 +440,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                             onClick={() => {
                                                 localStorage.removeItem('token');
                                                 localStorage.removeItem('user');
+                                                window.dispatchEvent(new Event('auth-change'));
                                                 window.location.href = '/login';
                                             }}
                                             style={{
@@ -464,7 +465,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                             }}
                                         >
                                             <LogOut size={16} />
-                                            Sign Out
+                                            {t('auth.signOut')}
                                         </motion.button>
                                     </>
                                 ) : (
@@ -481,6 +482,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
+                                                    gap: '8px',
                                                     padding: '12px 16px',
                                                     color: 'white',
                                                     background: '#0A9396',
@@ -489,7 +491,8 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                                     fontSize: '14px'
                                                 }}
                                             >
-                                                Login
+                                                <LogIn size={16} />
+                                                {t('auth.login')}
                                             </Link>
                                             <Link
                                                 to="/register"
@@ -497,6 +500,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
+                                                    gap: '8px',
                                                     padding: '12px 16px',
                                                     color: 'white',
                                                     background: 'rgba(255,255,255,0.08)',
@@ -506,7 +510,8 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                                     border: '1px solid rgba(255,255,255,0.2)'
                                                 }}
                                             >
-                                                Register
+                                                <UserPlus size={16} />
+                                                {t('auth.register')}
                                             </Link>
                                         </motion.div>
                                     </>

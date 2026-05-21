@@ -1,7 +1,53 @@
 // Public routes controller for landing page content
 
+async function getCmsFallback(page) {
+    try {
+        if (global.dbConnection) {
+            const [rows] = await global.dbConnection.query(
+                'SELECT content FROM cms_sections WHERE page = ? AND section = ? LIMIT 1',
+                [page, 'main']
+            );
+            if (rows.length > 0) return typeof rows[0].content === 'string' ? JSON.parse(rows[0].content) : rows[0].content;
+        }
+    } catch {}
+    return null;
+}
+
 exports.getAboutUs = async (req, res) => {
     try {
+        let userCount = 0;
+        let transactionCount = 0;
+
+        if (global.dbConnection) {
+            try {
+                const [userRows] = await global.dbConnection.query('SELECT COUNT(*) as count FROM users');
+                userCount = userRows[0]?.count || 0;
+            } catch {}
+            try {
+                const [txnRows] = await global.dbConnection.query('SELECT COUNT(*) as count FROM transactions');
+                transactionCount = txnRows[0]?.count || 0;
+            } catch {}
+        }
+
+        const formatCount = (num) => {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M+';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K+';
+            return num.toString();
+        };
+
+        const liveStats = [
+            { label: "Active Users", value: formatCount(userCount) },
+            { label: "Transactions", value: formatCount(transactionCount) },
+            { label: "Coverage", value: "All 30 Districts" },
+            { label: "Customer Satisfaction", value: "98%" }
+        ];
+
+        const cms = await getCmsFallback('about');
+        if (cms) {
+            cms.stats = liveStats;
+            return res.json(cms);
+        }
+
         const aboutData = {
             title: "About AI Banking Rwanda",
             description: "AI Banking is Rwanda's leading digital banking platform, combining cutting-edge artificial intelligence with traditional banking services to provide you with a seamless, secure, and intelligent banking experience.",
@@ -25,12 +71,7 @@ exports.getAboutUs = async (req, res) => {
                     description: "Every solution is designed with our customers' needs at the forefront"
                 }
             ],
-            stats: [
-                { label: "Active Users", value: "50,000+" },
-                { label: "Transactions Daily", value: "10,000+" },
-                { label: "Coverage", value: "All 30 Districts" },
-                { label: "Customer Satisfaction", value: "98%" }
-            ]
+            stats: liveStats
         };
 
         res.json(aboutData);
@@ -42,6 +83,8 @@ exports.getAboutUs = async (req, res) => {
 
 exports.getContactUs = async (req, res) => {
     try {
+        const cms = await getCmsFallback('contact');
+        if (cms) return res.json(cms);
         const contactData = {
             title: "Contact Us",
             description: "We're here to help you with all your banking needs. Reach out to us through any of the following channels:",
@@ -98,6 +141,8 @@ exports.getContactUs = async (req, res) => {
 
 exports.getServices = async (req, res) => {
     try {
+        const cms = await getCmsFallback('services');
+        if (cms) return res.json(cms);
         const servicesData = {
             title: "Our Services",
             description: "Discover our comprehensive range of AI-powered banking services designed to meet your financial needs:",
@@ -150,6 +195,8 @@ exports.getServices = async (req, res) => {
 
 exports.getFAQ = async (req, res) => {
     try {
+        const cms = await getCmsFallback('faq');
+        if (cms) return res.json(cms);
         const faqData = {
             title: "Frequently Asked Questions",
             description: "Find answers to common questions about AI Banking Rwanda:",

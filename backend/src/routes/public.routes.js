@@ -199,4 +199,20 @@ router.get('/services', publicController.getServices);
  */
 router.get('/faq', publicController.getFAQ);
 
+// CMS public endpoint for all pages
+router.get('/cms/:page', async (req, res) => {
+    try {
+        const connection = global.dbConnection;
+        if (!connection) return res.status(503).json({ error: 'Database unavailable' });
+        const [rows] = await connection.query(
+            'SELECT content FROM cms_sections WHERE page = ? AND section = ? LIMIT 1',
+            [req.params.page, 'main']
+        );
+        if (rows.length > 0) return res.json(typeof rows[0].content === 'string' ? JSON.parse(rows[0].content) : rows[0].content);
+        res.status(404).json({ error: 'Page not found' });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 module.exports = router;

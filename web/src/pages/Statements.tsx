@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AppShell from '../components/AppShell';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
+import { settingsService } from '../services/settingsService';
 import { FileText, Download, Calendar, Filter } from 'lucide-react';
 
 interface Statement {
@@ -18,110 +19,67 @@ interface Statement {
 const Statements: React.FC = () => {
   const [statements, setStatements] = useState<Statement[]>([]);
   const [loading, setLoading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const loadStatements = async () => {
-      setLoading(true);
-      try {
-        // Mock data for now - would connect to backend
-        const mockStatements: Statement[] = [
-          {
-            id: 1,
-            statement_type: 'monthly',
-            statement_period: 'January 2024',
-            file_path: '/statements/january-2024.pdf',
-            file_size: 245760,
-            download_count: 12,
-            generated_at: '2024-02-01T10:00:00Z'
-          },
-          {
-            id: 2,
-            statement_type: 'monthly',
-            statement_period: 'December 2023',
-            file_path: '/statements/december-2023.pdf',
-            file_size: 189432,
-            download_count: 8,
-            generated_at: '2024-01-01T10:00:00Z'
-          },
-          {
-            id: 3,
-            statement_type: 'quarterly',
-            statement_period: 'Q4 2023',
-            file_path: '/statements/q4-2023.pdf',
-            file_size: 567890,
-            download_count: 5,
-            generated_at: '2024-01-01T10:00:00Z'
-          },
-          {
-            id: 4,
-            statement_type: 'annual',
-            statement_period: 'Annual 2023',
-            file_path: '/statements/annual-2023.pdf',
-            file_size: 2345678,
-            download_count: 15,
-            generated_at: '2024-01-01T10:00:00Z'
-          }
-        ];
-        setStatements(mockStatements);
-      } catch (err: any) {
-        setError('Failed to load statements');
-      } finally {
-        setLoading(false);
+  const loadStatements = async () => {
+    setLoading(true);
+    try {
+      const response = await settingsService.getStatements();
+      if (response.data.success) {
+        setStatements(response.data.data);
       }
-    };
+    } catch (err: any) {
+      setError('Failed to load statements');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     loadStatements();
   }, []);
 
   const handleDownload = async (statement: Statement) => {
     try {
-      // Mock download - would trigger actual file download
-      const link = document.createElement('a');
-      link.href = statement.file_path;
-      link.download = `${statement.statement_period}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      // Record download in backend
+      await settingsService.incrementDownloadCount(statement.id);
       
-      // Update download count
+      // Update local state
       setStatements(prev => prev.map(s => 
         s.id === statement.id 
           ? { ...s, download_count: s.download_count + 1 }
           : s
       ));
+
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = statement.file_path.startsWith('http') ? statement.file_path : `http://localhost:5001${statement.file_path}`;
+      link.download = `${statement.statement_period}.pdf`;
+      link.target = '_blank';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (err: any) {
       setError('Failed to download statement');
     }
   };
 
   const handleGenerateStatement = async (type: string) => {
+    setGenerating(true);
     try {
-      // Mock API call
-      const newStatement: Statement = {
-        id: statements.length + 1,
-        statement_type: type,
-        statement_period: type === 'monthly' 
-          ? `${new Date().toLocaleString('en-US', { month: 'long' })} ${new Date().getFullYear()}`
-          : type === 'quarterly'
-          ? `Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()}`
-          : `Annual ${new Date().getFullYear()}`,
-        file_path: `/statements/${type}-${Date.now()}.pdf`,
-        file_size: Math.floor(Math.random() * 1000000) + 500000,
-        download_count: 0,
-        generated_at: new Date().toISOString()
-      };
-      
-      setStatements(prev => [newStatement, ...prev]);
-      setError('');
-      
-      // Auto-download the new statement
-      setTimeout(() => handleDownload(newStatement), 1000);
+      const response = await settingsService.generateStatement(type);
+      if (response.data.success) {
+        loadStatements();
+        setError('');
+      }
     } catch (err: any) {
       setError('Failed to generate statement');
+    } finally {
+      setGenerating(false);
     }
   };
 
@@ -218,6 +176,29 @@ const Statements: React.FC = () => {
               >
                 📈 Annual Statement
               </LoadingButton>
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard 
+          title="Statement Activity"
+          subtitle="Overview of your generated documents"
+          headerRight={
+            <Filter size={24} style={{ color: '#0A9396' }} />
+          }
+        >
+          <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 16 }}>
+            <div style={{ padding: '16px', background: '#f8fafc', borderRadius: 12, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#0B1F3A' }}>{statements.length}</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Total Statements</div>
+            </div>
+            <div style={{ padding: '16px', background: '#f8fafc', borderRadius: 12, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#0A9396' }}>{statements.filter(s => s.statement_type === 'monthly').length}</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Monthly Reports</div>
+            </div>
+            <div style={{ padding: '16px', background: '#f8fafc', borderRadius: 12, textAlign: 'center', border: '1px solid #e2e8f0' }}>
+              <div style={{ fontSize: '20px', fontWeight: 700, color: '#059669' }}>{statements.reduce((acc, s) => acc + s.download_count, 0)}</div>
+              <div style={{ fontSize: '12px', color: '#64748b' }}>Total Downloads</div>
             </div>
           </div>
         </SectionCard>

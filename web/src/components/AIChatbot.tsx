@@ -11,8 +11,10 @@ import {
   ChevronRight,
   Mic,
   MicOff,
+  Volume2,
+  VolumeX,
 } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../context/LanguageContext';
 import { aiService } from '../services/api';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -29,7 +31,7 @@ interface Message {
 
 const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?: boolean }[] = [
   {
-    keywords: ['hello', 'hi', 'hey', 'start', 'help', 'bonjour', 'muraho'],
+    keywords: ['hello', 'hi', 'hey', 'start', 'help', 'bonjour', 'muraho', 'marhaba', 'ahlan'],
     answer:
       "👋 Hello! I'm **Lend-AI**, your personal banking assistant for AI Smart Banking.\n\nI can help you:\n• 📊 Understand your Dashboard\n• 💸 Send & receive Money\n• 🏦 Manage Accounts\n• 💳 Apply for Loans\n• 💰 Track Savings\n• 📈 Check AI Insights\n\nWhat would you like to know?",
     quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'],
@@ -378,7 +380,7 @@ const ChatBubble: React.FC<{ msg: Message }> = ({ msg }) => {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const AIChatbot: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, language } = useLanguage();
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [messages, setMessages] = useState<Message[]>([WELCOME_MSG]);
@@ -386,6 +388,7 @@ const AIChatbot: React.FC = () => {
   const [typing, setTyping] = useState(false);
   const [unread, setUnread] = useState(0);
   const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -393,11 +396,19 @@ const AIChatbot: React.FC = () => {
   // Initialize Web Speech API
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition && !recognitionRef.current) {
+    if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
-      recognitionRef.current.language = 'en-US';
+
+      // Map language code to Speech API codes
+      const langMap: Record<string, string> = {
+        en: 'en-US',
+        rw: 'rw-RW',
+        fr: 'fr-FR',
+        ar: 'ar-SA'
+      };
+      recognitionRef.current.lang = langMap[language] || 'en-US';
 
       recognitionRef.current.onstart = () => setIsListening(true);
       recognitionRef.current.onend = () => setIsListening(false);
@@ -406,13 +417,41 @@ const AIChatbot: React.FC = () => {
           .map((result: any) => result[0].transcript)
           .join('');
         setInput(transcript);
+        handleSend(transcript);
       };
-      recognitionRef.current.onerror = () => setIsListening(false);
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
     }
-  }, []);
+  }, [language]);
+
+  const speak = useCallback((text: string) => {
+    if (!isSpeaking || !window.speechSynthesis) return;
+    
+    // Stop any current speech
+    window.speechSynthesis.cancel();
+
+    // Remove markdown bold tags for cleaner speech
+    const cleanText = text.replace(/\*\*/g, '');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    const langMap: Record<string, string> = {
+      en: 'en-US',
+      rw: 'rw-RW',
+      fr: 'fr-FR',
+      ar: 'ar-SA'
+    };
+    utterance.lang = langMap[language] || 'en-US';
+    
+    window.speechSynthesis.speak(utterance);
+  }, [isSpeaking, language]);
 
   const toggleMicrophone = () => {
-    if (!recognitionRef.current) return;
+    if (!recognitionRef.current) {
+        alert("Speech recognition is not supported in your browser.");
+        return;
+    }
     if (isListening) {
       recognitionRef.current.stop();
     } else {
@@ -463,7 +502,7 @@ const AIChatbot: React.FC = () => {
         if (response.useAPI) {
           try {
             const apiResponse = await aiService.chat(trimmed);
-            botMsg.text = apiResponse.data.response || apiResponse.data.message || "I received your message, but I'm not sure how to respond. Can you try rephrasing?";
+            botMsg.text = apiResponse.data.reply || apiResponse.data.response || apiResponse.data.message || "I received your message, but I'm not sure how to respond. Can you try rephrasing?";
             botMsg.quickReplies = apiResponse.data.quickReplies || ['Go back to start'];
           } catch (apiError) {
             console.error('API call failed:', apiError);
@@ -473,6 +512,7 @@ const AIChatbot: React.FC = () => {
         }
         
         setMessages((prev) => [...prev, botMsg]);
+        speak(botMsg.text);
       } catch (error) {
         console.error('Error handling message:', error);
         const errorMsg: Message = { 
@@ -563,6 +603,13 @@ const AIChatbot: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsSpeaking(!isSpeaking)}
+                  title={isSpeaking ? 'Mute' : 'Unmute'}
+                  className="p-1.5 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  {isSpeaking ? <Volume2 size={15} /> : <VolumeX size={15} />}
+                </button>
                 <button
                   onClick={handleReset}
                   title="Reset conversation"

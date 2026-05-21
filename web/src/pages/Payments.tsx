@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
+import PinModal from '../components/PinModal';
 import { useBanking } from '../context/BankingContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
@@ -26,6 +28,7 @@ const Payments: React.FC = () => {
     // Deposit state
     const [depositAmount, setDepositAmount] = useState('');
     const [depositPhoneNumber, setDepositPhoneNumber] = useState('');
+    const [depositProvider, setDepositProvider] = useState<'mtn' | 'airtel'>('mtn');
 
     // Schedules state
     const [schedules, setSchedules] = useState<any[]>([]);
@@ -33,6 +36,7 @@ const Payments: React.FC = () => {
     const [showSchedModal, setShowSchedModal] = useState(false);
     const [schedPayType, setSchedPayType] = useState<'phone' | 'account'>('account');
     const [schedForm, setSchedForm] = useState({ name: '', amount: '', frequency: 'monthly', startDate: '', endDate: '', description: '', recipient: '' });
+    const [pinAction, setPinAction] = useState<{ cb: () => void } | null>(null);
 
     useEffect(() => {
         if (activeTab === 'schedules') loadSchedules();
@@ -52,12 +56,18 @@ const Payments: React.FC = () => {
         setMessage(''); setError('');
         const amountValue = parseFloat(sendData.amount);
         if (!Number.isFinite(amountValue) || amountValue <= 0) { setError('Enter a valid amount'); return; }
-        try {
-            const recipientId = payType === 'phone' ? sendData.phone : sendData.account;
-            await sendPayment(amountValue, recipientId, sendData.recipient, sendData.note);
-            setMessage(`Sent RWF ${amountValue.toLocaleString()} to ${sendData.recipient}`);
-            setSendData({ recipient: '', phone: '', account: '', amount: '', note: '' });
-        } catch (err: any) { setError(err.response?.data?.msg || 'Payment failed'); }
+        if (!sendData.recipient) { setError('Enter recipient name'); return; }
+        const recipientId = payType === 'phone' ? sendData.phone : sendData.account;
+        if (!recipientId) { setError(payType === 'phone' ? 'Enter phone number' : 'Enter account number'); return; }
+        setPinAction({
+            cb: async () => {
+                try {
+                    await sendPayment(amountValue, recipientId, sendData.recipient, sendData.note);
+                    setMessage(`Sent RWF ${amountValue.toLocaleString()} to ${sendData.recipient}`);
+                    setSendData({ recipient: '', phone: '', account: '', amount: '', note: '' });
+                } catch (err: any) { setError(err.response?.data?.msg || 'Payment failed'); }
+            }
+        });
     };
 
     const handleDeposit = async (e: React.FormEvent) => {
@@ -66,8 +76,8 @@ const Payments: React.FC = () => {
         const amountValue = parseFloat(depositAmount);
         if (!Number.isFinite(amountValue) || amountValue <= 0) { setError('Enter a valid amount'); return; }
         try {
-            await deposit(amountValue, 'Deposit', depositPhoneNumber || undefined);
-            setMessage(depositPhoneNumber ? `Deposit initiated on ${depositPhoneNumber}.` : `Deposited RWF ${amountValue.toLocaleString()}`);
+            await deposit(amountValue, `Deposit via ${depositProvider.toUpperCase()}`, depositPhoneNumber || undefined);
+            setMessage(depositPhoneNumber ? `Deposit initiated via ${depositProvider.toUpperCase()} on ${depositPhoneNumber}.` : `Deposited RWF ${amountValue.toLocaleString()}`);
             setDepositAmount(''); setDepositPhoneNumber('');
         } catch (err: any) { setError(err.response?.data?.msg || 'Deposit failed'); }
     };
@@ -104,9 +114,9 @@ const Payments: React.FC = () => {
     const inputStyle = { padding: 12, borderRadius: 14, border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`, background: isDark ? '#0F172A' : 'white', color: isDark ? '#E2E8F0' : 'inherit', boxSizing: 'border-box' as const, width: '100%' as const };
 
     return (
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Navbar authenticated={!!localStorage.getItem('token')} />
-            <div style={{ padding: 24, minHeight: 'calc(100vh - 48px)', background: isDark ? '#071B2F' : '#eef7fb' }}>
+            <div style={{ flex: 1, padding: 24, background: isDark ? '#0B1F3A' : '#f8fafc' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 24 }}>
                     <div>
                         <h1>Payments</h1>
@@ -134,7 +144,24 @@ const Payments: React.FC = () => {
                     <SectionCard title="Deposit Money">
                         <form onSubmit={handleDeposit} style={{ marginTop: 18, display: 'grid', gap: 16 }}>
                             <input value={depositAmount} placeholder="Amount (RWF)" type="number" min="0.01" step="0.01" onChange={(e) => setDepositAmount(e.target.value)} {...{style: inputStyle}} required />
-                            <input value={depositPhoneNumber} placeholder="Phone number (mobile money)" type="tel" onChange={(e) => setDepositPhoneNumber(e.target.value)} {...{style: inputStyle}} />
+                            
+                            {/* Provider Selector */}
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button type="button" onClick={() => setDepositProvider('mtn')}
+                                    style={{ flex: 1, padding: 10, borderRadius: 10, border: depositProvider === 'mtn' ? '2px solid #0A9396' : `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
+                                        background: depositProvider === 'mtn' ? (isDark ? 'rgba(10,147,150,0.15)' : 'rgba(10,147,150,0.08)') : 'transparent',
+                                        color: isDark ? '#E2E8F0' : '#0f172a', cursor: 'pointer', fontWeight: depositProvider === 'mtn' ? 700 : 400 }}>
+                                    MTN MoMo
+                                </button>
+                                <button type="button" onClick={() => setDepositProvider('airtel')}
+                                    style={{ flex: 1, padding: 10, borderRadius: 10, border: depositProvider === 'airtel' ? '2px solid #0A9396' : `1px solid ${isDark ? '#334155' : '#cbd5e1'}`,
+                                        background: depositProvider === 'airtel' ? (isDark ? 'rgba(10,147,150,0.15)' : 'rgba(10,147,150,0.08)') : 'transparent',
+                                        color: isDark ? '#E2E8F0' : '#0f172a', cursor: 'pointer', fontWeight: depositProvider === 'airtel' ? 700 : 400 }}>
+                                    Airtel Money
+                                </button>
+                            </div>
+
+                            <input value={depositPhoneNumber} placeholder={`Phone number (${depositProvider === 'mtn' ? 'MTN' : 'Airtel'})`} type="tel" onChange={(e) => setDepositPhoneNumber(e.target.value)} {...{style: inputStyle}} required />
                             <button type="submit" style={{ padding: '12px 20px', background: '#059669', color: 'white', border: 'none', borderRadius: 14, fontWeight: 700 }}>Deposit</button>
                         </form>
                     </SectionCard>
@@ -204,7 +231,8 @@ const Payments: React.FC = () => {
                                                     <div><span style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>Frequency</span><div style={{ fontSize: 16, fontWeight: 600, color: '#0A9396', textTransform: 'capitalize' }}>{s.frequency}</div></div>
                                                     <div><span style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>Status</span><div style={{ fontSize: 16, fontWeight: 600, color: s.status === 'active' ? '#10b981' : s.status === 'paused' ? '#f59e0b' : '#64748b', textTransform: 'capitalize' }}>{s.status}</div></div>
                                                     <div><span style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>Next</span><div style={{ fontSize: 16, fontWeight: 600, color: isDark ? '#f1f5f9' : '#1e293b' }}>{s.next_payment_date || 'N/A'}</div></div>
-                                                </div>
+            <Footer />
+        </div>
                                             </div>
                                             <div style={{ display: 'flex', gap: 8 }}>
                                                 {s.status === 'active' && <button onClick={() => handlePauseResume(s.id, 'pause')} style={{ padding: 8, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8, cursor: 'pointer', color: '#f59e0b' }}><Pause size={16} /></button>}
@@ -270,6 +298,14 @@ const Payments: React.FC = () => {
                 {message && <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: isDark ? '#064e3b' : '#d1fae5', color: isDark ? '#d1fae5' : '#065f46' }}>{message}</div>}
                 {error && <div style={{ marginTop: 18, padding: 14, borderRadius: 14, background: isDark ? '#7f1d1d' : '#fee2e2', color: isDark ? '#fde2e2' : '#991b1b' }}>{error}</div>}
             </div>
+            <Footer />
+            {pinAction && (
+                <PinModal
+                    action="Confirm sending money"
+                    onSuccess={() => { const cb = pinAction.cb; setPinAction(null); cb(); }}
+                    onCancel={() => setPinAction(null)}
+                />
+            )}
         </div>
     );
 };

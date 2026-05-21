@@ -1,10 +1,10 @@
-const db = require('../config/db');
+const getDb = () => global.dbConnection;
 
 // Security Settings
 exports.getSecuritySettings = async (req, res) => {
   try {
     const userId = req.user.id;
-    const [settings] = await db.query(
+    const [settings] = await getDb().query(
       'SELECT * FROM security_settings WHERE user_id = ?',
       [userId]
     );
@@ -34,14 +34,14 @@ exports.updateSecuritySettings = async (req, res) => {
     const { two_factor_enabled, sms_alerts, email_alerts, login_notifications, session_timeout } = req.body;
 
     // Check if settings exist
-    const [existing] = await db.query(
+    const [existing] = await getDb().query(
       'SELECT id FROM security_settings WHERE user_id = ?',
       [userId]
     );
 
     if (existing.length > 0) {
       // Update existing settings
-      await db.query(
+      await getDb().query(
         `UPDATE security_settings 
          SET two_factor_enabled = ?, sms_alerts = ?, email_alerts = ?, 
              login_notifications = ?, session_timeout = ?, updated_at = NOW()
@@ -50,7 +50,7 @@ exports.updateSecuritySettings = async (req, res) => {
       );
     } else {
       // Insert new settings
-      await db.query(
+      await getDb().query(
         `INSERT INTO security_settings 
          (user_id, two_factor_enabled, sms_alerts, email_alerts, login_notifications, session_timeout, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -75,7 +75,7 @@ exports.updateSecuritySettings = async (req, res) => {
 exports.getNotificationSettings = async (req, res) => {
   try {
     const userId = req.user.id;
-    const [settings] = await db.query(
+    const [settings] = await getDb().query(
       'SELECT * FROM notification_settings WHERE user_id = ?',
       [userId]
     );
@@ -105,13 +105,13 @@ exports.updateNotificationSettings = async (req, res) => {
     const userId = req.user.id;
     const { email_transactions, sms_transactions, email_promotions, sms_promotions, push_notifications, weekly_summary } = req.body;
 
-    const [existing] = await db.query(
+    const [existing] = await getDb().query(
       'SELECT id FROM notification_settings WHERE user_id = ?',
       [userId]
     );
 
     if (existing.length > 0) {
-      await db.query(
+      await getDb().query(
         `UPDATE notification_settings 
          SET email_transactions = ?, sms_transactions = ?, email_promotions = ?, 
              sms_promotions = ?, push_notifications = ?, weekly_summary = ?, updated_at = NOW()
@@ -119,7 +119,7 @@ exports.updateNotificationSettings = async (req, res) => {
         [email_transactions, sms_transactions, email_promotions, sms_promotions, push_notifications, weekly_summary, userId]
       );
     } else {
-      await db.query(
+      await getDb().query(
         `INSERT INTO notification_settings 
          (user_id, email_transactions, sms_transactions, email_promotions, sms_promotions, push_notifications, weekly_summary, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -144,7 +144,7 @@ exports.updateNotificationSettings = async (req, res) => {
 exports.getPrivacySettings = async (req, res) => {
   try {
     const userId = req.user.id;
-    const [settings] = await db.query(
+    const [settings] = await getDb().query(
       'SELECT * FROM privacy_settings WHERE user_id = ?',
       [userId]
     );
@@ -173,13 +173,13 @@ exports.updatePrivacySettings = async (req, res) => {
     const userId = req.user.id;
     const { data_sharing, analytics_consent, marketing_consent, public_profile, location_tracking } = req.body;
 
-    const [existing] = await db.query(
+    const [existing] = await getDb().query(
       'SELECT id FROM privacy_settings WHERE user_id = ?',
       [userId]
     );
 
     if (existing.length > 0) {
-      await db.query(
+      await getDb().query(
         `UPDATE privacy_settings 
          SET data_sharing = ?, analytics_consent = ?, marketing_consent = ?, 
              public_profile = ?, location_tracking = ?, updated_at = NOW()
@@ -187,7 +187,7 @@ exports.updatePrivacySettings = async (req, res) => {
         [data_sharing, analytics_consent, marketing_consent, public_profile, location_tracking, userId]
       );
     } else {
-      await db.query(
+      await getDb().query(
         `INSERT INTO privacy_settings 
          (user_id, data_sharing, analytics_consent, marketing_consent, public_profile, location_tracking, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -212,7 +212,7 @@ exports.updatePrivacySettings = async (req, res) => {
 exports.getTransactionLimits = async (req, res) => {
   try {
     const userId = req.user.id;
-    const [limits] = await db.query(
+    const [limits] = await getDb().query(
       'SELECT * FROM transaction_limits WHERE user_id = ?',
       [userId]
     );
@@ -248,20 +248,20 @@ exports.updateTransactionLimits = async (req, res) => {
       });
     }
 
-    const [existing] = await db.query(
+    const [existing] = await getDb().query(
       'SELECT id FROM transaction_limits WHERE user_id = ?',
       [userId]
     );
 
     if (existing.length > 0) {
-      await db.query(
+      await getDb().query(
         `UPDATE transaction_limits 
          SET daily_limit = ?, weekly_limit = ?, monthly_limit = ?, single_transaction_limit = ?, updated_at = NOW()
          WHERE user_id = ?`,
         [daily_limit, weekly_limit, monthly_limit, single_transaction_limit, userId]
       );
     } else {
-      await db.query(
+      await getDb().query(
         `INSERT INTO transaction_limits 
          (user_id, daily_limit, weekly_limit, monthly_limit, single_transaction_limit, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
@@ -286,7 +286,7 @@ exports.updateTransactionLimits = async (req, res) => {
 exports.getUserPreferences = async (req, res) => {
   try {
     const userId = req.user.id;
-    const [preferences] = await db.query(
+    const [preferences] = await getDb().query(
       'SELECT * FROM user_preferences WHERE user_id = ?',
       [userId]
     );
@@ -313,26 +313,26 @@ exports.getUserPreferences = async (req, res) => {
 exports.updateUserPreferences = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { currency, language, timezone, date_format, theme } = req.body;
+    const { currency, language, timezone, date_format, theme, large_text, high_contrast } = req.body;
 
-    const [existing] = await db.query(
+    const [existing] = await getDb().query(
       'SELECT id FROM user_preferences WHERE user_id = ?',
       [userId]
     );
 
     if (existing.length > 0) {
-      await db.query(
+      await getDb().query(
         `UPDATE user_preferences 
-         SET currency = ?, language = ?, timezone = ?, date_format = ?, theme = ?, updated_at = NOW()
+         SET currency = ?, language = ?, timezone = ?, date_format = ?, theme = ?, large_text = ?, high_contrast = ?, updated_at = NOW()
          WHERE user_id = ?`,
-        [currency, language, timezone, date_format, theme, userId]
+        [currency, language, timezone, date_format, theme, large_text, high_contrast, userId]
       );
     } else {
-      await db.query(
+      await getDb().query(
         `INSERT INTO user_preferences 
-         (user_id, currency, language, timezone, date_format, theme, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-        [userId, currency, language, timezone, date_format, theme]
+         (user_id, currency, language, timezone, date_format, theme, large_text, high_contrast, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        [userId, currency, language, timezone, date_format, theme, large_text, high_contrast]
       );
     }
 
@@ -346,5 +346,138 @@ exports.updateUserPreferences = async (req, res) => {
       success: false,
       msg: 'Failed to update user preferences'
     });
+  }
+};
+
+// Cards Management
+exports.getCards = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const [cards] = await getDb().query(
+      'SELECT * FROM cards WHERE user_id = ?',
+      [userId]
+    );
+    res.json({ success: true, data: cards });
+  } catch (error) {
+    console.error('Error fetching cards:', error);
+    res.status(500).json({ success: false, msg: 'Failed to fetch cards' });
+  }
+};
+
+exports.addCard = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { card_type, card_number, card_holder_name, expiry_date, cvv } = req.body;
+
+    // Check if it's the first card to set as default
+    const [existing] = await getDb().query('SELECT id FROM cards WHERE user_id = ?', [userId]);
+    const is_default = existing.length === 0;
+
+    const [result] = await getDb().query(
+      `INSERT INTO cards (user_id, card_type, card_number, card_holder_name, expiry_date, cvv, is_default, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [userId, card_type, card_number, card_holder_name, expiry_date, cvv, is_default]
+    );
+
+    res.json({ success: true, msg: 'Card added successfully', cardId: result.insertId });
+  } catch (error) {
+    console.error('Error adding card:', error);
+    res.status(500).json({ success: false, msg: 'Failed to add card' });
+  }
+};
+
+exports.deleteCard = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const cardId = req.params.id;
+    await getDb().query('DELETE FROM cards WHERE id = ? AND user_id = ?', [cardId, userId]);
+    res.json({ success: true, msg: 'Card deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting card:', error);
+    res.status(500).json({ success: false, msg: 'Failed to delete card' });
+  }
+};
+
+exports.updateCardStatus = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const cardId = req.params.id;
+    const { status } = req.body;
+    await getDb().query('UPDATE cards SET card_status = ?, updated_at = NOW() WHERE id = ? AND user_id = ?', [status, cardId, userId]);
+    res.json({ success: true, msg: `Card ${status} successfully` });
+  } catch (error) {
+    console.error('Error updating card status:', error);
+    res.status(500).json({ success: false, msg: 'Failed to update card status' });
+  }
+};
+
+exports.setDefaultCard = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const cardId = req.params.id;
+    
+    // Unset all as default
+    await getDb().query('UPDATE cards SET is_default = FALSE WHERE user_id = ?', [userId]);
+    // Set selected as default
+    await getDb().query('UPDATE cards SET is_default = TRUE WHERE id = ? AND user_id = ?', [cardId, userId]);
+    
+    res.json({ success: true, msg: 'Default card updated successfully' });
+  } catch (error) {
+    console.error('Error setting default card:', error);
+    res.status(500).json({ success: false, msg: 'Failed to set default card' });
+  }
+};
+
+// Statements Management
+exports.getStatements = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const [statements] = await getDb().query(
+      'SELECT * FROM statements WHERE user_id = ? ORDER BY generated_at DESC',
+      [userId]
+    );
+    res.json({ success: true, data: statements });
+  } catch (error) {
+    console.error('Error fetching statements:', error);
+    res.status(500).json({ success: false, msg: 'Failed to fetch statements' });
+  }
+};
+
+exports.generateStatement = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { type } = req.body;
+    
+    const period = type === 'monthly' 
+      ? `${new Date().toLocaleString('en-US', { month: 'long' })} ${new Date().getFullYear()}`
+      : type === 'quarterly'
+      ? `Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()}`
+      : `Annual ${new Date().getFullYear()}`;
+
+    const filePath = `/statements/${type}-${Date.now()}.pdf`;
+    const fileSize = Math.floor(Math.random() * 1000000) + 500000;
+
+    const [result] = await getDb().query(
+      `INSERT INTO statements (user_id, statement_type, statement_period, file_path, file_size, generated_at, created_at)
+       VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+      [userId, type, period, filePath, fileSize]
+    );
+
+    res.json({ success: true, msg: 'Statement generated successfully', statementId: result.insertId });
+  } catch (error) {
+    console.error('Error generating statement:', error);
+    res.status(500).json({ success: false, msg: 'Failed to generate statement' });
+  }
+};
+
+exports.incrementDownloadCount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const statementId = req.params.id;
+    await getDb().query('UPDATE statements SET download_count = download_count + 1 WHERE id = ? AND user_id = ?', [statementId, userId]);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error incrementing download count:', error);
+    res.status(500).json({ success: false });
   }
 };

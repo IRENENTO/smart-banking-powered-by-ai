@@ -250,6 +250,27 @@ ai-banking/
 └─ UPGRADE_SUMMARY.md    # Version changelog and upgrade notes
 ```
 
+## Admin Access
+
+### Admin Dashboard Credentials
+- **URL**: `http://localhost:5001/admin/login`
+- **Email**: `smartbankingpoweredbyai@gmail.com`
+- **Password**: `irene12003`
+- **Role**: `super_admin`
+
+### Setup Admin Account
+Run the migration to create the admin tables and seed the admin user:
+```bash
+cd backend
+node run-migrations.js
+```
+
+Or manually update/create the admin:
+```bash
+cd backend
+node scripts/update-admin-password.js
+```
+
 ## How to Run
 
 ### 1. Backend API

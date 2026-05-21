@@ -1,107 +1,102 @@
+const db = require('../config/db');
+
 class Loan {
     constructor() {
         this.table = 'loans';
     }
 
-    getConnection() {
-        return global.dbConnection;
-    }
-
     async create(loanData) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute(`
-            INSERT INTO loans (user_id, amount, purpose, duration_months, status, risk_score, monthly_income, existing_debt, ai_decision, deduction_amount, deduction_period, paid_amount, next_deduction_date)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [
-            loanData.user_id,
-            loanData.amount,
-            loanData.purpose || null,
-            loanData.duration || null,
-            loanData.status || 'pending',
-            loanData.risk_score || null,
-            loanData.monthly_income || null,
-            loanData.existing_debt || null,
-            loanData.ai_decision ? JSON.stringify(loanData.ai_decision) : null,
-            loanData.deduction_amount || null,
-            loanData.deduction_period || null,
-            loanData.paid_amount || 0,
-            loanData.next_deduction_date || null
-        ]);
+        const result = await db.query(
+            `INSERT INTO loans (user_id, amount, purpose, duration_months, status, risk_score, monthly_income, existing_debt, ai_decision, deduction_amount, deduction_period, paid_amount, next_deduction_date)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+            [
+                loanData.user_id,
+                loanData.amount,
+                loanData.purpose || null,
+                loanData.duration || null,
+                loanData.status || 'pending',
+                loanData.risk_score || null,
+                loanData.monthly_income || null,
+                loanData.existing_debt || null,
+                loanData.ai_decision ? JSON.stringify(loanData.ai_decision) : null,
+                loanData.deduction_amount || null,
+                loanData.deduction_period || null,
+                loanData.paid_amount || 0,
+                loanData.next_deduction_date || null
+            ]
+        );
 
-        return this.findById(result.insertId);
+        return this.findById(result.rows[0].id);
     }
 
     async findById(id) {
-        const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT *, duration_months AS duration
+        const result = await db.query(
+            `SELECT *, duration_months AS duration
             FROM loans
-            WHERE id = ?
-        `, [id]);
-        if (rows[0]) {
-            rows[0] = this._parseFields(rows[0]);
+            WHERE id = $1`,
+            [id]
+        );
+        if (result.rows[0]) {
+            result.rows[0] = this._parseFields(result.rows[0]);
         }
-        return rows[0] || null;
+        return result.rows[0] || null;
     }
 
     async findByUserId(userId) {
-        const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT *, duration_months AS duration
+        const result = await db.query(
+            `SELECT *, duration_months AS duration
             FROM loans
-            WHERE user_id = ?
-            ORDER BY created_at DESC
-        `, [userId]);
-        return rows.map(row => this._parseFields(row));
+            WHERE user_id = $1
+            ORDER BY created_at DESC`,
+            [userId]
+        );
+        return result.rows.map(row => this._parseFields(row));
     }
 
     async updateStatus(id, status, riskScore = null) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute(`
-            UPDATE loans 
-            SET status = ?, risk_score = ?, updated_at = CURRENT_TIMESTAMP 
-            WHERE id = ?
-        `, [status, riskScore, id]);
+        const result = await db.query(
+            `UPDATE loans 
+            SET status = $1, risk_score = $2, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = $3`,
+            [status, riskScore, id]
+        );
 
-        return result.affectedRows > 0;
+        return result.rowCount > 0;
     }
 
     async findAll() {
-        const connection = this.getConnection();
-        const [rows] = await connection.execute(`
-            SELECT *, duration_months AS duration
+        const result = await db.query(
+            `SELECT *, duration_months AS duration
             FROM loans
-            ORDER BY created_at DESC
-        `);
-        return rows.map(row => this._parseFields(row));
+            ORDER BY created_at DESC`
+        );
+        return result.rows.map(row => this._parseFields(row));
     }
 
     async delete(id, userId) {
-        const connection = this.getConnection();
-        const [result] = await connection.execute(
-            'DELETE FROM loans WHERE id = ? AND user_id = ? AND status = ?',
+        const result = await db.query(
+            'DELETE FROM loans WHERE id = $1 AND user_id = $2 AND status = $3',
             [id, userId, 'pending']
         );
-        return result.affectedRows > 0;
+        return result.rowCount > 0;
     }
 
     async setDeductionSchedule(id, deductionAmount, deductionPeriod) {
-        const connection = this.getConnection();
         const loan = await this.findById(id);
         if (!loan) return null;
 
         const nextDate = this._calculateNextDate(new Date(), deductionPeriod);
-        const [result] = await connection.execute(`
-            UPDATE loans
-            SET deduction_amount = ?, deduction_period = ?, next_deduction_date = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `, [deductionAmount, deductionPeriod, nextDate, id]);
+        const result = await db.query(
+            `UPDATE loans
+            SET deduction_amount = $1, deduction_period = $2, next_deduction_date = $3, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $4`,
+            [deductionAmount, deductionPeriod, nextDate, id]
+        );
 
-        return result.affectedRows > 0;
+        return result.rowCount > 0;
     }
 
     async recordPayment(id, amount) {
-        const connection = this.getConnection();
         const loan = await this.findById(id);
         if (!loan) return null;
 
@@ -118,17 +113,17 @@ class Loan {
             newStatus = 'completed';
         }
 
-        await connection.execute(`
-            UPDATE loans
-            SET paid_amount = ?, next_deduction_date = ?, status = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-        `, [newPaidAmount, nextDate, newStatus, id]);
+        await db.query(
+            `UPDATE loans
+            SET paid_amount = $1, next_deduction_date = $2, status = $3, updated_at = CURRENT_TIMESTAMP
+            WHERE id = $4`,
+            [newPaidAmount, nextDate, newStatus, id]
+        );
 
         return { paidAmount: newPaidAmount, isCompleted, newStatus };
     }
 
     async requestExtension(id, extraDays) {
-        const connection = this.getConnection();
         const loan = await this.findById(id);
         if (!loan) return null;
 
@@ -151,17 +146,19 @@ class Loan {
             currentDue.setDate(currentDue.getDate() + extraDays);
             newExtension.new_due_date = currentDue.toISOString().split('T')[0];
 
-            await connection.execute(`
-                UPDATE loans
-                SET due_date = ?, extensions = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            `, [newExtension.new_due_date, JSON.stringify([...extensions, newExtension]), id]);
+            await db.query(
+                `UPDATE loans
+                SET due_date = $1, extensions = $2, updated_at = CURRENT_TIMESTAMP
+                WHERE id = $3`,
+                [newExtension.new_due_date, JSON.stringify([...extensions, newExtension]), id]
+            );
         } else {
-            await connection.execute(`
-                UPDATE loans
-                SET extensions = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-            `, [JSON.stringify([...extensions, newExtension]), id]);
+            await db.query(
+                `UPDATE loans
+                SET extensions = $1, updated_at = CURRENT_TIMESTAMP
+                WHERE id = $2`,
+                [JSON.stringify([...extensions, newExtension]), id]
+            );
         }
 
         return {

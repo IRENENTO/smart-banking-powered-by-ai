@@ -176,9 +176,9 @@ const SpendingAnalytics: React.FC<SpendingAnalyticsProps> = ({ isOpen, onClose }
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.92, y: 40 }}
             transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-            className="fixed inset-0 z-[1001] flex items-center justify-center p-4 pointer-events-none"
+            className="fixed inset-0 z-[1001] flex items-start sm:items-center justify-center p-4 pt-8 sm:pt-4 overflow-y-auto pointer-events-none"
           >
-            <div className="pointer-events-auto w-full max-w-2xl bg-white dark:bg-[#0B1F3A] rounded-3xl shadow-2xl shadow-black/30 overflow-hidden">
+            <div className="pointer-events-auto w-full max-w-2xl bg-white dark:bg-[#0B1F3A] rounded-3xl shadow-2xl shadow-black/30 overflow-y-auto max-h-[85vh]">
 
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100 dark:border-gray-800">

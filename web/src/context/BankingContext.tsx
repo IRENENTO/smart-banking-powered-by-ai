@@ -82,7 +82,20 @@ export const BankingProvider: React.FC<BankingProviderProps> = ({ children }) =>
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const isAuthenticated = !!localStorage.getItem('token');
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => !!localStorage.getItem('token'));
+
+    useEffect(() => {
+        const handleStorage = () => {
+            setIsAuthenticated(!!localStorage.getItem('token'));
+        };
+        window.addEventListener('storage', handleStorage);
+        // Also listen for a custom event if login happens in the same tab
+        window.addEventListener('auth-change', handleStorage);
+        return () => {
+            window.removeEventListener('storage', handleStorage);
+            window.removeEventListener('auth-change', handleStorage);
+        };
+    }, []);
 
     const fetchData = useCallback(async () => {
         if (!isAuthenticated) {

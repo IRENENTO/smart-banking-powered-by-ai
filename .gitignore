@@ -28,6 +28,8 @@ coverage/
 # Logs
 *.log
 npm-debug.log*
+backend/logs/
+logs/
 
 # Environment variable example files
 !*.env.example

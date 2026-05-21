@@ -259,6 +259,28 @@ const NotificationsSettings: React.FC = () => {
         </SectionCard>
 
         <SectionCard 
+          title="Notification Preview"
+          subtitle="How alerts will appear on your device"
+          headerRight={
+            <Smartphone size={24} style={{ color: '#0A9396' }} />
+          }
+        >
+          <div style={{ marginTop: 16, display: 'grid', gap: 16 }}>
+            <div style={{ padding: '16px', background: 'linear-gradient(135deg, #0B1F3A 0%, #1e293b 100%)', borderRadius: 16, color: 'white', maxWidth: '300px', margin: '0 auto', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, fontSize: '10px', opacity: 0.6 }}>
+                <span>SMART BANKING</span>
+                <span>Just now</span>
+              </div>
+              <div style={{ fontWeight: 700, fontSize: '14px', marginBottom: 4 }}>Transaction Alert</div>
+              <div style={{ fontSize: '12px', opacity: 0.8 }}>RWF 50,000 deposited to your account ACC882931 from MTN MoMo.</div>
+            </div>
+            <div style={{ textAlign: 'center', fontSize: '12px', color: '#64748b' }}>
+              Sample notification for transaction alerts
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard 
           title="Marketing Communications"
           subtitle="Control promotional messages and offers"
           headerRight={

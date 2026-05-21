@@ -1,6 +1,8 @@
 const express = require('express');
+const { body } = require('express-validator');
 const router = express.Router();
 const authController = require('../controllers/auth.controller');
+const validate = require('../middleware/validate');
 
 /**
  * @swagger
@@ -40,13 +42,17 @@ const authController = require('../controllers/auth.controller');
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/register', authController.register);
+router.post('/register', [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+    body('name').trim().notEmpty().withMessage('Name is required'),
+], validate, authController.register);
 
 /**
  * @swagger
  * /api/auth/login:
  *   post:
- *     summary: Authenticate user and get JWT token
+ *     summary: Login with email and password
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -60,15 +66,21 @@ router.post('/register', authController.register);
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                   description: JWT token
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
  *       400:
- *         description: Bad request - missing credentials
+ *         description: Bad request - validation error
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  *       401:
- *         description: Invalid credentials
+ *         description: Invalid email or password
  *         content:
  *           application/json:
  *             schema:
@@ -80,6 +92,9 @@ router.post('/register', authController.register);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.post('/login', authController.login);
+router.post('/login', [
+    body('email').isEmail().normalizeEmail().withMessage('Valid email is required'),
+    body('password').notEmpty().withMessage('Password is required'),
+], validate, authController.login);
 
 module.exports = router;

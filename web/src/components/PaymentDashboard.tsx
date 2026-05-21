@@ -40,6 +40,7 @@ const PaymentDashboard: React.FC = () => {
     const [amount, setAmount] = useState<string>('');
     const [description, setDescription] = useState<string>('');
     const [sourcePhone, setSourcePhone] = useState<string>('');
+    const [depositProvider, setDepositProvider] = useState<'mtn' | 'airtel'>('mtn');
     const [recipientAccount, setRecipientAccount] = useState<string>('');
     const [recipientName, setRecipientName] = useState<string>('');
 
@@ -73,14 +74,14 @@ const PaymentDashboard: React.FC = () => {
         }
 
         try {
-            await paymentService.deposit(parseFloat(amount), description || 'Deposit', sourcePhone || undefined);
+            await paymentService.deposit(parseFloat(amount), description || `Deposit via ${depositProvider.toUpperCase()}`, sourcePhone || undefined);
             setShowDepositModal(false);
             setAmount('');
             setDescription('');
             setSourcePhone('');
             fetchPaymentData();
             if (sourcePhone) {
-                toastInfo(`Deposit initiated. Please complete the payment on ${sourcePhone}.`);
+                toastInfo(`Deposit initiated via ${depositProvider.toUpperCase()}. Please complete the payment on ${sourcePhone}.`);
             } else {
                 toastSuccess('Deposit successful!');
             }
@@ -352,14 +353,44 @@ const PaymentDashboard: React.FC = () => {
                                     placeholder="0.00"
                                 />
                             </div>
+                            
+                            {/* Provider Selector */}
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Source Phone Number (Optional)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Money Provider</label>
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDepositProvider('mtn')}
+                                        className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
+                                            depositProvider === 'mtn'
+                                                ? 'border-yellow-400 bg-yellow-50 text-yellow-800'
+                                                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        MTN MoMo
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDepositProvider('airtel')}
+                                        className={`flex-1 py-2 px-4 rounded-lg border-2 transition-all ${
+                                            depositProvider === 'airtel'
+                                                ? 'border-red-500 bg-red-50 text-red-800'
+                                                : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        Airtel Money
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number ({depositProvider === 'mtn' ? 'MTN' : 'Airtel'})</label>
                                 <input
                                     type="tel"
                                     value={sourcePhone}
                                     onChange={(e) => setSourcePhone(e.target.value)}
                                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="0787654321"
+                                    placeholder={depositProvider === 'mtn' ? "078XXXXXXX" : "073XXXXXXX"}
                                 />
                             </div>
                             <div>

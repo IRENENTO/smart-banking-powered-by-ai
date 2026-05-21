@@ -24,6 +24,7 @@
     "start": "craco start",
     "build": "craco build"
   },
+  "proxy": "http://localhost:5001",
   "browserslist": {
     "production": [
       ">0.2%",

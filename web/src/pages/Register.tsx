@@ -95,6 +95,7 @@ const Register: React.FC = () => {
             if (returned.token && returned.user) {
                 localStorage.setItem('token', returned.token);
                 localStorage.setItem('user', JSON.stringify(returned.user));
+                window.dispatchEvent(new Event('auth-change'));
                 localStorage.setItem('userEmail', returned.user.email || email);
                 localStorage.setItem('otpAutoSend', 'false');
                 localStorage.removeItem('otpSent');

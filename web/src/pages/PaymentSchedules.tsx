@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, Calendar, Clock, DollarSign, Pause, Play, Trash2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
 import { scheduleService } from '../services/api';
@@ -107,9 +108,9 @@ const PaymentSchedules: React.FC = () => {
     };
 
     return (
-        <>
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <Navbar authenticated={!!localStorage.getItem('token')} />
-            <div style={{ minHeight: '100vh', padding: '32px 24px', maxWidth: '1200px', margin: '0 auto', background: darkMode ? '#0f172a' : '#eef7fb' }}>
+            <div style={{ flex: 1, padding: '32px 24px', maxWidth: '1200px', margin: '0 auto', background: darkMode ? '#0f172a' : '#eef7fb' }}>
                 <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 20, marginBottom: 32 }}>
                         <div>
@@ -195,7 +196,8 @@ const PaymentSchedules: React.FC = () => {
                     </div>
                 )}
             </div>
-        </>
+            <Footer />
+        </div>
     );
 };
 

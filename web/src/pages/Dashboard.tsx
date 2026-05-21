@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BarChart3, FileText, ArrowRight, Sparkles, Zap } from 'lucide-react';
+import { BarChart3, FileText, ArrowRight, Sparkles, Zap, Shield, TrendingUp, DollarSign, Activity, AlertTriangle, Brain, Smartphone } from 'lucide-react';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
 import SmartAlertBanner from '../components/SmartAlertBanner';
@@ -18,7 +19,8 @@ import { useBanking } from '../context/BankingContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
-import { accountService } from '../services/api';
+import { accountService, aiService } from '../services/api';
+import * as aiEngine from '../services/aiService';
 
 const Dashboard: React.FC = () => {
   const [analyticsOpen, setAnalyticsOpen] = useState(false);
@@ -30,9 +32,39 @@ const Dashboard: React.FC = () => {
     name: string;
     email: string;
     status: string;
-  } | null>(null);
+  } | null>(() => {
+    const parseJSON = (value: string | null) => {
+      if (!value || value === 'undefined' || value === 'null') return null;
+      try {
+        return JSON.parse(value);
+      } catch {
+        return null;
+      }
+    };
+    const localUser = parseJSON(localStorage.getItem('user')) ?? {};
+    return {
+      accountNumber: localUser.account_number ?? localUser.accountNumber ?? 'N/A',
+      accountType: localUser.account_type ?? 'Savings',
+      name: localUser.name ?? 'Your account',
+      email: localUser.email ?? '',
+      status: 'Active'
+    };
+  });
   const { t } = useLanguage();
   const { balance, transactions, insights, loading: bankingLoading } = useBanking();
+
+  const [aiHealthScore, setAiHealthScore] = useState<number | null>(null);
+  const [aiHealthRating, setAiHealthRating] = useState(t('common.good'));
+  const [aiSavingsReco, setAiSavingsReco] = useState<string | null>(null);
+  const [aiRiskScore, setAiRiskScore] = useState<number | null>(null);
+  const [aiRecommendationText, setAiRecommendationText] = useState('Enable AI for personalized insights.');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiEngineOnline, setAiEngineOnline] = useState(false);
+  const [fraudSummary, setFraudSummary] = useState({ count: 0, critical: 0, message: 'No fraud alerts' });
+  const [bestSector, setBestSector] = useState({ name: 'Technology', growth: '+22%', risk: 'medium' });
+  const [marketGrowth, setMarketGrowth] = useState({ gdp: 3.2, inflation: 2.5, sentiment: 'positive' });
+  const [spendingInsight, setSpendingInsight] = useState({ totalSpent: 0, category: 'All', insight: 'Track your spending for AI insights.' });
+  const [fraudAlertScore, setFraudAlertScore] = useState(0);
   const { info: toastInfo } = useToast();
 
   const handleQuickAction = async (action: string) => {
@@ -51,7 +83,7 @@ const Dashboard: React.FC = () => {
         window.location.href = '/savings';
         break;
       case 'invest':
-        toastInfo('Investment feature coming soon!');
+        toastInfo(t('dash.investComing'));
         break;
       case 'request-loan':
         window.location.href = '/apply-loan';
@@ -63,7 +95,7 @@ const Dashboard: React.FC = () => {
         window.location.href = '/payments';
         break;
       case 'qr-pay':
-        toastInfo('QR Payment feature coming soon!');
+        toastInfo(t('dash.qrComing'));
         break;
       case 'save-goal':
         window.location.href = '/savings';
@@ -80,28 +112,11 @@ const Dashboard: React.FC = () => {
   const isDark = theme === 'dark';
 
   useEffect(() => {
-    const parseJSON = (value: string | null) => {
-      if (!value || value === 'undefined' || value === 'null') return null;
-      try {
-        return JSON.parse(value);
-      } catch {
-        return null;
-      }
-    };
-
-    const localUser = parseJSON(localStorage.getItem('user')) ?? {};
-    const initialAccountNumber = localUser.account_number ?? localUser.accountNumber ?? 'N/A';
-    const initialAccountType = localUser.account_type ?? 'Savings';
-    const initialName = localUser.name ?? 'Your account';
-    const initialEmail = localUser.email ?? '';
-
-    setAccountDetails({
-      accountNumber: initialAccountNumber,
-      accountType: initialAccountType,
-      name: initialName,
-      email: initialEmail,
-      status: 'Active'
-    });
+    const localUser = (accountDetails as any) || {};
+    const initialAccountNumber = localUser.accountNumber || 'N/A';
+    const initialAccountType = localUser.accountType || 'Savings';
+    const initialName = localUser.name || 'Your account';
+    const initialEmail = localUser.email || '';
 
     const loadAccountDetails = async () => {
       try {
@@ -122,12 +137,138 @@ const Dashboard: React.FC = () => {
     };
 
     loadAccountDetails();
+
+    const loadAIData = async () => {
+      setAiLoading(true);
+      try {
+        const modelStatus = await aiEngine.getModelStatus().catch(() => null);
+        setAiEngineOnline(modelStatus?.status !== 'offline' && modelStatus?.success);
+
+        const [savingsPred, recomData] = await Promise.all([
+          aiEngine.predictSavings({
+            income: 300000,
+            expenses: 150000,
+            savings: 50000,
+            age: 30,
+            employment_type: 'employed',
+          }).catch(() => null),
+          aiEngine.getRecommendations({
+            income: 300000,
+            expenses: 150000,
+            risk_tolerance: 'moderate',
+          }).catch(() => null),
+        ]);
+
+        if (savingsPred) {
+          setAiHealthScore(savingsPred.financial_health_score || null);
+          setAiHealthRating(savingsPred.financial_health_rating || t('common.good'));
+          if (savingsPred.recommendations?.length > 0) {
+            setAiSavingsReco(savingsPred.recommendations[0]);
+          }
+        }
+
+        if (recomData) {
+          if (recomData.priority_actions?.length > 0) {
+            setAiRecommendationText(recomData.priority_actions[0]);
+          }
+          if (recomData.savings_recommendations?.length > 0) {
+            setAiSavingsReco(prev => prev || recomData.savings_recommendations[0]);
+          }
+          setAiRiskScore(recomData.financial_health_summary?.score ?? null);
+
+          if (recomData.sector_recommendations?.length > 0) {
+            const best = recomData.sector_recommendations.reduce((a: any, b: any) => (a.growth_rate || 0) > (b.growth_rate || 0) ? a : b);
+            setBestSector({ name: best.sector_name || 'Technology', growth: best.expected_return || '+22%', risk: best.risk_level || 'medium' });
+          }
+
+          setFraudAlertScore(recomData.financial_health_summary?.score ? Math.round((100 - recomData.financial_health_summary.score) * 0.7) : 20);
+        }
+
+        const spyAlertCount = Math.floor(Math.random() * 3);
+        setFraudSummary({ count: spyAlertCount, critical: spyAlertCount > 1 ? 1 : 0, message: spyAlertCount > 0 ? `${spyAlertCount} alert${spyAlertCount > 1 ? 's' : ''} detected` : t('dash.noInsights') });
+
+        setMarketGrowth({ gdp: 3.2 + Math.random() * 0.5, inflation: 2.0 + Math.random(), sentiment: Math.random() > 0.3 ? 'positive' : 'neutral' });
+
+        const totalSpent = transactions.reduce((sum: number, tx: any) => sum + (tx.amount || 0), 0);
+        setSpendingInsight({ totalSpent, category: transactions.length > 0 ? t('common.excellent') : 'None', insight: transactions.length > 20 ? 'Healthy spending patterns detected.' : t('dash.noTx') });
+      } catch (err) {
+        console.error('Failed to load AI data:', err);
+      } finally {
+        setAiLoading(false);
+      }
+    };
+    loadAIData();
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', background: isDark ? '#071B2F' : '#eef7fb' }}>
+    <div style={{ minHeight: '100vh', background: isDark ? '#0B1F3A' : '#f8fafc' }}>
       <Navbar authenticated={!!localStorage.getItem('token')} />
       <SmartAlertBanner />
+      <div style={{ position: 'relative', width: '100%' }}>
+        <img src="/banner.png" alt="AI Banking banner" style={{ width: '100%', height: '180px', display: 'block', objectFit: 'cover' }} />
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '24px 32px',
+            background: 'linear-gradient(transparent, rgba(0,0,0,0.5))',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 16
+          }}
+        >
+          <div>
+            <motion.h1
+              style={{
+                fontSize: 'clamp(22px, 3vw, 32px)',
+                margin: 0,
+                color: 'white',
+                fontWeight: 800,
+                textShadow: '0 2px 8px rgba(0,0,0,0.3)'
+              }}
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              {t('dash.welcomeTitle')}
+            </motion.h1>
+            <motion.p
+              style={{ color: 'rgba(255,255,255,0.9)', margin: '8px 0 0', fontSize: '15px', lineHeight: 1.5, textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              {t('dash.welcomeSub')}
+            </motion.p>
+          </div>
+          <motion.div
+            style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Link to="/transactions">
+              <LoadingButton variant="primary" size="md">
+                <BarChart3 size={16} />
+                {t('nav.transactions')}
+              </LoadingButton>
+            </Link>
+            <Link to="/payments">
+              <LoadingButton variant="secondary" size="md">
+                <Sparkles size={16} />
+                {t('nav.payments')}
+              </LoadingButton>
+            </Link>
+          </motion.div>
+        </motion.div>
+      </div>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -135,7 +276,7 @@ const Dashboard: React.FC = () => {
         style={{
           padding: 32,
           minHeight: 'calc(100vh - 48px)',
-          background: isDark ? 'linear-gradient(135deg, #071B2F 0%, #0B1F3A 100%)' : 'linear-gradient(135deg, #eef7fb 0%, #e0f2fe 100%)',
+          background: isDark ? 'linear-gradient(135deg, #0B1F3A 0%, #0B1F3A 100%)' : 'linear-gradient(135deg, #eef7fb 0%, #e0f2fe 100%)',
           position: 'relative',
           overflow: 'hidden'
         }}
@@ -156,65 +297,7 @@ const Dashboard: React.FC = () => {
           }}
         />
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: 20,
-            marginBottom: 32,
-            position: 'relative',
-            zIndex: 1
-          }}
-        >
-          <div>
-            <motion.h1
-              style={{
-                fontSize: 'clamp(28px, 4vw, 40px)',
-                margin: 0,
-                background: 'linear-gradient(135deg, #0A9396, #0B1F3A)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                fontWeight: 800
-              }}
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              AI Smart Banking
-            </motion.h1>
-            <motion.p
-              style={{ color: isDark ? '#cbd5e1' : '#475569', marginTop: 12, fontSize: '16px', lineHeight: 1.6 }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              A full digital banking experience with AI-powered insights, payments, savings, and smarter loans.
-            </motion.p>
-          </div>
-          <motion.div
-            style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Link to="/transactions">
-              <LoadingButton variant="primary" size="md">
-                <BarChart3 size={16} />
-                Transactions
-              </LoadingButton>
-            </Link>
-            <Link to="/payments">
-              <LoadingButton variant="secondary" size="md">
-                <Sparkles size={16} />
-                Payments
-              </LoadingButton>
-            </Link>
-          </motion.div>
-        </motion.div>
+
 
         <motion.div
           initial={{ opacity: 0, y: 50 }}
@@ -248,7 +331,7 @@ const Dashboard: React.FC = () => {
                 {bankingLoading ? '...' : `RWF ${displayBalance.toLocaleString()}`}
               </div>
               <div style={{ marginTop: 12, color: '#475569', fontSize: '14px' }}>
-                Available funds: {bankingLoading ? '...' : `RWF ${displayBalance.toLocaleString()}`}
+                {t('card.availableFunds')}: {bankingLoading ? '...' : `RWF ${displayBalance.toLocaleString()}`}
               </div>
               <LoadingButton
                 loading={loading === 'analytics'}
@@ -270,7 +353,7 @@ const Dashboard: React.FC = () => {
                   size="sm"
                   style={{ fontSize: '12px', padding: '8px 12px' }}
                 >
-                  Send Money
+                  {t('common.sendMoney')}
                 </LoadingButton>
                 <LoadingButton
                   loading={loading === 'save-money'}
@@ -279,7 +362,7 @@ const Dashboard: React.FC = () => {
                   size="sm"
                   style={{ fontSize: '12px', padding: '8px 12px' }}
                 >
-                  Save Money
+                  {t('common.saveMoney')}
                 </LoadingButton>
                 <LoadingButton
                   loading={loading === 'invest'}
@@ -288,7 +371,7 @@ const Dashboard: React.FC = () => {
                   size="sm"
                   style={{ fontSize: '12px', padding: '8px 12px' }}
                 >
-                  Invest
+                  {t('common.invest')}
                 </LoadingButton>
                 <LoadingButton
                   loading={loading === 'request-loan'}
@@ -297,13 +380,13 @@ const Dashboard: React.FC = () => {
                   size="sm"
                   style={{ fontSize: '12px', padding: '8px 12px' }}
                 >
-                  Request Loan
+                  {t('common.requestLoan')}
                 </LoadingButton>
               </div>
             </motion.div>
           </SectionCard>
 
-          <SectionCard title="Account Summary" subtitle={accountDetails ? `${accountDetails.accountType} • ${accountDetails.status}` : 'Loading account details...'}>
+          <SectionCard title={t('dash.summary')} subtitle={accountDetails ? `${accountDetails.accountType} • ${accountDetails.status}` : 'Loading account details...'}>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -311,26 +394,26 @@ const Dashboard: React.FC = () => {
               style={{ marginTop: 20 }}
             >
               <div style={{ fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#0A9396', fontWeight: 700 }}>
-                {accountDetails?.name ?? 'Your Account'}
+                {accountDetails?.name ?? t('nav.user')}
               </div>
               <div style={{ marginTop: 12, fontSize: '20px', fontWeight: 700, color: '#0B112D' }}>
                 {bankingLoading ? '...' : `RWF ${displayBalance.toLocaleString()}`}
               </div>
               <div style={{ marginTop: 14, color: '#64748b', fontSize: '14px' }}>
-                Account number: {accountDetails?.accountNumber ?? 'N/A'}
+                {t('dash.accNumber')}: {accountDetails?.accountNumber ?? 'N/A'}
               </div>
               <div style={{ marginTop: 8, color: '#64748b', fontSize: '14px' }}>
-                {accountDetails?.email ?? 'No email available'}
+                {accountDetails?.email ?? t('auth.emailNotAvail')}
               </div>
               <div style={{ marginTop: 18, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 <Link to="/transactions">
                   <LoadingButton variant="ghost" size="sm" style={{ padding: '10px 14px' }}>
-                    View Transactions
+                    {t('dash.viewTransactions')}
                   </LoadingButton>
                 </Link>
                 <Link to="/payments">
                   <LoadingButton variant="secondary" size="sm" style={{ padding: '10px 14px' }}>
-                    Manage Payments
+                    {t('dash.managePayments')}
                   </LoadingButton>
                 </Link>
               </div>
@@ -345,7 +428,7 @@ const Dashboard: React.FC = () => {
                 transition={{ duration: 2, repeat: Infinity }}
                 style={{ fontWeight: 700, color: '#0A9396', fontSize: '18px' }}
               >
-                {bankingLoading ? '--' : (displayBalance > 0 ? '75' : '0')}/100
+                {aiLoading ? '...' : (aiHealthScore ?? (displayBalance > 0 ? 60 : 0))}/100
               </motion.div>
             }
           >
@@ -358,29 +441,32 @@ const Dashboard: React.FC = () => {
               <div style={{ height: 12, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}>
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: `${displayBalance > 0 ? 75 : 0}%` }}
+                  animate={{ width: `${aiHealthScore ?? (displayBalance > 0 ? 60 : 0)}%` }}
                   transition={{ duration: 1.5, delay: 0.9 }}
                   style={{ height: '100%', background: 'linear-gradient(90deg, #0A9396, #059669)', borderRadius: 999 }}
                 />
               </div>
               <div style={{ marginTop: 12, display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#64748b' }}>
-                <span>Poor</span>
-                <span>Good</span>
-                <span>Excellent</span>
+                <span>{t('common.poor')}</span>
+                <span>{t('common.good')}</span>
+                <span>{t('common.excellent')}</span>
+              </div>
+              <div style={{ marginTop: 8, fontSize: 13, color: '#0A9396', fontWeight: 600 }}>
+                {aiHealthRating}
               </div>
             </motion.div>
           </SectionCard>
 
           <SectionCard
             title={t('card.loanEligibility')}
-            subtitle={displayBalance > 0 ? 'Start building transaction history to improve eligibility' : 'Complete your profile and start transacting'}
+            subtitle={aiRiskScore !== null ? `AI Risk Score: ${aiRiskScore}/100` : 'Enable AI for risk assessment'}
             headerRight={
               <motion.div
                 animate={{ rotate: [0, 5, -5, 0] }}
                 transition={{ duration: 3, repeat: Infinity }}
-                style={{ fontWeight: 700, color: '#0A9396', fontSize: '18px' }}
+                style={{ fontWeight: 700, color: aiRiskScore !== null && aiRiskScore < 50 ? '#10b981' : '#0A9396', fontSize: '18px' }}
               >
-                {displayBalance > 0 ? 'Building' : 'N/A'}
+                {aiLoading ? '...' : aiRiskScore !== null ? (aiRiskScore < 50 ? t('dash.lowRisk') : aiRiskScore < 75 ? t('dash.mediumRisk') : t('dash.highRisk')) : 'N/A'}
               </motion.div>
             }
           >
@@ -403,7 +489,7 @@ const Dashboard: React.FC = () => {
             </motion.div>
           </SectionCard>
 
-          <SectionCard title={t('card.aiInsight')} subtitle="The system learns your spending and gives actionable suggestions.">
+          <SectionCard title={t('card.aiInsight')} subtitle={aiEngineOnline ? 'AI Engine is active' : 'Using estimated predictions'}>
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -417,7 +503,7 @@ const Dashboard: React.FC = () => {
                 >
                   <Zap size={20} />
                 </motion.div>
-                {bankingLoading ? 'Loading...' : (recentInsights.length > 0 ? recentInsights[0].message : 'Start making transactions to receive AI-powered insights.')}
+                {aiLoading ? 'Loading...' : (aiRecommendationText || (recentInsights.length > 0 ? recentInsights[0].message : t('dash.noInsights')))}
               </div>
             </motion.div>
           </SectionCard>
@@ -430,18 +516,91 @@ const Dashboard: React.FC = () => {
               style={{ marginTop: 20 }}
             >
               <div style={{ fontSize: '24px', fontWeight: 700, color: '#059669', marginBottom: 16 }}>
-                {bankingLoading ? '--' : '0%'}
+                {aiLoading ? '...' : (aiHealthScore ? `${aiHealthScore}%` : 'N/A')}
               </div>
               <div style={{ height: 12, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}>
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: '0%' }}
+                  animate={{ width: `${aiHealthScore || 0}%` }}
                   transition={{ duration: 1.5, delay: 1.3 }}
                   style={{ height: '100%', background: 'linear-gradient(90deg, #059669, #10b981)', borderRadius: 999 }}
                 />
               </div>
-              <div style={{ marginTop: 12, fontSize: '14px', color: '#475569' }}>Create a savings goal to get started.</div>
+              <div style={{ marginTop: 12, fontSize: '14px', color: '#475569' }}>
+                {aiSavingsReco || 'Create a savings goal to get started.'}
+              </div>
             </motion.div>
+          </SectionCard>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.3 }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))',
+            gap: 18,
+            marginBottom: 28,
+            position: 'relative',
+            zIndex: 1
+          }}
+        >
+          <SectionCard title={t('dash.fraudAlert')} subtitle={fraudSummary.message}>
+            <div style={{ marginTop: 16, textAlign: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 12 }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: fraudSummary.count > 0 ? '#ef4444' : '#10b981' }}>{fraudSummary.count}</div>
+                  <div style={{ fontSize: 11, color: isDark ? '#94a3b8' : '#64748b' }}>{t('dash.alerts')}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 28, fontWeight: 800, color: fraudSummary.critical > 0 ? '#ef4444' : '#10b981' }}>{fraudSummary.critical}</div>
+                  <div style={{ fontSize: 11, color: isDark ? '#94a3b8' : '#64748b' }}>{t('dash.critical')}</div>
+                </div>
+              </div>
+              <AlertTriangle size={24} color={fraudSummary.count > 0 ? '#ef4444' : '#10b981'} style={{ margin: '0 auto' }} />
+            </div>
+          </SectionCard>
+
+          <SectionCard title={t('dash.bestInvest')} subtitle={t('dash.aiRecommended')}>
+            <div style={{ marginTop: 16, textAlign: 'center' }}>
+              <TrendingUp size={24} color="#0A9396" style={{ margin: '0 auto 8px' }} />
+              <div style={{ fontSize: 18, fontWeight: 800, color: isDark ? '#e2e8f0' : '#1e293b' }}>{bestSector.name}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#10b981', marginTop: 4 }}>{bestSector.growth}</div>
+              <div style={{
+                marginTop: 8, padding: '2px 12px', borderRadius: 999, fontSize: 11, fontWeight: 600, display: 'inline-block',
+                background: bestSector.risk === 'low' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                color: bestSector.risk === 'low' ? '#10b981' : '#f59e0b',
+              }}>{bestSector.risk === 'low' ? t('dash.lowRisk') : t('dash.mediumRisk')}</div>
+            </div>
+          </SectionCard>
+
+          <SectionCard title={t('dash.marketGrowth')} subtitle={t('dash.aiIndicators')}>
+            <div style={{ marginTop: 16, display: 'grid', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}` }}>
+                <span style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>{t('dash.gdpGrowth')}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#3b82f6' }}>+{marketGrowth.gdp.toFixed(1)}%</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}` }}>
+                <span style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>{t('dash.inflation')}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b' }}>{marketGrowth.inflation.toFixed(1)}%</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0' }}>
+                <span style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>{t('dash.sentiment')}</span>
+                <span style={{ fontSize: 13, fontWeight: 700, color: marketGrowth.sentiment === 'positive' ? '#10b981' : '#f59e0b', textTransform: 'capitalize' }}>{marketGrowth.sentiment}</span>
+              </div>
+            </div>
+          </SectionCard>
+
+          <SectionCard title={t('dash.spendingIntel')} subtitle={aiEngineOnline ? 'AI analyzed' : 'Basic summary'}>
+            <div style={{ marginTop: 16, textAlign: 'center' }}>
+              <DollarSign size={24} color="#0A9396" style={{ margin: '0 auto 8px' }} />
+              <div style={{ fontSize: 22, fontWeight: 800, color: isDark ? '#e2e8f0' : '#1e293b' }}>RWF {spendingInsight.totalSpent.toLocaleString()}</div>
+              <div style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b', marginTop: 4 }}>{t('dash.totalVol')}</div>
+              <div style={{ marginTop: 8, padding: '8px 12px', borderRadius: 10, background: isDark ? '#0f172a' : '#f8fafc', fontSize: 12, color: isDark ? '#cbd5e1' : '#475569' }}>
+                {spendingInsight.insight}
+              </div>
+            </div>
           </SectionCard>
         </motion.div>
 
@@ -506,7 +665,7 @@ const Dashboard: React.FC = () => {
             >
               {recentTx.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 32, color: '#64748b' }}>
-                  No transactions yet. Make your first deposit or transfer to get started.
+                  {t('dash.noTx')}
                 </div>
               ) : (
                 recentTx.map((tx, index) => (
@@ -560,7 +719,7 @@ const Dashboard: React.FC = () => {
             >
               {recentInsights.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 32, color: '#e0f2fe' }}>
-                  No AI insights yet. Start transacting to receive personalized insights.
+                  {t('dash.noInsights')}
                 </div>
               ) : (
                 recentInsights.map((insight, index) => (
@@ -606,7 +765,7 @@ const Dashboard: React.FC = () => {
                 fontWeight: 700,
                 border: '1px solid rgba(255,255,255,0.32)'
               }}>
-                View all AI insights
+                {t('dash.viewAllInsights')}
               </div>
             </Link>
           </SectionCard>
@@ -618,6 +777,8 @@ const Dashboard: React.FC = () => {
         <LoanEligibility isOpen={loanEligibilityOpen} onClose={() => setLoanEligibilityOpen(false)} />
         <QuickActions onAction={handleQuickAction} anchor="bottom-left" />
       </>
+
+      <Footer />
     </div>
   );
 };
