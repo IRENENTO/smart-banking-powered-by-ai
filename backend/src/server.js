@@ -1,9 +1,9 @@
+const { PORT } = require('./config/env');
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('./config/passport');
 const connectDB = require('./config/db');
-const { PORT } = require('./config/env');
 const { swaggerUi, specs } = require('./config/swagger');
 const errorHandler = require('./middleware/error.middleware');
 
@@ -14,9 +14,6 @@ const { startDeductionScheduler } = require('./services/deductionScheduler');
 process.env.MONGODB_URI = 'disabled';
 
 const app = express();
-
-// Connect Database
-connectDB();
 
 // Init Middleware
 app.use(cors({ origin: ['http://localhost:3000', 'http://localhost:3001', 'http://10.0.2.2:3000'], credentials: true }));
@@ -97,21 +94,33 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 if (require.main === module) {
-    const server = app.listen(PORT, () => {
-        console.log(`Server started on port ${PORT}`);
-        console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-        startPaymentStatusChecker();
-        startDeductionScheduler();
-    });
+    const startServer = async () => {
+        try {
+            // Connect Database
+            await connectDB();
 
-    server.on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-            console.error(`Port ${PORT} is already in use. Stop the process using that port or start the server with a different port via PORT=<port> npm start.`);
-        } else {
-            console.error('Server failed to start:', err);
+            const server = app.listen(PORT, () => {
+                console.log(`Server started on port ${PORT}`);
+                console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+                startPaymentStatusChecker();
+                startDeductionScheduler();
+            });
+
+            server.on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    console.error(`Port ${PORT} is already in use. Stop the process using that port or start the server with a different port via PORT=<port> npm start.`);
+                } else {
+                    console.error('Server failed to start:', err);
+                }
+                process.exit(1);
+            });
+        } catch (err) {
+            console.error('Failed to start server:', err);
+            process.exit(1);
         }
-        process.exit(1);
-    });
+    };
+
+    startServer();
 }
 
 module.exports = app;
