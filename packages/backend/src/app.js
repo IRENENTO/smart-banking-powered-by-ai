@@ -6,15 +6,20 @@ const cors = require('cors');
 const compression = require('compression');
 const morgan = require('morgan');
 const config = require('./config');
+const { sequelize } = require('./models');
 const { setupSocketHandlers } = require('./socket');
 const logger = require('./utils/logger');
 
 const app = express();
 const server = http.createServer(app);
 
+const allowedOrigins = config.nodeEnv === 'production'
+  ? process.env.CORS_ORIGINS?.split(',') || ['https://smart-banking-powered-by-ai.onrender.com']
+  : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:8081'];
+
 const io = new Server(server, {
   cors: {
-    origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:8081'],
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -24,7 +29,7 @@ const io = new Server(server, {
 
 app.use(helmet());
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:8081'],
+  origin: allowedOrigins,
   credentials: true,
 }));
 app.use(compression());
@@ -38,9 +43,21 @@ app.use('/api/locations', require('./routes/locations'));
 app.use('/api/alerts', require('./routes/alerts'));
 app.use('/api/admin', require('./routes/admin'));
 
-app.get('/api/health', (req, res) => {
+app.get('/', (req, res) => {
+  res.json({ service: 'Sentinel AI API', status: 'running', version: '1.0.0' });
+});
+
+app.get('/api/health', async (req, res) => {
+  let dbStatus = 'disconnected';
+  try {
+    await sequelize.authenticate();
+    dbStatus = 'connected';
+  } catch (e) {
+    dbStatus = `error: ${e.message}`;
+  }
   res.json({
     status: 'ok',
+    database: dbStatus,
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: config.nodeEnv,
