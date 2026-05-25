@@ -36,7 +36,7 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
             fontSrc: ["'self'", 'https://fonts.gstatic.com'],
             imgSrc: ["'self'", 'data:', 'blob:'],
-            connectSrc: ["'self'", process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'],
+            connectSrc: ["'self'", process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000', 'http://localhost:4000'],
         },
     },
 }));
@@ -65,6 +65,7 @@ app.use(generalLimiter);
 const ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:3001',
+    'http://localhost:4000',
     'http://localhost:8081',
     'http://localhost:19000',
     'http://localhost:19006',
@@ -75,13 +76,34 @@ const ALLOWED_ORIGINS = [
 ];
 
 if (process.env.VERCEL_URL) ALLOWED_ORIGINS.push(`https://${process.env.VERCEL_URL}`);
-if (process.env.CLIENT_URL) ALLOWED_ORIGINS.push(process.env.CLIENT_URL);
+if (process.env.RENDER_EXTERNAL_URL) ALLOWED_ORIGINS.push(process.env.RENDER_EXTERNAL_URL);
+if (process.env.CLIENT_URL) {
+    const origins = process.env.CLIENT_URL.split(',').map(o => o.trim());
+    ALLOWED_ORIGINS.push(...origins);
+}
 
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production'
-        ? ALLOWED_ORIGINS
-        : '*',
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl, or server-to-server)
+        if (!origin) return callback(null, true);
+        
+        const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
+        
+        if (ALLOWED_ORIGINS.includes(origin) || (process.env.NODE_ENV !== 'production' && isLocalhost)) {
+            callback(null, true);
+        } else {
+            // In production, block. In dev, log and allow.
+            if (process.env.NODE_ENV === 'production') {
+                logger.warn(`CORS blocked for origin: ${origin}`);
+                callback(new Error('Not allowed by CORS'));
+            } else {
+                callback(null, true);
+            }
+        }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
 };
 
 app.use(compression());

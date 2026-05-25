@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config/env');
 const { adminAuth, adminRole } = require('../middleware/admin.middleware');
+const { query } = require('../config/db');
 
 /**
  * @swagger
@@ -36,17 +37,16 @@ router.post('/login', async (req, res) => {
             return res.status(400).json({ error: 'Email and password are required' });
         }
 
-        const connection = global.dbConnection;
-        const [admins] = await connection.execute(
+        const result = await query(
             'SELECT * FROM admins WHERE email = ?',
             [email]
         );
 
-        if (admins.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const admin = admins[0];
+        const admin = result.rows[0];
 
         // Check if admin is active
         if (admin.status !== 'active') {
@@ -60,7 +60,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Update last login
-        await connection.execute(
+        await query(
             'UPDATE admins SET last_login = NOW() WHERE id = ?',
             [admin.id]
         );

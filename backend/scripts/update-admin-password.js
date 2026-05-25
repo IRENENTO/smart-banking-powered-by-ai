@@ -8,9 +8,11 @@ require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') }
 async function main() {
     const connection = await mysql.createConnection({
         host: process.env.DB_HOST || 'localhost',
+        port: parseInt(process.env.DB_PORT, 10) || 4000,
         user: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || 'irene2003',
         database: process.env.DB_NAME || 'smart_banking_powered_by_ai',
+        ssl: { rejectUnauthorized: false }
     });
 
     const email = 'smartbankingpoweredbyai@gmail.com';

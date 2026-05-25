@@ -2,6 +2,10 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || '/api';
 
+if (process.env.NODE_ENV === 'development') {
+    console.log('Connect to API at:', API_URL);
+}
+
 const api = axios.create({
     baseURL: API_URL,
     headers: {

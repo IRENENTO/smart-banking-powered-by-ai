@@ -28,7 +28,7 @@ class User {
         let exists;
         do {
             accountNum = 'ACC' + String(Math.floor(Math.random() * 1000000)).padStart(6, '0');
-            const result = await db.query('SELECT id FROM users WHERE account_number = $1', [accountNum]);
+            const result = await db.query('SELECT id FROM users WHERE account_number = ?', [accountNum]);
             exists = result.rows.length > 0;
         } while (exists);
         return accountNum;
@@ -60,7 +60,7 @@ class User {
         Object.keys(query).forEach((key) => {
             if (query[key] === undefined || query[key] === null) return;
             if (key.includes('.')) return;
-            filters.push(`${key} = $${filters.length + 1}`);
+            filters.push(`${key} = ?`);
             values.push(query[key]);
         });
 
@@ -113,40 +113,40 @@ class User {
             values.push(userData.otp_expires_at);
         }
 
-        const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
+        const placeholders = values.map(() => '?').join(', ');
 
         const result = await db.query(
-            `INSERT INTO users (${fields.join(', ')}) VALUES (${placeholders}) RETURNING id`,
+            `INSERT INTO users (${fields.join(', ')}) VALUES (${placeholders})`,
             values
         );
 
-        return this.findById(result.rows[0].id);
+        return this.findById(result.insertId);
     }
 
     async findById(id) {
-        const result = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+        const result = await db.query('SELECT * FROM users WHERE id = ?', [id]);
         return this.wrapUser(result.rows[0]);
     }
 
     async findByEmail(email) {
-        const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        const result = await db.query('SELECT * FROM users WHERE email = ?', [email]);
         return this.wrapUser(result.rows[0]);
     }
 
     async findByPhone(phone) {
-        const result = await db.query('SELECT * FROM users WHERE phone = $1', [phone]);
+        const result = await db.query('SELECT * FROM users WHERE phone = ?', [phone]);
         if (result.rows.length) return this.wrapUser(result.rows[0]);
 
         const digits = phone.replace(/\D/g, '');
         const byDigits = await db.query(
-            `SELECT * FROM users WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', ''), '(', '') LIKE $1`,
+            `SELECT * FROM users WHERE REPLACE(REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', ''), '(', '') LIKE ?`,
             [`%${digits}`]
         );
         return this.wrapUser(byDigits.rows[0]);
     }
 
     async findByAccountNumber(accountNumber) {
-        const result = await db.query('SELECT * FROM users WHERE account_number = $1', [accountNumber]);
+        const result = await db.query('SELECT * FROM users WHERE account_number = ?', [accountNumber]);
         return this.wrapUser(result.rows[0]);
     }
 
@@ -158,20 +158,20 @@ class User {
             if (['id', 'created_at', 'updated_at', 'save'].includes(key)) return;
             if (userData[key] === undefined) return;
             if (key === 'password') return;
-            fields.push(`${key} = $${fields.length + 1}`);
+            fields.push(`${key} = ?`);
             values.push(userData[key]);
         });
 
         if (userData.password) {
             const hashedPassword = await this.hashPassword(userData.password);
-            fields.push(`password = $${fields.length + 1}`);
+            fields.push(`password = ?`);
             values.push(hashedPassword);
         }
 
         if (fields.length > 0) {
             values.push(id);
             await db.query(
-                `UPDATE users SET ${fields.join(', ')} WHERE id = $${values.length}`,
+                `UPDATE users SET ${fields.join(', ')} WHERE id = ?`,
                 values
             );
         }
@@ -180,7 +180,7 @@ class User {
     }
 
     async delete(id) {
-        const result = await db.query('DELETE FROM users WHERE id = $1', [id]);
+        const result = await db.query('DELETE FROM users WHERE id = ?', [id]);
         return result.rowCount > 0;
     }
 
@@ -190,18 +190,18 @@ class User {
             `SELECT id, name, email, phone, role, email_verified, profile_completed, pin_set, balance, account_number, created_at
             FROM users 
             ORDER BY created_at DESC 
-            LIMIT $1 OFFSET $2`,
+            LIMIT ? OFFSET ?`,
             [lim, off]
         );
         return result.rows.map((row) => this.wrapUser(row));
     }
 
     async updateBalance(userId, newBalance) {
-        await db.query('UPDATE users SET balance = $1 WHERE id = $2', [newBalance, userId]);
+        await db.query('UPDATE users SET balance = ? WHERE id = ?', [newBalance, userId]);
     }
 
     async getBalance(userId) {
-        const result = await db.query('SELECT balance FROM users WHERE id = $1', [userId]);
+        const result = await db.query('SELECT balance FROM users WHERE id = ?', [userId]);
         return result.rows[0] ? result.rows[0].balance : 0;
     }
 }

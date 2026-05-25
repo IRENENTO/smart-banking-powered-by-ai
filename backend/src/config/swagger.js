@@ -15,12 +15,16 @@ const options = {
         },
         servers: [
             {
-                url: 'http://localhost:5001',
-                description: 'Development server'
+                url: process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 4000}`,
+                description: 'Current Environment'
             },
             {
-                url: 'https://api.aibanking.com',
-                description: 'Production server'
+                url: 'http://localhost:4000',
+                description: 'Local Development'
+            },
+            {
+                url: 'https://smart-banking-powered-by-ai.onrender.com',
+                description: 'Production (Render)'
             }
         ],
         components: {
