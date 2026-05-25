@@ -618,8 +618,7 @@ const AIInsights: React.FC = () => {
                                                             }}>
                                                                 {inv.status === 'active' ? 'Growing' : 'Matured'}
                                                             </span>
-            <Footer />
-        </div>
+                                                        </div>
                                                         <span style={{ fontSize: 12, color: mutedColor }}>
                                                             <Calendar size={12} style={{ marginRight: 4, verticalAlign: 'middle' }} />
                                                             {inv.duration}mo
@@ -788,6 +787,7 @@ const AIInsights: React.FC = () => {
                     </div>
                 )}
             </div>
+            <Footer />
         </div>
     );
 };

@@ -159,14 +159,14 @@ class Payment {
     async getPaymentStats(userId) {
         const result = await db.query(
             `SELECT 
-                COUNT(*)::int as total_payments,
+                CAST(COUNT(*) AS SIGNED) as total_payments,
                 SUM(CASE WHEN status = 'completed' THEN amount ELSE 0 END) as total_amount,
                 SUM(CASE WHEN payment_type = 'bill' AND status = 'completed' THEN amount ELSE 0 END) as total_bills,
                 SUM(CASE WHEN payment_type = 'merchant' AND status = 'completed' THEN amount ELSE 0 END) as total_merchant,
                 SUM(CASE WHEN payment_type = 'subscription' AND status = 'completed' THEN amount ELSE 0 END) as total_subscriptions,
                 SUM(CASE WHEN payment_type = 'top_up' AND status = 'completed' THEN amount ELSE 0 END) as total_top_ups,
-                COUNT(CASE WHEN status = 'pending' THEN 1 END)::int as pending_payments,
-                COUNT(CASE WHEN status = 'failed' THEN 1 END)::int as failed_payments
+                CAST(COUNT(CASE WHEN status = 'pending' THEN 1 END) AS SIGNED) as pending_payments,
+                CAST(COUNT(CASE WHEN status = 'failed' THEN 1 END) AS SIGNED) as failed_payments
             FROM payments 
             WHERE user_id = $1`,
             [userId]

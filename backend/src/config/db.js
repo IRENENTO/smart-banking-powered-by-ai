@@ -41,6 +41,7 @@ async function query(sql, params) {
 const connectDB = async () => {
     try {
         await pool.query('SELECT 1');
+        global.dbConnection = pool;
         console.log('✅ TiDB Cloud connected successfully (MySQL protocol with SSL)');
         return true;
     } catch (err) {

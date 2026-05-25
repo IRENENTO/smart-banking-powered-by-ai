@@ -96,12 +96,12 @@ class Transaction {
     async getTransactionStats(userId) {
         const result = await db.query(
             `SELECT 
-                COUNT(*)::int as total_transactions,
+                CAST(COUNT(*) AS SIGNED) as total_transactions,
                 SUM(CASE WHEN type = 'deposit' AND status = 'completed' THEN amount ELSE 0 END) as total_deposits,
                 SUM(CASE WHEN type = 'withdraw' AND status = 'completed' THEN amount ELSE 0 END) as total_withdrawals,
                 SUM(CASE WHEN type = 'payment' AND status = 'completed' THEN amount ELSE 0 END) as total_payments,
                 SUM(CASE WHEN type = 'transfer' AND status = 'completed' THEN amount ELSE 0 END) as total_transfers,
-                COUNT(CASE WHEN status = 'pending' THEN 1 END)::int as pending_transactions
+                CAST(COUNT(CASE WHEN status = 'pending' THEN 1 END) AS SIGNED) as pending_transactions
             FROM transactions 
             WHERE user_id = $1`,
             [userId]

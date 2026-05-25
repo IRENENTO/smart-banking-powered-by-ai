@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const session = require('express-session');
-const pgSession = require('connect-pg-simple')(session);
+const MySQLStore = require('express-mysql-session')(session);
 const passport = require('./config/passport');
 const { connectDB, pool } = require('./config/db');
 const { PORT } = require('./config/env');
@@ -96,13 +96,24 @@ app.use('/api/auth', authLimiter);
 const responseFormatter = require('./middleware/response.middleware');
 app.use(responseFormatter);
 
-// Session Middleware with PostgreSQL store (fixes memory leak warning)
+// Session Middleware with MySQL store
 app.use(session({
-    store: new pgSession({
-        pool: pool,
-        tableName: 'session',
-        createTableIfMissing: true,
-        pruneSessionInterval: 60 // Prune expired sessions every 60 seconds
+    store: new MySQLStore({
+        host: process.env.DB_HOST,
+        port: parseInt(process.env.DB_PORT, 10),
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        ssl: { rejectUnauthorized: false },
+        createDatabaseTable: true,
+        schema: {
+            tableName: 'session',
+            columnNames: {
+                session_id: 'session_id',
+                expires: 'expires',
+                data: 'data'
+            }
+        }
     }),
     secret: process.env.JWT_SECRET || 'your-secret-key',
     resave: false,
@@ -151,10 +162,10 @@ app.use('/api/ai', require('./routes/ai.routes'));
 
 // ==================== HEALTH CHECK ENDPOINT (FIXED FOR TiDB) ====================
 app.get('/api/health', async (req, res) => {
-    const { pool } = require('./config/db');
+    const { query } = require('./config/db');
     try {
         // Simple query that works with TiDB Cloud (MySQL protocol)
-        const result = await pool.query('SELECT 1 as connected, NOW() as server_time');
+        const result = await query('SELECT 1 as connected, NOW() as server_time');
         const row = result.rows[0];
         res.json({
             success: true,
@@ -179,13 +190,13 @@ app.get('/api/health', async (req, res) => {
 
 // ==================== DETAILED HEALTH CHECK (Optional) ====================
 app.get('/api/health/detailed', async (req, res) => {
-    const { pool } = require('./config/db');
+    const { query } = require('./config/db');
     try {
         // Test connection
-        await pool.query('SELECT 1');
+        await query('SELECT 1');
         
         // Get version info
-        const versionResult = await pool.query('SELECT VERSION() as version');
+        const versionResult = await query('SELECT VERSION() as version');
         
         res.json({
             success: true,

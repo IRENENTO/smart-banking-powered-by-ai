@@ -1025,7 +1025,7 @@ const deleteUser = async (req, res) => {
         const [existing] = await connection.query('SELECT id FROM users WHERE id = ?', [userId]);
         if (existing.length === 0) return res.status(404).json({ error: 'User not found' });
 
-        await connection.query('DELETE FROM transactions WHERE sender_id = ? OR receiver_id = ?', [userId, userId]);
+        await connection.query('DELETE FROM transactions WHERE user_id = ?', [userId]);
         await connection.query('DELETE FROM loans WHERE user_id = ?', [userId]);
         await connection.query('DELETE FROM accounts WHERE user_id = ?', [userId]);
         await connection.query('DELETE FROM users WHERE id = ?', [userId]);
@@ -1042,13 +1042,13 @@ const deleteUser = async (req, res) => {
 const createTransaction = async (req, res) => {
     try {
         const connection = global.dbConnection;
-        const { sender_id, receiver_id, amount, type, status, description } = req.body;
+        const { user_id, amount, type, status, description } = req.body;
         if (!amount || !type) return res.status(400).json({ error: 'Amount and type are required' });
 
         const reference_number = 'TXN' + Date.now().toString();
         const [result] = await connection.query(
-            'INSERT INTO transactions (sender_id, receiver_id, amount, type, status, description, reference_number) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [sender_id || null, receiver_id || null, amount, type, status || 'completed', description || null, reference_number]
+            'INSERT INTO transactions (user_id, amount, type, status, description, reference_number) VALUES (?, ?, ?, ?, ?, ?)',
+            [user_id || null, amount, type, status || 'completed', description || null, reference_number]
         );
 
         res.json({ success: true, message: 'Transaction created successfully', data: { id: result.insertId, reference_number } });

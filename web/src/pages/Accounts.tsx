@@ -58,8 +58,7 @@ const Accounts: React.FC = () => {
                                 <div>
                                     <div style={{ fontSize: 14, fontWeight: 700, color: isDark ? '#7dd3fc' : '#0B1F3A' }}>Savings</div>
                                     <div style={{ marginTop: 8, fontSize: 22, fontWeight: 700, color: isDark ? '#e2e8f0' : 'inherit' }}>{userName}</div>
-            <Footer />
-        </div>
+                                </div>
                                 <div style={{ background: '#0A9396', borderRadius: 12, color: 'white', padding: '8px 12px', fontSize: 14 }}>Active</div>
                             </div>
                             <div style={{ marginTop: 24 }}>
@@ -72,6 +71,7 @@ const Accounts: React.FC = () => {
                     </div>
                 )}
             </div>
+            <Footer />
         </div>
     );
 };

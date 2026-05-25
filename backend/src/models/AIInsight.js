@@ -55,7 +55,7 @@ class AIInsight {
 
     async getUnreadCount(userId) {
         const result = await db.query(
-            `SELECT COUNT(*)::int as count FROM ai_insights 
+            `SELECT CAST(COUNT(*) AS SIGNED) as count FROM ai_insights 
             WHERE user_id = $1 AND is_read = FALSE`,
             [userId]
         );

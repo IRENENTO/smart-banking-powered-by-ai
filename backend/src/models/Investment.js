@@ -71,7 +71,7 @@ class Investment {
     static async getInvestmentStats(userId) {
         const result = await db.query(
             `SELECT 
-                COUNT(*)::int as total_investments,
+                CAST(COUNT(*) AS SIGNED) as total_investments,
                 SUM(amount) as total_invested,
                 SUM(expected_return) as total_expected_returns,
                 SUM(actual_return) as total_actual_returns,
@@ -88,7 +88,7 @@ class Investment {
         const result = await db.query(
             `SELECT 
                 type,
-                COUNT(*)::int as count,
+                CAST(COUNT(*) AS SIGNED) as count,
                 SUM(amount) as total_amount,
                 AVG(expected_return) as avg_return
             FROM investments 

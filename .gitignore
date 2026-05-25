@@ -26,7 +26,6 @@ Thumbs.db
 coverage/
 
 # Logs
-*.log
 npm-debug.log*
 backend/logs/
 logs/
@@ -39,6 +38,14 @@ supabase/.temp
 
 # Vercel
 .vercel
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pkl
+venv/
+.venv/
 
 # Sentinel AI specific
 expo-env.d.ts

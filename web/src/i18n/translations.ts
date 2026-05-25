@@ -9,7 +9,17 @@ export type TranslationKey =
   | 'nav.savings'
   | 'nav.loans'
   | 'nav.aiInsights'
+  | 'nav.marketInsights'
+  | 'nav.lightMode'
+  | 'nav.darkMode'
+  | 'nav.notifications'
+  | 'nav.profile'
+  | 'nav.cards'
   | 'nav.admin'
+  | 'auth.continueSetup'
+  | 'auth.signOut'
+  | 'auth.login'
+  | 'auth.register'
   | 'common.accounts'
   | 'common.transactions'
   | 'common.payments'
@@ -153,7 +163,17 @@ const EN: Dict = {
   'nav.savings': 'Savings',
   'nav.loans': 'Loans',
   'nav.aiInsights': 'AI Insights',
+  'nav.marketInsights': 'Market Insights',
+  'nav.lightMode': 'Switch to light mode',
+  'nav.darkMode': 'Switch to dark mode',
+  'nav.notifications': 'Notifications',
+  'nav.profile': 'Profile',
+  'nav.cards': 'Cards',
   'nav.admin': 'Admin',
+  'auth.continueSetup': 'Continue Setup',
+  'auth.signOut': 'Sign Out',
+  'auth.login': 'Login',
+  'auth.register': 'Register',
   'common.accounts': 'Accounts',
   'common.transactions': 'Transactions',
   'common.payments': 'Payments',
