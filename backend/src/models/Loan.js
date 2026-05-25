@@ -8,7 +8,7 @@ class Loan {
     async create(loanData) {
         const result = await db.query(
             `INSERT INTO loans (user_id, amount, purpose, duration_months, status, risk_score, monthly_income, existing_debt, ai_decision, deduction_amount, deduction_period, paid_amount, next_deduction_date)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 loanData.user_id,
                 loanData.amount,
@@ -33,7 +33,7 @@ class Loan {
         const result = await db.query(
             `SELECT *, duration_months AS duration
             FROM loans
-            WHERE id = $1`,
+            WHERE id = ?`,
             [id]
         );
         if (result.rows[0]) {
@@ -46,7 +46,7 @@ class Loan {
         const result = await db.query(
             `SELECT *, duration_months AS duration
             FROM loans
-            WHERE user_id = $1
+            WHERE user_id = ?
             ORDER BY created_at DESC`,
             [userId]
         );
@@ -56,8 +56,8 @@ class Loan {
     async updateStatus(id, status, riskScore = null) {
         const result = await db.query(
             `UPDATE loans 
-            SET status = $1, risk_score = $2, updated_at = CURRENT_TIMESTAMP 
-            WHERE id = $3`,
+            SET status = ?, risk_score = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?`,
             [status, riskScore, id]
         );
 
@@ -75,7 +75,7 @@ class Loan {
 
     async delete(id, userId) {
         const result = await db.query(
-            'DELETE FROM loans WHERE id = $1 AND user_id = $2 AND status = $3',
+            'DELETE FROM loans WHERE id = ? AND user_id = ? AND status = ?',
             [id, userId, 'pending']
         );
         return result.rowCount > 0;
@@ -88,8 +88,8 @@ class Loan {
         const nextDate = this._calculateNextDate(new Date(), deductionPeriod);
         const result = await db.query(
             `UPDATE loans
-            SET deduction_amount = $1, deduction_period = $2, next_deduction_date = $3, updated_at = CURRENT_TIMESTAMP
-            WHERE id = $4`,
+            SET deduction_amount = ?, deduction_period = ?, next_deduction_date = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?`,
             [deductionAmount, deductionPeriod, nextDate, id]
         );
 
@@ -115,8 +115,8 @@ class Loan {
 
         await db.query(
             `UPDATE loans
-            SET paid_amount = $1, next_deduction_date = $2, status = $3, updated_at = CURRENT_TIMESTAMP
-            WHERE id = $4`,
+            SET paid_amount = ?, next_deduction_date = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ?`,
             [newPaidAmount, nextDate, newStatus, id]
         );
 
@@ -148,15 +148,15 @@ class Loan {
 
             await db.query(
                 `UPDATE loans
-                SET due_date = $1, extensions = $2, updated_at = CURRENT_TIMESTAMP
-                WHERE id = $3`,
+                SET due_date = ?, extensions = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?`,
                 [newExtension.new_due_date, JSON.stringify([...extensions, newExtension]), id]
             );
         } else {
             await db.query(
                 `UPDATE loans
-                SET extensions = $1, updated_at = CURRENT_TIMESTAMP
-                WHERE id = $2`,
+                SET extensions = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?`,
                 [JSON.stringify([...extensions, newExtension]), id]
             );
         }

@@ -29,7 +29,7 @@ class Payment {
 
         const result = await db.query(
             `INSERT INTO payments (user_id, payment_type, provider, provider_reference, account_or_phone, amount, currency, status, description, metadata, transaction_reference, balance_before, balance_after)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 paymentData.user_id,
                 paymentData.payment_type,
@@ -51,7 +51,7 @@ class Payment {
     }
 
     async findById(id) {
-        const result = await db.query('SELECT * FROM payments WHERE id = $1', [id]);
+        const result = await db.query('SELECT * FROM payments WHERE id = ?', [id]);
         const payment = result.rows[0] || null;
         if (payment && payment.metadata) {
             try {
@@ -62,7 +62,7 @@ class Payment {
     }
 
     async findByTransactionReference(reference) {
-        const result = await db.query('SELECT * FROM payments WHERE transaction_reference = $1', [reference]);
+        const result = await db.query('SELECT * FROM payments WHERE transaction_reference = ?', [reference]);
         const payment = result.rows[0] || null;
         if (payment && payment.metadata) {
             try {
@@ -76,9 +76,9 @@ class Payment {
         const [lim, off] = this._clampLimitOffset(limit, offset);
         const result = await db.query(
             `SELECT * FROM payments 
-            WHERE user_id = $1 
+            WHERE user_id = ? 
             ORDER BY created_at DESC 
-            LIMIT $2 OFFSET $3`,
+            LIMIT ? OFFSET ?`,
             [userId, lim, off]
         );
         return result.rows.map(row => {
@@ -93,9 +93,9 @@ class Payment {
         const [lim, off] = this._clampLimitOffset(limit, offset);
         const result = await db.query(
             `SELECT * FROM payments 
-            WHERE user_id = $1 AND payment_type = $2 
+            WHERE user_id = ? AND payment_type = ? 
             ORDER BY created_at DESC 
-            LIMIT $3 OFFSET $4`,
+            LIMIT ? OFFSET ?`,
             [userId, paymentType, lim, off]
         );
         return result.rows.map(row => {
@@ -110,9 +110,9 @@ class Payment {
         const [lim, off] = this._clampLimitOffset(limit, offset);
         const result = await db.query(
             `SELECT * FROM payments 
-            WHERE user_id = $1 AND status = $2 
+            WHERE user_id = ? AND status = ? 
             ORDER BY created_at DESC 
-            LIMIT $3 OFFSET $4`,
+            LIMIT ? OFFSET ?`,
             [userId, status, lim, off]
         );
         return result.rows.map(row => {
@@ -127,9 +127,9 @@ class Payment {
         const [lim, off] = this._clampLimitOffset(limit, offset);
         const result = await db.query(
             `SELECT * FROM payments
-            WHERE user_id = $1 AND status = 'pending' AND provider = 'paypack'
+            WHERE user_id = ? AND status = 'pending' AND provider = 'paypack'
             ORDER BY created_at DESC
-            LIMIT $2 OFFSET $3`,
+            LIMIT ? OFFSET ?`,
             [userId, lim, off]
         );
         return result.rows.map(row => {
@@ -142,7 +142,7 @@ class Payment {
 
     async updateStatus(id, status, userId) {
         const result = await db.query(
-            `UPDATE payments SET status = $1, updated_at = CURRENT_TIMESTAMP, paid_at = CASE WHEN $2 = 'completed' AND paid_at IS NULL THEN CURRENT_TIMESTAMP ELSE paid_at END WHERE id = $3 AND user_id = $4`,
+            `UPDATE payments SET status = ?, updated_at = CURRENT_TIMESTAMP, paid_at = CASE WHEN ? = 'completed' AND paid_at IS NULL THEN CURRENT_TIMESTAMP ELSE paid_at END WHERE id = ? AND user_id = ?`,
             [status, status, id, userId]
         );
         return result.rowCount > 0;
@@ -150,7 +150,7 @@ class Payment {
 
     async delete(id, userId) {
         const result = await db.query(
-            `DELETE FROM payments WHERE id = $1 AND user_id = $2 AND status IN ('pending', 'failed', 'cancelled')`,
+            `DELETE FROM payments WHERE id = ? AND user_id = ? AND status IN ('pending', 'failed', 'cancelled')`,
             [id, userId]
         );
         return result.rowCount > 0;
@@ -168,7 +168,7 @@ class Payment {
                 CAST(COUNT(CASE WHEN status = 'pending' THEN 1 END) AS SIGNED) as pending_payments,
                 CAST(COUNT(CASE WHEN status = 'failed' THEN 1 END) AS SIGNED) as failed_payments
             FROM payments 
-            WHERE user_id = $1`,
+            WHERE user_id = ?`,
             [userId]
         );
         return result.rows[0] || {};
@@ -178,9 +178,9 @@ class Payment {
         const lim = this._clampLimit(limit, 10, 100);
         const result = await db.query(
             `SELECT * FROM payments 
-            WHERE user_id = $1 
+            WHERE user_id = ? 
             ORDER BY created_at DESC 
-            LIMIT $2`,
+            LIMIT ?`,
             [userId, lim]
         );
         return result.rows.map(row => {

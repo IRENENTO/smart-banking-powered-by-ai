@@ -73,6 +73,9 @@ const ALLOWED_ORIGINS = [
     'http://127.0.0.1:19006',
     'http://10.0.2.2:3000',
     'http://10.0.2.2:8081',
+    'https://smartbankingpoweredbyai.netlify.app', 
+    'https://smart-banking-frontend.netlify.app',
+    'https://smart-banking-powered-by-ai.onrender.com'
 ];
 
 if (process.env.VERCEL_URL) ALLOWED_ORIGINS.push(`https://${process.env.VERCEL_URL}`);
@@ -119,13 +122,14 @@ const responseFormatter = require('./middleware/response.middleware');
 app.use(responseFormatter);
 
 // Session Middleware with MySQL store
+const dbName = process.env.TIDB_DB_NAME || process.env.DB_NAME;
 app.use(session({
     store: new MySQLStore({
         host: process.env.DB_HOST,
         port: parseInt(process.env.DB_PORT, 10),
         user: process.env.DB_USER,
         password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
+        database: dbName,
         ssl: { rejectUnauthorized: false },
         createDatabaseTable: true,
         schema: {

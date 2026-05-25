@@ -8,7 +8,7 @@ class Account {
     async create(accountData) {
         const result = await db.query(
             `INSERT INTO accounts (user_id, balance, currency, account_type)
-            VALUES ($1, $2, $3, $4) RETURNING id`,
+            VALUES (?, ?, ?, ?)`,
             [
                 accountData.user_id,
                 accountData.balance || 0.00,
@@ -21,20 +21,20 @@ class Account {
     }
 
     async findById(id) {
-        const result = await db.query('SELECT * FROM accounts WHERE id = $1', [id]);
+        const result = await db.query('SELECT * FROM accounts WHERE id = ?', [id]);
         return result.rows[0] || null;
     }
 
     async findByUserId(userId) {
-        const result = await db.query('SELECT * FROM accounts WHERE user_id = $1', [userId]);
+        const result = await db.query('SELECT * FROM accounts WHERE user_id = ?', [userId]);
         return result.rows[0] || null;
     }
 
     async updateBalance(userId, newBalance) {
         const result = await db.query(
             `UPDATE accounts 
-            SET balance = $1, updated_at = CURRENT_TIMESTAMP 
-            WHERE user_id = $2`,
+            SET balance = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE user_id = ?`,
             [newBalance, userId]
         );
 
@@ -49,8 +49,8 @@ class Account {
     async deposit(userId, amount) {
         const result = await db.query(
             `UPDATE accounts 
-            SET balance = balance + $1, updated_at = CURRENT_TIMESTAMP 
-            WHERE user_id = $2`,
+            SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE user_id = ?`,
             [amount, userId]
         );
 
@@ -66,8 +66,8 @@ class Account {
 
         const result = await db.query(
             `UPDATE accounts 
-            SET balance = balance - $1, updated_at = CURRENT_TIMESTAMP 
-            WHERE user_id = $2`,
+            SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE user_id = ?`,
             [amount, userId]
         );
 
@@ -75,12 +75,12 @@ class Account {
     }
 
     async deleteByUserId(userId) {
-        const result = await db.query('DELETE FROM accounts WHERE user_id = $1', [userId]);
+        const result = await db.query('DELETE FROM accounts WHERE user_id = ?', [userId]);
         return result.rowCount > 0;
     }
 
     async delete(id) {
-        const result = await db.query('DELETE FROM accounts WHERE id = $1', [id]);
+        const result = await db.query('DELETE FROM accounts WHERE id = ?', [id]);
         return result.rowCount > 0;
     }
 }
