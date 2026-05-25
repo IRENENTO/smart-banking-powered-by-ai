@@ -232,6 +232,7 @@ const Payments: React.FC = () => {
                                                     <div><span style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>Status</span><div style={{ fontSize: 16, fontWeight: 600, color: s.status === 'active' ? '#10b981' : s.status === 'paused' ? '#f59e0b' : '#64748b', textTransform: 'capitalize' }}>{s.status}</div></div>
                                                     <div><span style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>Next</span><div style={{ fontSize: 16, fontWeight: 600, color: isDark ? '#f1f5f9' : '#1e293b' }}>{s.next_payment_date || 'N/A'}</div></div>
                                             </div>
+                                        </div>
                                             <div style={{ display: 'flex', gap: 8 }}>
                                                 {s.status === 'active' && <button onClick={() => handlePauseResume(s.id, 'pause')} style={{ padding: 8, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8, cursor: 'pointer', color: '#f59e0b' }}><Pause size={16} /></button>}
                                                 {s.status === 'paused' && <button onClick={() => handlePauseResume(s.id, 'resume')} style={{ padding: 8, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 8, cursor: 'pointer', color: '#10b981' }}><Play size={16} /></button>}
