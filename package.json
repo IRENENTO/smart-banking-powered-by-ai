@@ -1,26 +1,20 @@
 {
-  "dependencies": {
-    "@react-navigation/bottom-tabs": "^7.15.11",
-    "@react-navigation/native": "^7.2.2",
-    "@react-navigation/native-stack": "^7.14.12",
-    "@supabase/supabase-js": "^2.105.4",
-    "axios": "^1.15.2",
-    "dotenv": "^17.3.1",
-    "mongodb": "^7.1.0",
-    "react-native-gesture-handler": "^2.31.1",
-    "react-native-reanimated": "^4.3.0",
-    "react-native-safe-area-context": "^5.7.0",
-    "react-native-screens": "^4.24.0"
-  },
-  "name": "ai-banking",
+  "name": "sentinel-ai",
   "version": "1.0.0",
-  "description": "An intelligent digital banking ecosystem designed for automated loan approval, financial risk assessment, and economic forecasting. The platform leverages machine learning to streamline credit decisions while providing a modern banking experience across web and mobile interfaces.",
-  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "packages/backend",
+    "packages/mobile",
+    "packages/admin",
+    "packages/ai-engine"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs"
+    "backend": "npm run dev --workspace=packages/backend",
+    "mobile": "npm run start --workspace=packages/mobile",
+    "admin": "npm run dev --workspace=packages/admin",
+    "db:migrate": "npm run migrate --workspace=packages/backend",
+    "db:seed": "npm run seed --workspace=packages/backend",
+    "docker:up": "docker-compose -f docker/docker-compose.yml up",
+    "docker:down": "docker-compose -f docker/docker-compose.yml down"
+  }
 }

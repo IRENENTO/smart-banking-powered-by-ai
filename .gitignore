@@ -39,3 +39,9 @@ supabase/.temp
 
 # Vercel
 .vercel
+
+# Sentinel AI specific
+expo-env.d.ts
+*.tsbuildinfo
+.turbo/
+.next/
