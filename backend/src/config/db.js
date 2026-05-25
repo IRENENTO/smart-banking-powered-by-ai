@@ -1,82 +1,56 @@
 require('dotenv').config();
-// THEN your other imports
 const mysql = require('mysql2/promise');
 
-let pool;
+const pool = mysql.createPool({
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT, 10),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    ssl: { rejectUnauthorized: false },
+    waitForConnections: true,
+    connectionLimit: 20,
+    queueLimit: 0,
+    enableKeepAlive: true,
+    keepAliveInitialDelay: 0,
+});
 
-function getPool() {
-    if (!pool) {
-        pool = mysql.createPool({
-            host: process.env.DB_HOST || 'localhost',
-            user: process.env.DB_USER || 'root',
-            password: process.env.DB_PASSWORD || '',
-            database: process.env.DB_NAME || 'smart_banking_powered_by_ai',
-            port: process.env.DB_PORT || 3306,
-            waitForConnections: true,
-            connectionLimit: 10,
-            queueLimit: 0,
-            // ADD THIS FOR TiDB CLOUD:
-            ssl: {
-                require: true,
-                rejectUnauthorized: true
-            }
-        });
-    }
-    return pool;
-}
-
-const query = async (sql, params = []) => {
-    const convertedSql = pgToMySql(sql);
-    const sanitized = params.map(p => p === undefined ? null : p);
-    const [rows] = await getPool().query(convertedSql, sanitized);
-    if (Array.isArray(rows)) {
-        return { rows, rowCount: rows.length };
-    }
-    return { rows: [{ id: rows.insertId || 0 }], rowCount: rows.affectedRows || 0 };
-};
-
-function pgToMySql(sql) {
-    let result = sql.replace(/\$(\d+)/g, '?');
-    result = result.replace(/\s+RETURNING\s+.+?(?=\s*(?:;|\s*$))/i, '');
-    result = result.replace(/::\w+/g, '');
-    return result;
-}
-
-const compat = {
-    async execute(sql, params = []) {
-        const convertedSql = pgToMySql(sql);
-        const sanitized = params.map(p => p === undefined ? null : p);
-        const [rows, fields] = await getPool().query(convertedSql, sanitized);
-        const trimmed = sql.trimStart().toUpperCase();
-        if (trimmed.startsWith('INSERT')) {
-            return [{
-                insertId: rows.insertId || 0,
-                affectedRows: rows.affectedRows || 0,
-            }, []];
-        } else if (trimmed.startsWith('UPDATE') || trimmed.startsWith('DELETE')) {
-            return [{ affectedRows: rows.affectedRows || 0 }, []];
-        } else {
-            return [rows, fields || []];
+function convertParams(sql, params) {
+    if (!params || params.length === 0) return { sql, params: [] };
+    let idx = 0;
+    const paramMap = {};
+    const convertedSql = sql.replace(/\$(\d+)/g, (match, num) => {
+        if (!paramMap[num]) {
+            paramMap[num] = ++idx;
         }
-    },
-    async query(sql, params = []) {
-        return this.execute(sql, params);
-    },
-};
+        return '?';
+    });
+    const ordered = params.map((_, i) => params[i]);
+    return { sql: convertedSql, params: ordered };
+}
+
+async function query(sql, params) {
+    const { sql: convertedSql, params: convertedParams } = convertParams(sql, params);
+    const [rows, fields] = await pool.query(convertedSql, convertedParams);
+    return {
+        rows: rows,
+        rowCount: rows.length
+    };
+}
 
 const connectDB = async () => {
     try {
-        await getPool().execute('SELECT 1');
-        global.dbConnection = compat;
-        console.log('✅ MySQL connected successfully to TiDB Cloud');
+        await pool.query('SELECT 1');
+        console.log('✅ TiDB Cloud connected successfully (MySQL protocol with SSL)');
+        return true;
     } catch (err) {
-        console.error('❌ Database connection error:', err.message || err);
-        console.warn('⚠️  Server will continue without database — only static and docs routes will work');
+        console.error('❌ TiDB Cloud connection error:', err.message);
+        return false;
     }
 };
 
-module.exports = { query, connectDB, compat };
-const { connectDB, query } = require('./your-database-file');
+pool.on('error', (err) => {
+    console.error('Unexpected database error:', err.message);
+});
 
-// Then call connectDB when your app starts
-connectDB();
+module.exports = { pool, connectDB, query };

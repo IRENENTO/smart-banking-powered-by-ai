@@ -5,8 +5,9 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
 const passport = require('./config/passport');
-const { connectDB } = require('./config/db');
+const { connectDB, pool } = require('./config/db');
 const { PORT } = require('./config/env');
 const { swaggerUi, specs } = require('./config/swagger');
 const logger = require('./services/logger');
@@ -95,14 +96,21 @@ app.use('/api/auth', authLimiter);
 const responseFormatter = require('./middleware/response.middleware');
 app.use(responseFormatter);
 
-// Session Middleware
+// Session Middleware with PostgreSQL store (fixes memory leak warning)
 app.use(session({
+    store: new pgSession({
+        pool: pool,
+        tableName: 'session',
+        createTableIfMissing: true,
+        pruneSessionInterval: 60 // Prune expired sessions every 60 seconds
+    }),
     secret: process.env.JWT_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24, // 24 hours
         sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
     }
 }));
@@ -141,13 +149,40 @@ app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/market', require('./routes/market.routes'));
 app.use('/api/ai', require('./routes/ai.routes'));
 
-// API Info endpoint
+// ==================== HEALTH CHECK ENDPOINT ====================
+app.get('/api/health', async (req, res) => {
+    const { pool } = require('./config/db');
+    try {
+        const result = await pool.query('SELECT NOW() as time, DATABASE() as db_name, USER() as current_user');
+        const row = result.rows[0];
+        res.json({
+            success: true,
+            message: '✅ Connected to TiDB Cloud successfully!',
+            database: row.db_name,
+            time: row.time,
+            user: row.current_user,
+            environment: process.env.NODE_ENV || 'production',
+            session_store: 'PostgreSQL (TiDB Cloud)'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: '❌ Database connection failed',
+            error: error.message
+        });
+    }
+});
+
+// ==================== API INFO ====================
 app.get('/', (req, res) => {
     res.json({
         msg: 'AI Banking API is running',
         version: '1.0.0',
         documentation: `http://localhost:${PORT}/api-docs`,
+        database: 'TiDB Cloud (PostgreSQL compatible with SSL)',
+        session_store: 'PostgreSQL (TiDB Cloud)',
         endpoints: {
+            health: '/api/health',
             auth: '/api/auth',
             public: '/api/public',
             profile: '/api/profile',
@@ -176,8 +211,12 @@ app.use(errorHandler);
 
 if (require.main === module) {
     const server = app.listen(PORT, () => {
-        logger.info(`Server started on port ${PORT}`);
-        logger.info(`API Documentation: http://localhost:${PORT}/api-docs`);
+        logger.info(`✅ Server started on port ${PORT}`);
+        logger.info(`📝 API Documentation: http://localhost:${PORT}/api-docs`);
+        logger.info(`🏥 Health Check: http://localhost:${PORT}/api/health`);
+        logger.info(`🔒 Database: TiDB Cloud (SSL enabled)`);
+        logger.info(`💾 Session Store: PostgreSQL (TiDB Cloud)`);
+        
         startPaymentStatusChecker();
         startDeductionScheduler();
     });
