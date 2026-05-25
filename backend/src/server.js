@@ -73,7 +73,7 @@ const ALLOWED_ORIGINS = [
     'http://127.0.0.1:19006',
     'http://10.0.2.2:3000',
     'http://10.0.2.2:8081',
-    'https://smartbankingpoweredbyai.netlify.app', 
+    'https://smartbankingpoweredbyai.netlify.app',  
     'https://smart-banking-frontend.netlify.app',
     'https://smart-banking-powered-by-ai.onrender.com'
 ];
