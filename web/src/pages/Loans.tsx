@@ -742,8 +742,8 @@ const Loans: React.FC = () => {
 
                       <SectionCard title="Credit Analysis">
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 8 }}>
-                          <div style={{ height: 160 }}>
-                            <ResponsiveContainer width="100%" height="100%">
+                          <div style={{ width: '100%', height: 160 }}>
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                               <PieChart>
                                 <Pie data={[
                                   { name: 'Default Prob', value: aiPrediction.default_probability || 25 },

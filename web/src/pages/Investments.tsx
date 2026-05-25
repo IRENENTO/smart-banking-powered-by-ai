@@ -376,8 +376,8 @@ const Investments: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
               {sectorData.length > 0 && (
                 <SectionCard title={predictionInput.region ? `Sector Performance — ${predictionInput.region.charAt(0).toUpperCase() + predictionInput.region.slice(1)}` : 'Sector Performance'}>
-                  <div style={{ height: 260, marginTop: 8 }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                  <div style={{ width: '100%', height: 260, marginTop: 8 }}>
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                       <BarChart data={sectorData} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#e2e8f0'} />
                         <XAxis type="number" stroke={mutedColor} />

@@ -14,7 +14,7 @@ import {
 } from 'recharts';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5001').replace(/\/api\/?$/, '');
 
 interface AdminUser { id: number; email: string; name: string; role: string; status: string; created_at: string; }
 
@@ -334,50 +334,58 @@ const AdminDashboard: React.FC = () => {
                             {analyticsData?.user_growth?.length > 0 && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <ChartCardComponent title="User Growth (30 Days)">
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <LineChart data={analyticsData.user_growth}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 11 }} />
-                                                <YAxis stroke="#9ca3af" />
-                                                <Tooltip />
-                                                <Line type="monotone" dataKey="users_created" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                                            </LineChart>
-                                        </ResponsiveContainer>
+                                        <div style={{ width: '100%', height: 300 }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                                <LineChart data={analyticsData.user_growth}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                                    <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 11 }} />
+                                                    <YAxis stroke="#9ca3af" />
+                                                    <Tooltip />
+                                                    <Line type="monotone" dataKey="users_created" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                                                </LineChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     </ChartCardComponent>
                                     <ChartCardComponent title="Transaction Trends (30 Days)">
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <BarChart data={analyticsData.transaction_trends}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                                <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 11 }} />
-                                                <YAxis stroke="#9ca3af" />
-                                                <Tooltip />
-                                                <Bar dataKey="transaction_count" fill="#10b981" />
-                                            </BarChart>
-                                        </ResponsiveContainer>
+                                        <div style={{ width: '100%', height: 300 }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                                <BarChart data={analyticsData.transaction_trends}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                                    <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 11 }} />
+                                                    <YAxis stroke="#9ca3af" />
+                                                    <Tooltip />
+                                                    <Bar dataKey="transaction_count" fill="#10b981" />
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     </ChartCardComponent>
                                 </div>
                             )}
                             {analyticsData && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     <ChartCardComponent title="Loan Status Distribution">
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <PieChart>
-                                                <Pie data={analyticsData.loan_distribution || []} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={100} label>
-                                                    <Cell fill="#3b82f6" /><Cell fill="#10b981" /><Cell fill="#f59e0b" /><Cell fill="#ef4444" />
-                                                </Pie>
-                                                <Tooltip />
-                                            </PieChart>
-                                        </ResponsiveContainer>
+                                        <div style={{ width: '100%', height: 300 }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                                <PieChart>
+                                                    <Pie data={analyticsData.loan_distribution || []} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={100} label>
+                                                        <Cell fill="#3b82f6" /><Cell fill="#10b981" /><Cell fill="#f59e0b" /><Cell fill="#ef4444" />
+                                                    </Pie>
+                                                    <Tooltip />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     </ChartCardComponent>
                                     <ChartCardComponent title="Savings Goal Status">
-                                        <ResponsiveContainer width="100%" height={300}>
-                                            <PieChart>
-                                                <Pie data={analyticsData.savings_distribution || []} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={100} label>
-                                                    <Cell fill="#8b5cf6" /><Cell fill="#ec4899" /><Cell fill="#6366f1" />
-                                                </Pie>
-                                                <Tooltip />
-                                            </PieChart>
-                                        </ResponsiveContainer>
+                                        <div style={{ width: '100%', height: 300 }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                                <PieChart>
+                                                    <Pie data={analyticsData.savings_distribution || []} dataKey="count" nameKey="status" cx="50%" cy="50%" outerRadius={100} label>
+                                                        <Cell fill="#8b5cf6" /><Cell fill="#ec4899" /><Cell fill="#6366f1" />
+                                                    </Pie>
+                                                    <Tooltip />
+                                                </PieChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     </ChartCardComponent>
                                 </div>
                             )}

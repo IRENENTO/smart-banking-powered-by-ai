@@ -16,8 +16,8 @@ passport.use(new JwtStrategy(jwtOpts, async (jwtPayload, done) => {
     try {
         // Query user from TiDB Cloud
         const result = await query(
-            `SELECT id, email, first_name, last_name, role, is_active, profile_picture 
-             FROM users WHERE id = ? AND is_active = true`,
+            `SELECT id, email, first_name, last_name, role, profile_picture 
+             FROM users WHERE id = ?`,
             [jwtPayload.user?.id || jwtPayload.id]
         );
         
@@ -42,7 +42,7 @@ passport.serializeUser((user, done) => {
 passport.deserializeUser(async (id, done) => {
     try {
         const result = await query(
-            'SELECT id, email, first_name, last_name, role, is_active FROM users WHERE id = ?',
+            'SELECT id, email, first_name, last_name, role FROM users WHERE id = ?',
             [id]
         );
         

@@ -439,6 +439,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                             onClick={() => {
                                                 localStorage.removeItem('token');
                                                 localStorage.removeItem('user');
+                                                localStorage.removeItem('saved_route');
                                                 window.dispatchEvent(new Event('auth-change'));
                                                 window.location.href = '/login';
                                             }}

@@ -436,8 +436,8 @@ const AIInsights: React.FC = () => {
                         {sectors.length > 0 && (
                             <div style={{ display: 'grid', gap: 24, gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', marginBottom: 24 }}>
                                 <SectionCard title="Prediction Confidence">
-                                    <div style={{ height: 200, marginTop: 8 }}>
-                                        <ResponsiveContainer width="100%" height="100%">
+                                    <div style={{ width: '100%', height: 200, marginTop: 8 }}>
+                                        <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                             <BarChart data={sectors.map((s: any) => ({ name: s.name, confidence: s.risk === 'low' ? 85 : s.risk === 'medium' ? 65 : 40 }))} layout="vertical">
                                                 <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#e2e8f0'} />
                                                 <XAxis type="number" domain={[0, 100]} stroke={mutedColor} fontSize={12} />

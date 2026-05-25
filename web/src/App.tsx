@@ -9,6 +9,7 @@ import { BankingProvider } from './context/BankingContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import RouteGuard from './components/RouteGuard';
 import AIChatbot from './components/AIChatbot';
+import AutoLogout from './components/AutoLogout';
 
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -59,6 +60,7 @@ const App: React.FC = () => {
                     <NotificationProvider>
                         <BankingProvider>
                             <Router>
+                <AutoLogout />
                 <div className="imigongo-strip-top"></div>
                 <div className="App">
                     <ErrorBoundary>

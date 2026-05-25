@@ -301,8 +301,8 @@ const Transactions: React.FC = () => {
                     <SectionCard title="Flow Analysis" subtitle="Income vs Spending breakdown">
                         {displayAnalysis.total_in > 0 || displayAnalysis.total_out > 0 ? (
                             <div style={{ marginTop: 8 }}>
-                                <div style={{ height: 200 }}>
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div style={{ width: '100%', height: 200 }}>
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                         <PieChart>
                                             <Pie data={flowData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={75} innerRadius={45} label={({ name, value }: any) => `${name}: RWF ${(value || 0).toLocaleString()}`}>
                                                 {flowData.map((_, idx) => <Cell key={idx} fill={COLORS[idx]} />)}
@@ -316,21 +316,23 @@ const Transactions: React.FC = () => {
                                     <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><div style={{ width: 8, height: 8, borderRadius: 4, background: '#ef4444' }} /> Outflow: RWF {(displayAnalysis.total_out || 0).toLocaleString()}</span>
                                 </div>
                                 {typeData.length > 1 && (
-                                    <div style={{ height: 160, borderTop: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`, paddingTop: 12 }}>
+                                    <div style={{ width: '100%', height: 160, borderTop: `1px solid ${isDark ? '#1e293b' : '#e2e8f0'}`, paddingTop: 12 }}>
                                         <div style={{ fontSize: 11, color: mutedColor, marginBottom: 6, fontWeight: 600 }}>By Type</div>
-                                        <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={typeData}>
-                                                <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#e2e8f0'} />
-                                                <XAxis dataKey="type" tick={{ fill: mutedColor, fontSize: 11 }} />
-                                                <YAxis tick={{ fill: mutedColor, fontSize: 10 }} />
-                                                <Tooltip formatter={(value: any) => `RWF ${Number(value || 0).toLocaleString()}`} />
-                                                <Bar dataKey="total" radius={[4, 4, 0, 0]}>
-                                                    {typeData.map((entry) => (
-                                                        <Cell key={entry.type} fill={TYPE_COLORS[entry.type] || '#64748b'} />
-                                                    ))}
-                                                </Bar>
-                                            </BarChart>
-                                        </ResponsiveContainer>
+                                        <div style={{ width: '100%', height: 'calc(100% - 30px)' }}>
+                                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                                                <BarChart data={typeData}>
+                                                    <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#e2e8f0'} />
+                                                    <XAxis dataKey="type" tick={{ fill: mutedColor, fontSize: 11 }} />
+                                                    <YAxis tick={{ fill: mutedColor, fontSize: 10 }} />
+                                                    <Tooltip formatter={(value: any) => `RWF ${Number(value || 0).toLocaleString()}`} />
+                                                    <Bar dataKey="total" radius={[4, 4, 0, 0]}>
+                                                        {typeData.map((entry) => (
+                                                            <Cell key={entry.type} fill={TYPE_COLORS[entry.type] || '#64748b'} />
+                                                        ))}
+                                                    </Bar>
+                                                </BarChart>
+                                            </ResponsiveContainer>
+                                        </div>
                                     </div>
                                 )}
                             </div>

@@ -18,7 +18,8 @@ const Login: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
     const { error: toastError, info: toastInfo, success: toastSuccess, warning: toastWarning } = useToast();
     const location = useLocation();
-    const returnPath = (location.state as any)?.from || '/dashboard';
+    const savedRoute = localStorage.getItem('saved_route');
+    const returnPath = (location.state as any)?.from || savedRoute || '/dashboard';
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,6 +44,7 @@ const Login: React.FC = () => {
             } else if (!user.profile_completed) {
                 navigate('/complete-profile', { state: { from: returnPath } });
             } else {
+                localStorage.removeItem('saved_route');
                 navigate(returnPath);
             }
         } catch (userErr: any) {

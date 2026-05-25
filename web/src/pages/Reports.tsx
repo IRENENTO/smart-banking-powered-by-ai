@@ -136,8 +136,8 @@ const Reports: React.FC = () => {
                     </div>
 
                     <SectionCard title="Revenue & Expense Trends">
-                        <div style={{ height: 280, marginTop: 8 }}>
-                            <ResponsiveContainer width="100%" height="100%">
+                        <div style={{ width: '100%', height: 280, marginTop: 8 }}>
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <AreaChart data={reportData.growthData}>
                                     <defs>
                                         <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#0A9396" stopOpacity={0.3} /><stop offset="95%" stopColor="#0A9396" stopOpacity={0} /></linearGradient>
@@ -171,8 +171,8 @@ const Reports: React.FC = () => {
             {activeReport === 'investment' && reportData && (
                 <div style={{ display: 'grid', gap: 24 }}>
                     <SectionCard title="Sector Performance Analysis">
-                        <div style={{ height: 280, marginTop: 8 }}>
-                            <ResponsiveContainer width="100%" height="100%">
+                        <div style={{ width: '100%', height: 280, marginTop: 8 }}>
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <BarChart data={reportData.sectorData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#e2e8f0'} />
                                     <XAxis dataKey="name" stroke={mutedColor} />
@@ -205,8 +205,8 @@ const Reports: React.FC = () => {
             {activeReport === 'fraud' && reportData && (
                 <div style={{ display: 'grid', gap: 24 }}>
                     <SectionCard title="Fraud Detection Trends">
-                        <div style={{ height: 280, marginTop: 8 }}>
-                            <ResponsiveContainer width="100%" height="100%">
+                        <div style={{ width: '100%', height: 280, marginTop: 8 }}>
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                 <BarChart data={reportData.fraudData}>
                                     <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#1e293b' : '#e2e8f0'} />
                                     <XAxis dataKey="month" stroke={mutedColor} />

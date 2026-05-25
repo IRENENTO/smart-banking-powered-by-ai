@@ -238,29 +238,31 @@ const SpendingAnalytics: React.FC<SpendingAnalyticsProps> = ({ isOpen, onClose }
                           <div className="text-gray-500 dark:text-gray-400">Loading chart data...</div>
                         </div>
                       ) : (
-                        <ResponsiveContainer width="100%" height={300}>
-                          <PieChart>
-                            <Pie
-                              data={categoryData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={70}
-                              outerRadius={110}
-                              paddingAngle={4}
-                              dataKey="value"
-                            >
-                              {categoryData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                              ))}
-                            </Pie>
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend
-                              formatter={(value) => (
-                                <span className="text-sm text-gray-600 dark:text-gray-300">{value}</span>
-                              )}
-                            />
-                          </PieChart>
-                        </ResponsiveContainer>
+                        <div style={{ width: '100%', height: 300 }}>
+                          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                            <PieChart>
+                              <Pie
+                                data={categoryData}
+                                cx="50%"
+                                cy="50%"
+                                innerRadius={70}
+                                outerRadius={110}
+                                paddingAngle={4}
+                                dataKey="value"
+                              >
+                                {categoryData.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                                ))}
+                              </Pie>
+                              <Tooltip content={<CustomTooltip />} />
+                              <Legend
+                                formatter={(value) => (
+                                  <span className="text-sm text-gray-600 dark:text-gray-300">{value}</span>
+                                )}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
                       )}
                     </motion.div>
                   ) : (
@@ -279,32 +281,34 @@ const SpendingAnalytics: React.FC<SpendingAnalyticsProps> = ({ isOpen, onClose }
                           <div className="text-gray-500 dark:text-gray-400">Loading trend data...</div>
                         </div>
                       ) : (
-                        <ResponsiveContainer width="100%" height={300}>
-                          <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                            <defs>
-                              <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#0A9396" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#0A9396" stopOpacity={0} />
-                              </linearGradient>
-                              <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#E76F51" stopOpacity={0.3} />
-                                <stop offset="95%" stopColor="#E76F51" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
-                            <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-                            <YAxis
-                              tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
-                              tick={{ fontSize: 11, fill: '#6b7280' }}
-                              axisLine={false}
-                              tickLine={false}
-                            />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Legend />
-                            <Area type="monotone" dataKey="income" name="Income" stroke="#0A9396" strokeWidth={2.5} fill="url(#incomeGrad)" dot={{ r: 4, fill: '#0A9396' }} />
-                            <Area type="monotone" dataKey="spending" name="Spending" stroke="#E76F51" strokeWidth={2.5} fill="url(#spendGrad)" dot={{ r: 4, fill: '#E76F51' }} />
-                          </AreaChart>
-                        </ResponsiveContainer>
+                        <div style={{ width: '100%', height: 300 }}>
+                          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                            <AreaChart data={monthlyData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                              <defs>
+                                <linearGradient id="incomeGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#0A9396" stopOpacity={0.3} />
+                                  <stop offset="95%" stopColor="#0A9396" stopOpacity={0} />
+                                </linearGradient>
+                                <linearGradient id="spendGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#E76F51" stopOpacity={0.3} />
+                                  <stop offset="95%" stopColor="#E76F51" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" className="dark:stroke-gray-700" />
+                              <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+                              <YAxis
+                                tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                                tick={{ fontSize: 11, fill: '#6b7280' }}
+                                axisLine={false}
+                                tickLine={false}
+                              />
+                              <Tooltip content={<CustomTooltip />} />
+                              <Legend />
+                              <Area type="monotone" dataKey="income" name="Income" stroke="#0A9396" strokeWidth={2.5} fill="url(#incomeGrad)" dot={{ r: 4, fill: '#0A9396' }} />
+                              <Area type="monotone" dataKey="spending" name="Spending" stroke="#E76F51" strokeWidth={2.5} fill="url(#spendGrad)" dot={{ r: 4, fill: '#E76F51' }} />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
                       )}
                     </motion.div>
                   )}

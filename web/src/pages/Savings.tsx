@@ -155,8 +155,8 @@ const totalSaved = goals.reduce((sum, g) => sum + toNum(g.current_amount ?? g.cu
                         />
                         <SectionCard title="AI Savings Forecast">
                             <div style={{ marginTop: 8 }}>
-                                <div style={{ height: 160 }}>
-                                    <ResponsiveContainer width="100%" height="100%">
+                                <div style={{ width: '100%', height: 160 }}>
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                                         <AreaChart data={forecastData}>
                                             <defs>
                                                 <linearGradient id="savingsGrad" x1="0" y1="0" x2="0" y2="1">
