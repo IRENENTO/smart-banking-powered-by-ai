@@ -27,8 +27,76 @@ app.set('trust proxy', 1);
 // Connect Database
 connectDB();
 
-// Security headers
+// ==================== UPDATED CORS CONFIGURATION ====================
+// Allow all Netlify domains and local development
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:4000',
+    'http://localhost:5000',
+    'http://localhost:8080',
+    'http://localhost:5500',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:4000',
+    'http://10.0.2.2:3000',
+    'http://10.0.2.2:8081',
+    'https://chipper-starlight-301049.netlify.app',
+    'https://smartbankingpoweredbyai.netlify.app',
+    'https://smart-banking-frontend.netlify.app',
+    'https://*.netlify.app',
+    'https://smart-banking-powered-by-ai.onrender.com'
+];
+
+// Dynamic CORS origin function
+const corsOptions = {
+    origin: function (origin, callback) {
+        // Allow requests with no origin (like mobile apps, curl, Postman)
+        if (!origin) {
+            return callback(null, true);
+        }
+        
+        // Check if origin is allowed (exact match or wildcard for Netlify)
+        const isAllowed = allowedOrigins.some(allowed => {
+            if (allowed.includes('*')) {
+                const pattern = allowed.replace('*', '.*');
+                const regex = new RegExp(pattern);
+                return regex.test(origin);
+            }
+            return allowed === origin;
+        });
+        
+        // Also allow any localhost in development
+        const isLocalhost = origin.startsWith('http://localhost:') || 
+                           origin.startsWith('http://127.0.0.1:') ||
+                           origin.startsWith('http://10.0.2.2:');
+        
+        if (isAllowed || isLocalhost || process.env.NODE_ENV !== 'production') {
+            callback(null, true);
+        } else {
+            console.warn(`CORS blocked origin: ${origin}`);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+    exposedHeaders: ['Authorization', 'Content-Type'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
+};
+
+// Apply CORS middleware BEFORE all other middleware
+app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
+// ==================== END CORS CONFIGURATION ====================
+
+// ==================== UPDATED HELMET CONFIGURATION ====================
 app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    crossOriginOpenerPolicy: { policy: "unsafe-none" },
+    crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
@@ -36,10 +104,19 @@ app.use(helmet({
             styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
             fontSrc: ["'self'", 'https://fonts.gstatic.com'],
             imgSrc: ["'self'", 'data:', 'blob:'],
-            connectSrc: ["'self'", process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000', 'http://localhost:4000'],
+            connectSrc: [
+                "'self'", 
+                'https://smart-banking-powered-by-ai.onrender.com',
+                'https://chipper-starlight-301049.netlify.app',
+                'https://smartbankingpoweredbyai.netlify.app',
+                'https://*.netlify.app',
+                'http://localhost:3000',
+                'http://localhost:4000'
+            ],
         },
     },
 }));
+// ==================== END HELMET CONFIGURATION ====================
 
 // Rate limiting — auth limiter applied before general so stricter rules apply
 const authLimiter = rateLimit({
@@ -60,57 +137,7 @@ const generalLimiter = rateLimit({
 });
 
 app.use(generalLimiter);
-
-// CORS — restrict in production
-const ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://localhost:4000',
-    'http://localhost:8081',
-    'http://localhost:19000',
-    'http://localhost:19006',
-    'http://127.0.0.1:19000',
-    'http://127.0.0.1:19006',
-    'http://10.0.2.2:3000',
-    'http://10.0.2.2:8081',
-    'https://smartbankingpoweredbyai.netlify.app',  
-    'https://smart-banking-frontend.netlify.app',
-    'https://smart-banking-powered-by-ai.onrender.com'
-];
-
-if (process.env.VERCEL_URL) ALLOWED_ORIGINS.push(`https://${process.env.VERCEL_URL}`);
-if (process.env.RENDER_EXTERNAL_URL) ALLOWED_ORIGINS.push(process.env.RENDER_EXTERNAL_URL);
-if (process.env.CLIENT_URL) {
-    const origins = process.env.CLIENT_URL.split(',').map(o => o.trim());
-    ALLOWED_ORIGINS.push(...origins);
-}
-
-const corsOptions = {
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps, curl, or server-to-server)
-        if (!origin) return callback(null, true);
-        
-        const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
-        
-        if (ALLOWED_ORIGINS.includes(origin) || (process.env.NODE_ENV !== 'production' && isLocalhost)) {
-            callback(null, true);
-        } else {
-            // In production, block. In dev, log and allow.
-            if (process.env.NODE_ENV === 'production') {
-                logger.warn(`CORS blocked for origin: ${origin}`);
-                callback(new Error('Not allowed by CORS'));
-            } else {
-                callback(null, true);
-            }
-        }
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-};
-
 app.use(compression());
-app.use(cors(corsOptions));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
@@ -148,7 +175,7 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24, // 24 hours
-        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-origin
     }
 }));
 
@@ -186,11 +213,20 @@ app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/market', require('./routes/market.routes'));
 app.use('/api/ai', require('./routes/ai.routes'));
 
-// ==================== HEALTH CHECK ENDPOINT (FIXED FOR TiDB) ====================
+// ==================== CORS TEST ENDPOINT ====================
+app.get('/api/cors-test', (req, res) => {
+    res.json({
+        success: true,
+        message: 'CORS is working!',
+        origin: req.headers.origin,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// ==================== HEALTH CHECK ENDPOINT ====================
 app.get('/api/health', async (req, res) => {
     const { query } = require('./config/db');
     try {
-        // Simple query that works with TiDB Cloud (MySQL protocol)
         const result = await query('SELECT 1 as connected, NOW() as server_time');
         const row = result.rows[0];
         res.json({
@@ -201,7 +237,7 @@ app.get('/api/health', async (req, res) => {
             database: process.env.DB_NAME,
             host: process.env.DB_HOST,
             environment: process.env.NODE_ENV || 'production',
-            session_store: 'PostgreSQL (TiDB Cloud)',
+            session_store: 'MySQL (TiDB Cloud)',
             timestamp: new Date().toISOString()
         });
     } catch (error) {
@@ -214,14 +250,11 @@ app.get('/api/health', async (req, res) => {
     }
 });
 
-// ==================== DETAILED HEALTH CHECK (Optional) ====================
+// ==================== DETAILED HEALTH CHECK ====================
 app.get('/api/health/detailed', async (req, res) => {
     const { query } = require('./config/db');
     try {
-        // Test connection
         await query('SELECT 1');
-        
-        // Get version info
         const versionResult = await query('SELECT VERSION() as version');
         
         res.json({
@@ -241,7 +274,7 @@ app.get('/api/health/detailed', async (req, res) => {
                 environment: process.env.NODE_ENV || 'production',
                 start_time: new Date().toISOString()
             },
-            session_store: 'PostgreSQL (TiDB Cloud)',
+            session_store: 'MySQL (TiDB Cloud)',
             uptime: process.uptime(),
             memory_usage: process.memoryUsage(),
             timestamp: new Date().toISOString()
@@ -262,12 +295,13 @@ app.get('/', (req, res) => {
     res.json({
         msg: 'AI Banking API is running',
         version: '1.0.0',
-        documentation: `http://localhost:${PORT}/api-docs`,
-        database: 'TiDB Cloud (PostgreSQL compatible with SSL)',
-        session_store: 'PostgreSQL (TiDB Cloud)',
+        documentation: `https://smart-banking-powered-by-ai.onrender.com/api-docs`,
+        database: 'TiDB Cloud (MySQL compatible with SSL)',
+        session_store: 'MySQL (TiDB Cloud)',
         endpoints: {
             health: '/api/health',
             health_detailed: '/api/health/detailed',
+            cors_test: '/api/cors-test',
             auth: '/api/auth',
             public: '/api/public',
             profile: '/api/profile',
@@ -301,7 +335,8 @@ if (require.main === module) {
         logger.info(`🏥 Health Check: http://localhost:${PORT}/api/health`);
         logger.info(`🔍 Detailed Health: http://localhost:${PORT}/api/health/detailed`);
         logger.info(`🔒 Database: TiDB Cloud (SSL enabled)`);
-        logger.info(`💾 Session Store: PostgreSQL (TiDB Cloud)`);
+        logger.info(`💾 Session Store: MySQL (TiDB Cloud)`);
+        logger.info(`🌐 CORS enabled for Netlify and localhost`);
         
         startPaymentStatusChecker();
         startDeductionScheduler();
