@@ -1,15 +1,15 @@
 services:
   - type: web
-    name: sentinel-ai-backend
+    name: smart-banking-api
     runtime: node
-    repo: https://github.com/YOUR_USERNAME/sentinel-ai
+    repo: https://github.com/IRENENTO/smart-banking-powered-by-ai
     branch: main
     region: frankfurt
     plan: free
-    rootDir: packages/backend
+    rootDir: backend
     healthCheckPath: /api/health
     buildCommand: npm install
-    startCommand: node src/index.js
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production

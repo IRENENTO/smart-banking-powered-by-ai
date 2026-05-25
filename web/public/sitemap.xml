@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://ai-banking.vercel.app/</loc><priority>1.0</priority></url>
-  <url><loc>https://ai-banking.vercel.app/login</loc><priority>0.5</priority></url>
-  <url><loc>https://ai-banking.vercel.app/register</loc><priority>0.5</priority></url>
-  <url><loc>https://ai-banking.vercel.app/features</loc><priority>0.7</priority></url>
-  <url><loc>https://ai-banking.vercel.app/pricing</loc><priority>0.7</priority></url>
-  <url><loc>https://ai-banking.vercel.app/about</loc><priority>0.6</priority></url>
-  <url><loc>https://ai-banking.vercel.app/personal-banking</loc><priority>0.6</priority></url>
-  <url><loc>https://ai-banking.vercel.app/business-banking</loc><priority>0.6</priority></url>
-  <url><loc>https://ai-banking.vercel.app/loans</loc><priority>0.6</priority></url>
-  <url><loc>https://ai-banking.vercel.app/investments</loc><priority>0.6</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/</loc><priority>1.0</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/login</loc><priority>0.5</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/register</loc><priority>0.5</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/features</loc><priority>0.7</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/pricing</loc><priority>0.7</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/about</loc><priority>0.6</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/personal-banking</loc><priority>0.6</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/business-banking</loc><priority>0.6</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/loans</loc><priority>0.6</priority></url>
+  <url><loc>https://smart-banking-powered-by-ai.onrender.com/investments</loc><priority>0.6</priority></url>
 </urlset>
