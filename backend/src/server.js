@@ -149,26 +149,73 @@ app.use('/api/admin', require('./routes/admin.routes'));
 app.use('/api/market', require('./routes/market.routes'));
 app.use('/api/ai', require('./routes/ai.routes'));
 
-// ==================== HEALTH CHECK ENDPOINT ====================
+// ==================== HEALTH CHECK ENDPOINT (FIXED FOR TiDB) ====================
 app.get('/api/health', async (req, res) => {
     const { pool } = require('./config/db');
     try {
-        const result = await pool.query('SELECT NOW() as time, DATABASE() as db_name, USER() as current_user');
+        // Simple query that works with TiDB Cloud (MySQL protocol)
+        const result = await pool.query('SELECT 1 as connected, NOW() as server_time');
         const row = result.rows[0];
         res.json({
             success: true,
             message: '✅ Connected to TiDB Cloud successfully!',
-            database: row.db_name,
-            time: row.time,
-            user: row.current_user,
+            connected: true,
+            server_time: row.server_time,
+            database: process.env.DB_NAME,
+            host: process.env.DB_HOST,
             environment: process.env.NODE_ENV || 'production',
-            session_store: 'PostgreSQL (TiDB Cloud)'
+            session_store: 'PostgreSQL (TiDB Cloud)',
+            timestamp: new Date().toISOString()
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: '❌ Database connection failed',
-            error: error.message
+            error: error.message,
+            timestamp: new Date().toISOString()
+        });
+    }
+});
+
+// ==================== DETAILED HEALTH CHECK (Optional) ====================
+app.get('/api/health/detailed', async (req, res) => {
+    const { pool } = require('./config/db');
+    try {
+        // Test connection
+        await pool.query('SELECT 1');
+        
+        // Get version info
+        const versionResult = await pool.query('SELECT VERSION() as version');
+        
+        res.json({
+            success: true,
+            message: '✅ Connected to TiDB Cloud successfully!',
+            status: 'healthy',
+            database: {
+                name: process.env.DB_NAME,
+                host: process.env.DB_HOST,
+                port: process.env.DB_PORT,
+                version: versionResult.rows[0]?.version || 'TiDB Cloud',
+                connected: true,
+                ssl: true
+            },
+            server: {
+                port: PORT,
+                environment: process.env.NODE_ENV || 'production',
+                start_time: new Date().toISOString()
+            },
+            session_store: 'PostgreSQL (TiDB Cloud)',
+            uptime: process.uptime(),
+            memory_usage: process.memoryUsage(),
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: '❌ Database connection failed',
+            error: error.message,
+            status: 'unhealthy',
+            timestamp: new Date().toISOString()
         });
     }
 });
@@ -183,6 +230,7 @@ app.get('/', (req, res) => {
         session_store: 'PostgreSQL (TiDB Cloud)',
         endpoints: {
             health: '/api/health',
+            health_detailed: '/api/health/detailed',
             auth: '/api/auth',
             public: '/api/public',
             profile: '/api/profile',
@@ -214,6 +262,7 @@ if (require.main === module) {
         logger.info(`✅ Server started on port ${PORT}`);
         logger.info(`📝 API Documentation: http://localhost:${PORT}/api-docs`);
         logger.info(`🏥 Health Check: http://localhost:${PORT}/api/health`);
+        logger.info(`🔍 Detailed Health: http://localhost:${PORT}/api/health/detailed`);
         logger.info(`🔒 Database: TiDB Cloud (SSL enabled)`);
         logger.info(`💾 Session Store: PostgreSQL (TiDB Cloud)`);
         

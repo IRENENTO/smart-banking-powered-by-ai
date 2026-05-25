@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: sentinel-ai-backend
+    runtime: node
+    repo: https://github.com/YOUR_USERNAME/sentinel-ai
+    branch: main
+    region: frankfurt
+    plan: free
+    rootDir: packages/backend
+    healthCheckPath: /api/health
+    buildCommand: npm install
+    startCommand: node src/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: DB_HOST
+        value: gateway01.eu-central-1.prod.aws.tidbcloud.com
+      - key: DB_PORT
+        value: "4000"
+      - key: DB_NAME
+        value: smart_banking_powered_by_ai
+      - key: DB_USER
+        value: 34x4Fc56HfEyABY.root
+      - key: DB_PASSWORD
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_SSL
+        value: "true"

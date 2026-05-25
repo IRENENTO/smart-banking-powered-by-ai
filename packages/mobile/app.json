@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "Sentinel AI",
+    "slug": "sentinel-ai",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "sentinel",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "backgroundColor": "#0A0A0F",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.sentinelai.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Sentinel AI uses the camera to capture intruder photos.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Sentinel AI needs location access for live tracking.",
+        "NSLocationWhenInUseUsageDescription": "Sentinel AI needs location access for live tracking.",
+        "NSLocationAlwaysUsageDescription": "Sentinel AI needs location access for background tracking.",
+        "NSFaceIDUsageDescription": "Sentinel AI uses Face ID for secure authentication.",
+        "UIBackgroundModes": ["location", "fetch", "remote-notification"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0A0F"
+      },
+      "package": "com.sentinelai.app",
+      "permissions": [
+        "CAMERA",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "RECORD_AUDIO",
+        "USE_BIOMETRIC",
+        "POST_NOTIFICATIONS",
+        "RECEIVE_SMS",
+        "READ_SMS",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-local-authentication",
+      "expo-notifications",
+      "expo-location",
+      "expo-camera",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Sentinel AI needs microphone access for voice trigger."
+        }
+      ],
+      "expo-sms",
+      "expo-background-task"
+    ]
+  }
+}
