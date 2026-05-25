@@ -101,11 +101,11 @@ exports.predictSavings = async (data) => {
     return safeAICall(
         async () => {
             const { data: result } = await aiClient.post('/predict-savings', {
-                income: data.income || data.monthlyIncome || 0,
-                expenses: data.expenses || data.monthlyExpenses || 0,
-                savings: data.savings || data.existingSavings || 0,
+                monthly_income: data.income || data.monthlyIncome || 0,
+                monthly_expenses: data.expenses || data.monthlyExpenses || 0,
+                existing_savings: data.savings || data.existingSavings || 0,
                 age: data.age || 30,
-                dependents: data.dependents || 0,
+                num_dependents: data.dependents || 0,
                 employment_type: data.employment_type || 'employed'
             });
             return {
@@ -152,13 +152,13 @@ exports.analyzeSpending = async (transactions, monthlyIncome) => {
             });
             return {
                 success: true,
-                category_breakdown: result.category_breakdown,
-                total_spent: result.total_spent,
-                total_income: result.total_income,
-                savings_rate: result.savings_rate,
-                top_spending_category: result.top_spending_category,
-                spending_insights: result.spending_insights,
-                recommendations: result.recommendations,
+                category_breakdown: result.category_breakdown || [],
+                total_spent: result.total_spent || 0,
+                total_income: result.monthly_income || result.total_income || 0,
+                savings_rate: result.savings_rate || 0,
+                top_spending_category: result.top_category || result.top_spending_category || 'N/A',
+                spending_insights: result.spending_insight || result.spending_insights || 'No insights available.',
+                recommendations: result.recommendations || [],
                 ai_powered: true
             };
         },
@@ -185,23 +185,32 @@ exports.getRecommendations = async (data) => {
     return safeAICall(
         async () => {
             const { data: result } = await aiClient.post('/recommendations', {
-                income: data.income || data.monthlyIncome || 0,
-                expenses: data.expenses || data.monthlyExpenses || 0,
-                savings: data.savings || data.existingSavings || 0,
+                monthly_income: data.income || data.monthlyIncome || 0,
+                monthly_expenses: data.expenses || data.monthlyExpenses || 0,
+                existing_savings: data.savings || data.existingSavings || 0,
                 age: data.age || 30,
                 risk_tolerance: data.risk_tolerance || 'moderate',
-                goals: data.goals || data.financial_goals || ['savings'],
-                dependents: data.dependents || 0,
+                financial_goals: data.goals || data.financial_goals || ['savings'],
                 employment_type: data.employment_type || 'employed'
             });
+            const formatRecToStrings = (obj) => {
+                if (!obj || typeof obj !== 'object') return [];
+                const lines = [];
+                if (obj.tips && Array.isArray(obj.tips)) lines.push(...obj.tips);
+                if (obj.current_savings_rate) lines.push(`Current savings rate: ${obj.current_savings_rate}`);
+                if (obj.recommended_savings_rate) lines.push(`Recommended savings rate: ${obj.recommended_savings_rate}`);
+                if (obj.suggested_monthly_saving) lines.push(`Suggested monthly saving: RWF ${Number(obj.suggested_monthly_saving).toLocaleString()}`);
+                if (obj.estimated_yearly_savings) lines.push(`Estimated yearly savings: RWF ${Number(obj.estimated_yearly_savings).toLocaleString()}`);
+                return lines;
+            };
             return {
                 success: true,
                 financial_health_summary: result.financial_health_summary,
-                savings_recommendations: result.savings_recommendations,
-                investment_recommendations: result.investment_recommendations,
-                budgeting_advice: result.budgeting_advice,
-                sector_recommendations: result.sector_recommendations,
-                priority_actions: result.priority_actions,
+                savings_recommendations: result.savings_recommendation ? formatRecToStrings(result.savings_recommendation) : [],
+                investment_recommendations: result.investment_recommendation ? formatRecToStrings(result.investment_recommendation) : [],
+                budgeting_advice: result.budgeting_recommendation ? formatRecToStrings(result.budgeting_recommendation) : [],
+                sector_recommendations: result.sector_recommendations || [],
+                priority_actions: result.priority_actions || [],
                 ai_powered: true
             };
         },
@@ -269,6 +278,28 @@ exports.retrainModel = async (modelName) => {
             message: 'AI Engine unavailable. Cannot retrain models.',
             status: 'failed',
             ai_powered: false
+        })
+    );
+};
+
+exports.getEconomicForecast = async () => {
+    return safeAICall(
+        async () => {
+            const { data } = await aiClient.get('/economic-forecast');
+            return {
+                inflation_rate: data.inflation_rate ?? 2.5,
+                gdp_growth: data.gdp_growth ?? 3.2,
+                market_sentiment: data.market_sentiment || 'positive',
+                ai_powered: true,
+                recommendations: data.recommendations || ['Market conditions stable.'],
+            };
+        },
+        () => ({
+            inflation_rate: 2.5,
+            gdp_growth: 3.2,
+            market_sentiment: 'positive',
+            ai_powered: false,
+            recommendations: ['Market conditions stable.'],
         })
     );
 };

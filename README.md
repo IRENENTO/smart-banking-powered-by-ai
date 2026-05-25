@@ -1,316 +1,198 @@
-# AI-Powered Integrated Digital Banking Platform
+# AI-Powered Integrated Digital Banking Platform: The Complete Blueprint
 
-## System Overview
-An intelligent digital banking ecosystem designed for automated loan approval, financial risk assessment, and economic forecasting. The platform leverages machine learning to streamline credit decisions while providing a modern banking experience across web and mobile interfaces.
+## 📖 Preface
+This document serves as a comprehensive technical guide and architectural blueprint for the AI-Powered Integrated Digital Banking Platform. Designed as a high-performance, scalable, and intelligent ecosystem, this platform bridges the gap between traditional banking and modern artificial intelligence, specifically tailored for the Rwandan economic landscape but architected for global scalability.
 
-## Architecture
-The system follows a microservices architecture:
-- **Backend API**: Node.js/Express service handling user management, transactions, and business logic.
-- **AI Engine**: Python/FastAPI service dedicated to ML-based risk scoring and forecasting.
-- **Web Frontend**: React.js SPA for administrative and user banking operations.
-- **Mobile App**: React Native application for on-the-go banking services.
-- **Database**: MongoDB for flexible data storage.
+---
 
-## Project Structure
-```
-ai-banking/
-├─ .env                  # Environment variables for local development configuration
-├─ .idea/                # JetBrains IDE configuration and workspace settings
-├─ .isocode/             # IDE or editor specific configuration files
-├─ config.toml           # Global configuration settings for the entire platform
-├─ database/             # Database migration scripts and schema definitions
-│  └─ migration.sql      # SQL script for database initialization and updates
-├─ db.js                 # Root-level database connection helper and utilities
-├─ index.js              # Root-level server bootstrap and application entrypoint
-├─ ai-engine/            # Python AI/ML service for risk scoring and economic forecasting
-│  ├─ requirements.txt   # Python package dependencies for the AI engine
-│  └─ app/
-│     ├─ __pycache__/    # Python compiled bytecode cache directory
-│     │  ├─ main.cpython-314.pyc # Compiled main application
-│     │  └─ schemas.cpython-314.pyc # Compiled schema definitions
-│     ├─ main.py         # FastAPI application entrypoint and server setup
-│     ├─ schemas.py      # Pydantic models for request/response validation
-│     ├─ models/         # Machine learning model definitions and implementations
-│     │  ├─ __pycache__/ # Model bytecode cache
-│     │  │  └─ loan_risk_model.cpython-314.pyc # Compiled loan risk model
-│     │  └─ loan_risk_model.py # Loan risk assessment ML model
-│     └─ services/       # Business logic for AI scoring, prediction, and data processing
-│        ├─ __pycache__/ # Service bytecode cache
-│        │  ├─ economic_forecast.cpython-314.pyc # Compiled economic forecast service
-│        │  └─ risk_scoring.cpython-314.pyc # Compiled risk scoring service
-│        ├─ economic_forecast.py # Economic forecasting service
-│        └─ risk_scoring.py # Risk scoring and evaluation service
-├─ backend/              # Node.js backend API server and core business logic
-│  ├─ .env               # Backend-specific environment variables
-│  ├─ .env.example       # Template for backend environment configuration
-│  ├─ app/               # Python backend services for additional functionality
-│  │  ├─ __init__.py     # Python package initialization
-│  │  ├─ main.py         # Python backend application entrypoint
-│  │  ├─ api/            # API endpoints and route definitions
-│  │  │  ├─ __init__.py  # API package initialization
-│  │  │  └─ auth.py      # Authentication API endpoints
-│  │  ├─ core/           # Core application utilities and configurations
-│  │  │  ├─ __init__.py  # Core package initialization
-│  │  │  ├─ config.py    # Application configuration settings
-│  │  │  └─ security.py  # Security utilities and helpers
-│  │  ├─ db/             # Database connection and management utilities
-│  │  │  ├─ __init__.py  # Database package initialization
-│  │  │  └─ database.py  # Database connection and operations
-│  │  ├─ ml_engine/      # Machine learning integration services
-│  │  │  ├─ __init__.py  # ML engine package initialization
-│  │  │  ├─ data_gen.py  # Data generation utilities for ML
-│  │  │  └─ train.py     # ML model training scripts
-│  │  ├─ models/         # Data models and database schemas
-│  │  │  ├─ __init__.py  # Models package initialization
-│  │  │  └─ user.py      # User data model and schema
-│  │  └─ services/       # Business logic and service implementations
-│  │     ├─ __init__.py  # Services package initialization
-│  │     └─ risk_service.py # Risk assessment business logic
-│  ├─ cleanup.js         # Script for backend cleanup and maintenance tasks
-│  ├─ jest.config.js     # Jest testing framework configuration
-│  ├─ package.json       # Backend Node.js dependencies and npm scripts
-│  ├─ package-lock.json  # Locked dependency versions for reproducible builds
-│  ├─ requirements.txt   # Python dependencies for backend services
-│  ├─ src/               # Main backend source code directory
-│  │  ├─ server.js       # Express server setup and configuration
-│  │  ├─ config/         # Backend configuration files and settings
-│  │  │  ├─ database.js  # Database connection configuration
-│  │  │  ├─ env.js       # Environment variable configuration
-│  │  │  ├─ passport.js  # Authentication strategy configuration
-│  │  │  └─ swagger.js   # API documentation configuration
-│  │  ├─ controllers/    # API controllers handling request/response logic
-│  │  │  ├─ auth.controller.js     # Authentication endpoint handlers
-│  │  │  ├─ loan.controller.js     # Loan application and management
-│  │  │  ├─ otp.controller.js      # One-time password handling
-│  │  │  ├─ payment.controller.js  # Payment processing endpoints
-│  │  │  ├─ profile.controller.js  # User profile management
-│  │  │  ├─ public.controller.js   # Public API endpoints
-│  │  │  ├─ security.controller.js # Security settings management
-│  │  │  └─ transaction.controller.js # Transaction processing
-│  │  ├─ middleware/     # Express middleware for request processing
-│  │  │  ├─ auth.js       # Authentication and authorization middleware
-│  │  │  ├─ auth.middleware.js # Enhanced authentication middleware
-│  │  │  └─ role.middleware.js # Role-based access control
-│  │  ├─ models/         # Database models and schema definitions
-│  │  │  ├─ Account.js   # Account data model and schema
-│  │  │  ├─ AIDecision.js # AI decision tracking model
-│  │  │  ├─ Loan.js      # Loan application and data model
-│  │  │  ├─ Transaction.js # Transaction data model
-│  │  │  └─ User.js      # User data model and schema
-│  │  ├─ routes/         # API route definitions and endpoint mappings
-│  │  │  ├─ auth.routes.js       # Authentication routes
-│  │  │  ├─ loan.routes.js       # Loan-related endpoints
-│  │  │  ├─ oauth.routes.js      # OAuth authentication routes
-│  │  │  ├─ otp.routes.js        # One-time password routes
-│  │  │  ├─ payment.routes.js    # Payment processing endpoints
-│  │  │  ├─ profile.routes.js    # User profile endpoints
-│  │  │  ├─ public.routes.js     # Public API routes
-│  │  │  ├─ security.routes.js   # Security management routes
-│  │  │  └─ transaction.routes.js # Transaction endpoints
-│  │  ├─ services/       # Business logic and helper services
-│  │  │  └─ ai.service.js # AI service integration
-│  │  ├─ seeders/        # Database seeding scripts for initial data
-│  │  │  └─ demo-data.js # Demo data seeding script
-│  │  └─ migrations/     # Database migration scripts
-│  │     └─ mysql-migration.sql # MySQL database migration
-│  └─ tests/             # Backend test suites and test utilities
-│     └─ payment-transaction.test.js # Payment transaction tests
-├─ web/                  # React TypeScript web frontend application
-│  ├─ build/             # Compiled production build output
-│  ├─ build-temp/        # Temporary build files and cache
-│  ├─ craco-deps.json    # CRACO (Create React App Configuration Override) dependencies
-│  ├─ craco.config.js    # CRACO configuration for custom webpack setup
-│  ├─ package.json       # Web frontend dependencies and scripts
-│  ├─ package-lock.json  # Locked dependency versions for web frontend
-│  ├─ postcss.config.js  # PostCSS configuration for CSS processing
-│  ├─ public/            # Static assets and HTML template
-│  │  └─ index.html      # Main HTML template for the web app
-│  ├─ src/               # Web application source code
-│  │  ├─ App.tsx         # Main React application component
-│  │  ├─ index.tsx       # React application entry point
-│  │  ├─ index.css       # Global CSS styles and resets
-│  │  ├─ react-app-env.d.ts # TypeScript declarations for Create React App
-│  │  ├─ cards.css       # Custom card component styles
-│  │  ├─ imigongo.css    # Custom styling for specific components
-│  │  ├─ i18n.ts         # Internationalization setup and configuration
-│  │  ├─ components/     # Reusable React UI components
-│  │  │  ├─ AIChatbot.tsx # AI-powered chatbot component
-│  │  │  ├─ AIFinancialAdvisor.tsx # AI financial advisor interface
-│  │  │  ├─ AppShell.module.css # App shell component styles
-│  │  │  ├─ AppShell.tsx # Main application shell layout
-│  │  │  ├─ Button.tsx   # Custom button component
-│  │  │  ├─ Footer.tsx   # Application footer component
-│  │  │  ├─ IncomePattern.tsx # Income pattern visualization
-│  │  │  ├─ InvestmentIdeas.tsx # Investment suggestions component
-│  │  │  ├─ LandingScrollNav.module.css # Landing navigation styles
-│  │  │  ├─ LandingScrollNav.tsx # Landing page scroll navigation
-│  │  │  ├─ LanguageToggle.tsx # Language switcher component
-│  │  │  ├─ LoadingButton.tsx # Loading state button component
-│  │  │  ├─ LoanEligibility.tsx # Loan eligibility checker
-│  │  │  ├─ MarketInsights.tsx # Market insights display
-│  │  │  ├─ Modal.tsx    # Modal dialog component
-│  │  │  ├─ Navbar.tsx   # Navigation bar component
-│  │  │  ├─ NotificationDropdown.tsx # Notification dropdown menu
-│  │  │  ├─ PageLayout.tsx # Page layout wrapper component
-│  │  │  ├─ PaymentDashboard.tsx # Payment dashboard interface
-│  │  │  ├─ QuickActions.tsx # Quick action buttons component
-│  │  │  ├─ RiskAlerts.tsx # Risk alerts display
-│  │  │  ├─ RouteGuard.tsx # Route protection component
-│  │  │  ├─ SavingsGoalModal.tsx # Savings goal modal
-│  │  │  ├─ SectionCard.tsx # Section card wrapper
-│  │  │  ├─ SmartAlertBanner.tsx # Smart alert banner
-│  │  │  ├─ SpendingAnalytics.tsx # Spending analytics visualization
-│  │  │  └─ VideoBackground.tsx # Video background component
-│  │  ├─ context/        # React context providers for state management
-│  │  │  ├─ LanguageContext.tsx # Language preference context
-│  │  │  ├─ NotificationContext.tsx # Notification management context
-│  │  │  └─ ThemeContext.tsx # Theme management context
-│  │  ├─ data/           # Static data and mock data files
-│  │  │  └─ mockData.ts  # Mock data for development and testing
-│  │  ├─ i18n/           # Internationalization configuration and translations
-│  │  │  ├─ mappers.ts   # Translation mapping utilities
-│  │  │  ├─ translations.ts # Translation definitions
-│  │  │  └─ useT.ts      # Translation hook
-│  │  ├─ pages/          # Page-level React components
-│  │  │  ├─ About.tsx    # About page component
-│  │  │  ├─ Accounts.tsx # Accounts management page
-│  │  │  ├─ AdminDashboard.tsx # Admin dashboard interface
-│  │  │  ├─ AIInsights.tsx # AI insights and analytics page
-│  │  │  ├─ ApiDocs.tsx  # API documentation page
-│  │  │  ├─ Auth.module.css # Authentication page styles
-│  │  │  ├─ AuthSuccess.tsx # Authentication success page
-│  │  │  ├─ BusinessBanking.tsx # Business banking services page
-│  │  │  ├─ Careers.tsx  # Careers and job opportunities page
-│  │  │  ├─ CompleteProfile.tsx # Profile completion page
-│  │  │  ├─ CreditCards.tsx # Credit cards management page
-│  │  │  ├─ Dashboard.tsx # Main user dashboard
-│  │  │  ├─ Features.tsx # Platform features showcase page
-│  │  │  ├─ Insurance.tsx # Insurance services page
-│  │  │  ├─ Investments.tsx # Investment management page
-│  │  │  ├─ Landing.tsx  # Landing page component
-│  │  │  ├─ Landing.module.css # Landing page styles
-│  │  │  ├─ LoanApplication.tsx # Loan application form page
-│  │  │  ├─ LoanStatus.tsx # Loan application status page
-│  │  │  ├─ Loans.tsx    # Loans management page
-│  │  │  ├─ Login.tsx    # User login page
-│  │  │  ├─ Payments.tsx # Payment processing page
-│  │  │  ├─ PersonalBanking.tsx # Personal banking services page
-│  │  │  ├─ Pricing.tsx  # Pricing and plans page
-│  │  │  ├─ Profile.tsx  # User profile management page
-│  │  │  ├─ Register.tsx # User registration page
-│  │  │  ├─ Reports.tsx  # Reports and analytics page
-│  │  │  ├─ RiskResult.tsx # Risk assessment results page
-│  │  │  ├─ Savings.tsx  # Savings management page
-│  │  │  ├─ Security.tsx # Security settings page
-│  │  │  ├─ SetSecurity.tsx # Security configuration page
-│  │  │  ├─ Settings.tsx # Application settings page
-│  │  │  ├─ Transactions.tsx # Transaction history page
-│  │  │  └─ VerifyOTP.tsx # OTP verification page
-│  │  ├─ services/       # API service functions and HTTP clients
-│  │  │  ├─ api.ts       # Main API service client
-│  │  │  ├─ otpService.ts # OTP service functions
-│  │  │  └─ publicService.ts # Public API service functions
-│  │  └─ utils/          # Utility functions and helpers
-│  │     └─ preferences.ts # User preference utilities
-│  ├─ tailwind.config.js # Tailwind CSS configuration
-│  └─ tsconfig.json      # TypeScript configuration for the web app
-├─ mobile/               # React Native mobile application
-│  ├─ .eslintrc.js       # ESLint configuration for mobile code quality
-│  ├─ .gitignore         # Git ignore patterns for mobile project
-│  ├─ .prettierrc.js     # Prettier code formatting configuration
-│  ├─ App.tsx            # Main mobile application entry component
-│  ├─ app.json           # React Native app configuration and metadata
-│  ├─ babel.config.js    # Babel configuration for JavaScript transformation
-│  ├─ index.js           # React Native application bootstrap
-│  ├─ jest.config.js     # Jest testing configuration for mobile
-│  ├─ metro.config.js    # Metro bundler configuration for React Native
-│  ├─ package.json       # Mobile app dependencies and scripts
-│  ├─ package-lock.json # Locked dependency versions for mobile
-│  ├─ tsconfig.json      # TypeScript configuration for mobile app
-│  ├─ yarn.lock          # Yarn package manager lock file
-│  ├─ android/           # Android native project files and configuration
-│  ├─ ios/               # iOS native project files and configuration
-│  └─ src/               # Mobile application source code
-│     ├─ App.tsx         # Mobile app main component
-│     ├─ api/            # Mobile API service functions
-│     │  └─ client.ts    # API client for mobile
-│     ├─ screens/        # Mobile screen components
-│     │  ├─ ApplyLoanScreen.tsx # Loan application screen
-│     │  ├─ HomeScreen.tsx # Home dashboard screen
-│     │  ├─ LoanResultScreen.tsx # Loan results screen
-│     │  └─ LoginScreen.tsx # Login authentication screen
-│     ├─ services/       # Mobile-specific business logic services
-│     │  └─ api.ts       # Mobile API service
-│     └─ store/          # State management for mobile app
-│        └─ authStore.ts # Authentication state store
-├─ package.json          # Root workspace dependencies and scripts
-├─ package-lock.json     # Root workspace locked dependency versions
-├─ README.md             # Project documentation and overview
-├─ SETUP_GUIDE.md        # Detailed setup instructions and environment guide
-└─ UPGRADE_SUMMARY.md    # Version changelog and upgrade notes
-```
+## 📑 Table of Contents
+1. [Executive Summary](#-executive-summary)
+2. [Architectural Vision](#-architectural-vision)
+3. [The Technology Stack](#-the-technology-stack)
+4. [Core Logic & Workflows](#-core-logic--workflows)
+   - [Intelligent Authentication Flow](#intelligent-authentication-flow)
+   - [AI Loan Approval Engine](#ai-loan-approval-engine)
+   - [Automated Transaction System](#automated-transaction-system)
+   - [Economic Forecasting & Insights](#economic-forecasting--insights)
+5. [Service Breakdown](#-service-breakdown)
+   - [Backend API (Node.js/Express)](#backend-api-nodejs-express)
+   - [AI Intelligence Engine (Python/FastAPI)](#ai-intelligence-engine-pythonfastapi)
+   - [Web Frontend (React/TypeScript)](#web-frontend-reacttypescript)
+   - [Mobile App (React Native/Expo)](#mobile-app-react-nativeexpo)
+6. [Database & Data Modeling](#-database--data-modeling)
+7. [Security & Compliance](#-security--compliance)
+8. [Deployment & Infrastructure](#-deployment--infrastructure)
+9. [Getting Started](#-getting-started)
+10. [Academic & Economic Impact](#-academic--economic-impact)
 
-## Admin Access
+---
 
-### Admin Dashboard Credentials
-- **URL**: `http://localhost:5001/admin/login`
-- **Email**: `smartbankingpoweredbyai@gmail.com`
-- **Password**: `irene12003`
-- **Role**: `super_admin`
+## 🚀 Executive Summary
+The AI-Powered Integrated Digital Banking Platform is a next-generation financial services ecosystem. It automates critical banking operations—such as loan risk assessment, fraud detection, and financial advising—using state-of-the-art Machine Learning models. By integrating real-time economic indicators and user behavioral data, it provides a transparent, secure, and highly efficient banking experience for both individuals and SMEs.
 
-### Setup Admin Account
-Run the migration to create the admin tables and seed the admin user:
-```bash
-cd backend
-node run-migrations.js
-```
+---
 
-Or manually update/create the admin:
-```bash
-cd backend
-node scripts/update-admin-password.js
-```
+## 🏛 Architectural Vision
+The system is built on a **Microservices Architecture**, ensuring that each component can scale independently and use the most appropriate technology for its specific domain.
 
-## How to Run
+### High-Level Flow
+1. **Frontend Layer**: Web and Mobile apps provide a seamless UI, communicating via RESTful APIs.
+2. **Orchestration Layer**: The Node.js Backend manages business logic, user state, and coordinates with specialized services.
+3. **Intelligence Layer**: The Python AI Engine processes complex data to provide real-time predictions and insights.
+4. **Data Layer**: A hybrid approach using MySQL/PostgreSQL (via Supabase) for relational data and local model storage for ML.
 
-### 1. Backend API
-```bash
-cd backend
-npm install
-npm start
-```
+---
 
-### 2. AI Engine
-```bash
-cd ai-engine
-pip install -r requirements.txt
-uvicorn app.main:app --reload
-```
+## 🛠 The Technology Stack
 
-### 3. Web Application
-```bash
-cd web
-npm install
-npm start
-```
+### Backend API (The Brain)
+- **Runtime**: Node.js 18+
+- **Framework**: Express.js
+- **Auth**: Passport.js (JWT, Google/Facebook OAuth)
+- **Database**: MySQL (local) / PostgreSQL (Supabase) via Sequelize ORM
+- **Documentation**: Swagger/OpenAPI
+- **Payment**: Paypack SDK integration
+- **Messaging**: Nodemailer (SMTP) for OTPs
 
-### 4. Mobile Application
-```bash
-cd mobile
-npm install
-npx react-native run-android # or run-ios
-```
+### AI Engine (The Intelligence)
+- **Language**: Python 3.10+
+- **Framework**: FastAPI
+- **ML Libraries**: Scikit-learn, XGBoost, Pandas, NumPy
+- **Model Storage**: Joblib/Pickle
+- **Validation**: Pydantic
 
-## How AI Loan Approval Works
-The AI Engine evaluates loan applications based on:
-1. **Credit History**: Past repayment behavior.
-2. **Financial Ratios**: Debt-to-income and savings-to-loan ratios.
-3. **Economic Forecast**: Integration of macro-economic indicators to assess external risk factors.
+### Web Frontend (The Portal)
+- **Framework**: React 18
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS, Framer Motion
+- **State Management**: React Context API
+- **Internationalization**: i18next (English, French, Kinyarwanda)
+- **Charts**: Recharts / Chart.js
 
-The model returns a **Risk Score (0-100)** and a status (**APPROVED**, **REVIEW**, or **REJECTED**) with a human-readable explanation.
+### Mobile App (The Companion)
+- **Framework**: React Native / Expo
+- **Language**: TypeScript
+- **Navigation**: React Navigation
+- **State**: In-memory (Transitioning to AsyncStorage)
 
-## Academic & Economic Benefits
-- **Banks**: Reduced default rates through data-driven decisions and operational efficiency.
-- **Economy**: Improved financial inclusion by providing transparent, fast credit access to SMEs and individuals.
-- **Academic**: Demonstrates practical integration of ML in distributed enterprise systems.
-"# smart-banking-powered-by-ai" 
+---
+
+## ⚙️ Core Logic & Workflows
+
+### Intelligent Authentication Flow
+The platform employs a rigorous **Multi-Step Security Protocol** during registration to ensure KYC (Know Your Customer) compliance:
+1. **Initial Signup**: Basic details (Name, Email, Phone, Password).
+2. **Auto-Login**: Immediate JWT issuance upon registration.
+3. **OTP Verification**: Email-based verification for account activation.
+4. **Profile Completion**: Collection of National ID, DOB, and Address.
+5. **Security PIN**: Setup of a 4-digit PIN for sensitive transactions.
+
+### AI Loan Approval Engine
+The loan approval process is entirely data-driven:
+- **Feature Engineering**: Combines Credit Score, Debt-to-Income ratio, Employment Status, and historical transaction patterns.
+- **Model Inference**: Uses an XGBoost classifier to categorize applications into `APPROVED`, `REVIEW`, or `REJECTED`.
+- **Explainability**: The engine provides a "Reason Code" explaining the decision to the user.
+
+### Automated Transaction System
+- **Real-time Processing**: Transactions are processed through the Node.js backend with immediate ledger updates.
+- **Deduction Scheduler**: Automated systems for loan repayments and savings goals.
+- **Payment Gateway**: Integration with Paypack for mobile money (MTN, Airtel) processing.
+
+---
+
+## 📦 Service Breakdown
+
+### Backend API (`/backend`)
+Handles the heavy lifting of user management, transaction ledgers, and third-party integrations. It features a robust middleware stack for security (Helmet, Rate-limiting, CORS).
+
+### AI Intelligence Engine (`/ai-engine`)
+A specialized Python service that exposes ML models as high-performance endpoints. 
+- **Predict Loan**: `/api/ai/predict-loan`
+- **Detect Fraud**: `/api/ai/detect-fraud`
+- **Economic Forecast**: `/api/ai/economic-forecast`
+
+### Web Frontend (`/web`)
+A modern SPA built for administrative oversight and user banking. It includes advanced features like an AI Financial Advisor and real-time Spending Analytics.
+
+### Mobile App (`/mobile`)
+Designed for accessibility, providing a core set of banking features (Balance check, Transfers, Loan application) with a focus on ease of use.
+
+---
+
+## 🧠 Deep Dive: AI Intelligence Methodology
+
+The intelligence layer is the platform's core differentiator. It uses a **Hybrid Intelligence Approach**, combining advanced Machine Learning with robust Rule-Based Fallbacks.
+
+### 1. Machine Learning Models
+- **Loan Predictor**: An **XGBoost Classifier** trained on synthetic and historical Rwandan banking data.
+  - **Features**: Age, Monthly Income, Loan Amount, Duration, Existing Debt, Dependents, Employment Type, Education, Credit History, and Collateral.
+  - **Logic**: Calculates a probability of default. If the probability is < 0.25, it returns `APPROVED` (Risk Score 75-100).
+- **Fraud Detector**: An **Isolation Forest** model for anomaly detection.
+  - **Monitors**: Transaction amount, location variance, device fingerprints, and frequency.
+- **Financial Health (Savings) Predictor**: A **Random Forest Regressor**.
+  - **Logic**: Predicts the optimal monthly saving amount based on disposable income and life stage.
+
+### 2. The Hybrid "Safe-Call" Mechanism
+To ensure 100% system availability, the Node.js backend implements a `safeAICall` wrapper:
+- **Primary Path**: Attempts to reach the FastAPI AI Engine for high-precision ML inference.
+- **Fallback Path**: If the AI Engine is offline (e.g., during maintenance), the system automatically switches to a **Deterministic Rule-Based Engine**.
+- **Transparency**: The API response includes an `ai_powered: true/false` flag, informing the user or admin whether the decision was made by ML or heuristics.
+
+### 3. Model Explainability
+Every AI decision is accompanied by a human-readable explanation (e.g., "High risk profile due to Debt-to-Income ratio exceeding 40%"). This ensures transparency and builds trust in the automated system.
+
+---
+
+## 📊 Database & Data Modeling
+The system utilizes a relational schema to maintain ACID compliance for financial transactions:
+- **Users**: Identity and KYC status.
+- **Accounts**: Balance management and account types.
+- **Transactions**: Immutable record of all financial movements.
+- **Loans**: Application details, AI decisions, and repayment schedules.
+- **Settings**: System-wide and user-specific configurations.
+
+---
+
+## 🛡 Security & Compliance
+- **JWT Authentication**: Secure stateless sessions.
+- **Password Hashing**: Bcrypt with high salt rounds.
+- **Rate Limiting**: Protection against Brute Force and DDoS.
+- **Encryption**: TLS for all data in transit.
+- **Audit Logs**: Tracking of all administrative actions.
+
+---
+
+## 🌐 Deployment & Infrastructure
+- **Frontend**: Hosted on **Vercel** for high availability and CDN edge delivery.
+- **API & AI Engine**: Deployed on **Render** (Web Services) for scalable compute.
+- **Database**: Managed **PostgreSQL via Supabase**, providing robust backups and security.
+
+---
+
+## 🛠 Getting Started
+
+### Prerequisites
+- Node.js (v18+)
+- Python (v3.10+)
+- MySQL or Supabase account
+
+### Installation
+1. **Clone the Repo**: `git clone ...`
+2. **Backend**: `cd backend && npm install && npm start`
+3. **AI Engine**: `cd ai-engine && pip install -r requirements.txt && uvicorn app.main:app`
+4. **Web**: `cd web && npm install && npm start`
+
+### Admin Access
+- **URL**: `/admin/login`
+- **Default Super Admin**: `smartbankingpoweredbyai@gmail.com` / `irene12003`
+
+---
+
+## 🎓 Academic & Economic Impact
+This project demonstrates the practical application of Distributed Systems and Machine Learning in Financial Technology. 
+- **For Banks**: Reduces operational cost and credit risk.
+- **For the Economy**: Promotes financial inclusion by digitizing and accelerating access to credit for the underbanked.
+- **For Research**: Serves as a reference implementation for AI-driven decision systems in enterprise environments.
+
+---
+*Created by the AI Banking Team © 2026*

@@ -51,7 +51,7 @@ const Dashboard: React.FC = () => {
     };
   });
   const { t } = useLanguage();
-  const { balance, transactions, insights, loading: bankingLoading } = useBanking();
+  const { balance, realBalance, demoBalance, transactions, insights, loading: bankingLoading } = useBanking();
 
   const [aiHealthScore, setAiHealthScore] = useState<number | null>(null);
   const [aiHealthRating, setAiHealthRating] = useState(t('common.good'));
@@ -330,20 +330,20 @@ const Dashboard: React.FC = () => {
               >
                 {bankingLoading ? '...' : `RWF ${displayBalance.toLocaleString()}`}
               </div>
-              <div style={{ marginTop: 12, color: '#475569', fontSize: '14px' }}>
+              <div style={{ marginTop: 4, color: '#475569', fontSize: '14px' }}>
                 {t('card.availableFunds')}: {bankingLoading ? '...' : `RWF ${displayBalance.toLocaleString()}`}
               </div>
-              <LoadingButton
-                loading={loading === 'analytics'}
-                onClick={() => handleQuickAction('analytics')}
-                variant="ghost"
-                size="sm"
-                style={{ marginTop: 20 }}
-              >
-                <BarChart3 size={16} />
-                {t('card.analyzeSpending')}
-                <ArrowRight size={14} />
-              </LoadingButton>
+              <Link to="/spending-analysis">
+                <LoadingButton
+                  variant="ghost"
+                  size="sm"
+                  style={{ marginTop: 20 }}
+                >
+                  <BarChart3 size={16} />
+                  {t('card.analyzeSpending')}
+                  <ArrowRight size={14} />
+                </LoadingButton>
+              </Link>
               
               <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <LoadingButton
@@ -696,7 +696,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 700, fontSize: '16px', color: '#0A9396' }}>
-                        RWF {tx.amount.toLocaleString()}
+                        RWF {Number(tx.amount).toLocaleString()}
                       </div>
                       <div style={{ color: '#475569', marginTop: 6, fontSize: '12px' }}>{tx.status}</div>
                     </div>

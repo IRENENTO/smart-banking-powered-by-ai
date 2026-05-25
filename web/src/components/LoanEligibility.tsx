@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, AlertCircle, TrendingUp } from 'lucide-react';
+import { CheckCircle2, AlertCircle, TrendingUp, Calculator } from 'lucide-react';
 import { loanService } from '../services/api';
 import Modal from './Modal';
 import { useNavigate } from 'react-router-dom';
+import { calculateSimpleInterest, calculateCompoundEMI, generateYearlyBreakdown } from '../utils/interestCalculations';
 
 interface LoanEligibilityProps {
   isOpen: boolean;
@@ -44,12 +45,18 @@ const LoanEligibility: React.FC<LoanEligibilityProps> = ({ isOpen, onClose }) =>
       const eligible = debt < income * 0.5;
       const eligibleAmount = Math.min(income * 6, 500000);
 
+      const amount = eligible ? Math.round(eligibleAmount) : 0;
+      const rate = 12.5;
+      const months = 24;
+      const simple = calculateSimpleInterest(amount, rate, months);
+      const compound = calculateCompoundEMI(amount, rate, months);
+
       setResult({
         eligible,
-        eligibleAmount: eligible ? Math.round(eligibleAmount) : 0,
+        eligibleAmount: amount,
         riskScore: Math.max(10, Math.min(90, 75 - (debt / income) * 20)),
-        interestRate: 12.5,
-        monthlyPayment: Math.round(eligibleAmount / 24),
+        interestRate: rate,
+        monthlyPayment: compound.emi || simple.monthlyPayment,
         message: eligible
           ? 'Great news! You qualify for a loan based on your financial profile.'
           : 'Your existing debt is too high. Reduce it to improve eligibility.'
@@ -68,7 +75,7 @@ const LoanEligibility: React.FC<LoanEligibilityProps> = ({ isOpen, onClose }) =>
               Monthly Income (RWF)
             </span>
             <input
-              type="number"
+              type="text" inputMode="decimal"
               value={monthlyIncome}
               onChange={(e) => setMonthlyIncome(e.target.value)}
               placeholder="Enter your monthly income"
@@ -82,7 +89,7 @@ const LoanEligibility: React.FC<LoanEligibilityProps> = ({ isOpen, onClose }) =>
               Existing Monthly Debt (RWF)
             </span>
             <input
-              type="number"
+              type="text" inputMode="decimal"
               value={existingDebt}
               onChange={(e) => setExistingDebt(e.target.value)}
               placeholder="Enter your existing debt"
@@ -138,30 +145,80 @@ const LoanEligibility: React.FC<LoanEligibilityProps> = ({ isOpen, onClose }) =>
                 </div>
               )}
 
-              {result.monthlyPayment && (
-                <div className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-500/5 dark:from-purple-500/20 dark:to-purple-500/10 rounded-xl">
-                  <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-1">Est. Monthly (24mo)</p>
-                  <p className="text-xl font-bold text-purple-600 dark:text-purple-400">RWF {result.monthlyPayment.toLocaleString()}</p>
-                </div>
-              )}
             </div>
           )}
+
+          {result.eligible && (() => {
+            const p = result.eligibleAmount;
+            const r = result.interestRate || 12.5;
+            const n = 24;
+            const simple = calculateSimpleInterest(p, r, n);
+            const compound = calculateCompoundEMI(p, r, n);
+            const yearly = generateYearlyBreakdown(p, r, n);
+            return (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 dark:from-emerald-500/20 dark:to-emerald-500/10 rounded-xl">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-1 flex items-center gap-1">
+                      <Calculator size={14} /> Simple Interest
+                    </p>
+                    <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">RWF {simple.monthlyPayment.toLocaleString()}<span className="text-xs font-normal text-gray-500">/mo</span></p>
+                    <p className="text-xs text-gray-500 mt-1">Interest: RWF {simple.totalInterest.toLocaleString()} &middot; Total: RWF {simple.totalAmount.toLocaleString()}</p>
+                  </div>
+                  <div className="p-4 bg-gradient-to-br from-purple-500/10 to-purple-500/5 dark:from-purple-500/20 dark:to-purple-500/10 rounded-xl">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mb-1 flex items-center gap-1">
+                      <Calculator size={14} /> Compound (EMI)
+                    </p>
+                    <p className="text-lg font-bold text-purple-600 dark:text-purple-400">RWF {compound.emi.toLocaleString()}<span className="text-xs font-normal text-gray-500">/mo</span></p>
+                    <p className="text-xs text-gray-500 mt-1">Interest: RWF {compound.totalInterest.toLocaleString()} &middot; Total: RWF {compound.totalAmount.toLocaleString()}</p>
+                  </div>
+                </div>
+                {yearly.length > 0 && (
+                  <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
+                    <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Yearly Breakdown (EMI)</p>
+                    <div className="grid gap-1">
+                      <div className="grid grid-cols-5 gap-2 text-[10px] font-bold text-gray-500 dark:text-gray-400 pb-1 border-b border-gray-200 dark:border-gray-700">
+                        <span>Year</span><span>Payments</span><span>Interest</span><span>Principal</span><span>Balance</span>
+                      </div>
+                      {yearly.map(row => (
+                        <div key={row.year} className="grid grid-cols-5 gap-2 text-xs text-gray-700 dark:text-gray-300 py-1 border-b border-gray-100 dark:border-gray-700/50">
+                          <span>{row.year}</span>
+                          <span>RWF {row.totalPaid.toLocaleString()}</span>
+                          <span className="text-red-600">RWF {row.interestPaid.toLocaleString()}</span>
+                          <span className="text-green-600">RWF {row.principalPaid.toLocaleString()}</span>
+                          <span>RWF {row.remainingBalance.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Actions */}
           <div className="flex gap-3 pt-4">
             {result.eligible && (
-              <button 
-                onClick={() => navigate('/apply-loan', { state: { eligibleAmount: result.eligibleAmount, monthlyIncome, existingDebt } })}
-                className="flex-1 px-4 py-3 bg-[#0A9396] text-white rounded-xl font-medium hover:bg-[#087a7d] transition-colors"
-              >
-                Apply Now
-              </button>
+              <>
+                <button
+                  onClick={() => { onClose(); navigate('/loans', { state: { eligibleAmount: result.eligibleAmount, monthlyIncome, existingDebt } }); }}
+                  className="flex-1 px-4 py-3 bg-[#0A9396] text-white rounded-xl font-medium hover:bg-[#087a7d] transition-colors"
+                >
+                  Allow — RWF {result.eligibleAmount.toLocaleString()}
+                </button>
+                <button
+                  onClick={onClose}
+                  className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-medium hover:bg-red-700 transition-colors"
+                >
+                  Deny
+                </button>
+              </>
             )}
             <button
               onClick={() => { setResult(null); setMonthlyIncome(''); setExistingDebt(''); }}
-              className="flex-1 px-4 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-xl font-medium hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              className={`flex-1 px-4 py-3 rounded-xl font-medium transition-colors ${result.eligible ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600' : 'w-full bg-[#0A9396] text-white hover:bg-[#087a7d]'}`}
             >
-              Check Again
+              {result.eligible ? 'Check Again' : 'Try Again'}
             </button>
           </div>
         </motion.div>

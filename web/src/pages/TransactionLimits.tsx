@@ -194,11 +194,10 @@ const TransactionLimits: React.FC = () => {
                 <label style={{ display: 'grid', gap: 8 }}>
                   <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Daily Limit (RWF)</span>
                   <input
-                    type="number"
+                    type="text" inputMode="decimal"
                     value={limits.daily_limit}
                     onChange={(e) => handleLimitChange('daily_limit', e.target.value)}
                     placeholder="1000000"
-                    min={1000}
                     required
                     style={{ 
                       padding: 12, 
@@ -218,11 +217,10 @@ const TransactionLimits: React.FC = () => {
                 <label style={{ display: 'grid', gap: 8 }}>
                   <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Weekly Limit (RWF)</span>
                   <input
-                    type="number"
+                    type="text" inputMode="decimal"
                     value={limits.weekly_limit}
                     onChange={(e) => handleLimitChange('weekly_limit', e.target.value)}
                     placeholder="5000000"
-                    min={5000}
                     required
                     style={{ 
                       padding: 12, 
@@ -242,11 +240,10 @@ const TransactionLimits: React.FC = () => {
                 <label style={{ display: 'grid', gap: 8 }}>
                   <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Monthly Limit (RWF)</span>
                   <input
-                    type="number"
+                    type="text" inputMode="decimal"
                     value={limits.monthly_limit}
                     onChange={(e) => handleLimitChange('monthly_limit', e.target.value)}
                     placeholder="20000000"
-                    min={10000}
                     required
                     style={{ 
                       padding: 12, 
@@ -266,11 +263,10 @@ const TransactionLimits: React.FC = () => {
                 <label style={{ display: 'grid', gap: 8 }}>
                   <span style={{ color: '#64748b', fontSize: '14px', fontWeight: 500 }}>Single Transaction Limit (RWF)</span>
                   <input
-                    type="number"
+                    type="text" inputMode="decimal"
                     value={limits.single_transaction_limit}
                     onChange={(e) => handleLimitChange('single_transaction_limit', e.target.value)}
                     placeholder="500000"
-                    min={500}
                     required
                     style={{ 
                       padding: 12, 

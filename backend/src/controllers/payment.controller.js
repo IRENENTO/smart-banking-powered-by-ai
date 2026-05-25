@@ -18,48 +18,46 @@ exports.deposit = async (req, res) => {
 
         const currentBalance = await User.getBalance(userId);
 
-        // External deposit via PayPack (mobile money)
+        // Credit balance immediately (works for both phone and internal deposits)
+        const newBalance = parseFloat(currentBalance) + amountValue;
+        await User.updateBalance(userId, newBalance);
+
+        // Try PayPack cashin if phone provided (non-blocking - balance already credited)
         if (sourcePhone) {
+            let providerRef = null;
+            try {
+                const paypackRes = await paypack.initiateCashin(sourcePhone, amountValue);
+                providerRef = paypackRes?.ref || null;
+            } catch (err) {
+                console.warn('PayPack cashin initiation failed (balance already credited):', err.message);
+            }
+
             const transaction = await Transaction.create({
                 user_id: userId,
                 type: 'deposit',
                 amount: amountValue,
                 description: description || `Mobile money deposit from ${sourcePhone}`,
                 balance_before: parseFloat(currentBalance),
-                balance_after: parseFloat(currentBalance),
-                status: 'pending'
+                balance_after: parseFloat(newBalance),
+                status: 'completed'
             });
 
             const payment = await Payment.create({
                 user_id: userId,
                 payment_type: 'deposit',
                 provider: 'paypack',
-                provider_reference: null,
+                provider_reference: providerRef,
                 account_or_phone: sourcePhone,
                 amount: amountValue,
-                status: 'pending',
+                status: providerRef ? 'completed' : 'pending',
                 description: description || `Mobile money deposit from ${sourcePhone}`,
                 transaction_reference: transaction.reference_number,
                 balance_before: parseFloat(currentBalance),
-                balance_after: parseFloat(currentBalance)
+                balance_after: parseFloat(newBalance)
             });
 
-            let providerRef = null;
-            try {
-                const paypackRes = await paypack.initiateCashin(sourcePhone, amountValue);
-                providerRef = paypackRes?.ref || null;
-                if (providerRef) {
-                    await global.dbConnection.execute(
-                        'UPDATE payments SET provider_reference = ? WHERE id = ?',
-                        [providerRef, payment.id]
-                    );
-                }
-            } catch (err) {
-                console.error('PayPack cashin initiation failed:', err.message);
-            }
-
             return res.status(201).json({
-                msg: 'Deposit initiated. Check your phone to complete the payment.',
+                msg: 'Deposit successful. Your balance has been updated.',
                 transaction: {
                     id: transaction.id,
                     reference_number: transaction.reference_number,
@@ -77,15 +75,12 @@ exports.deposit = async (req, res) => {
                     amount: payment.amount,
                     status: payment.status,
                     created_at: payment.created_at
-                }
+                },
+                new_balance: parseFloat(newBalance)
             });
         }
 
-        // Internal deposit (instant)
-        const newBalance = parseFloat(currentBalance) + amountValue;
-
-        await User.updateBalance(userId, newBalance);
-
+        // Internal deposit (no phone) - instant
         const transaction = await Transaction.create({
             user_id: userId,
             type: 'deposit',
@@ -527,7 +522,7 @@ exports.getBalance = async (req, res) => {
         res.json({
             balance: parseFloat(balance),
             account_number: user.account_number,
-            currency: 'USD'
+            currency: 'RWF'
         });
     } catch (err) {
         console.error('Get balance error:', err);

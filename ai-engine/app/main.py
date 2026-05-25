@@ -220,6 +220,21 @@ def fetch_economic_forecast():
     return get_forecast()
 
 
+# Backend proxy calls POST /api/ai/economic-forecast — add both GET and POST
+@app.get("/api/ai/economic-forecast", response_model=EconomicForecast,
+         tags=["Economic Forecast"],
+         summary="Get current economic forecast and market recommendations")
+def fetch_economic_forecast_get():
+    return get_forecast()
+
+
+@app.post("/api/ai/economic-forecast", response_model=EconomicForecast,
+          tags=["Economic Forecast"],
+          summary="Get current economic forecast (POST variant)")
+def fetch_economic_forecast_post():
+    return get_forecast()
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)

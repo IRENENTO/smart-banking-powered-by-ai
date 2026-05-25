@@ -42,6 +42,20 @@ exports.getBalance = async (req, res) => {
     }
 };
 
+exports.getTotalDeposits = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const stats = await Transaction.getTransactionStats(userId);
+        res.json({
+            total_deposits: parseFloat(stats.total_deposits) || 0,
+            total_deposits_count: parseInt(stats.total_transactions) || 0
+        });
+    } catch (err) {
+        console.error('Get total deposits error:', err);
+        res.status(500).json({ msg: `Server Error: ${err.message}` });
+    }
+};
+
 exports.deposit = async (req, res) => {
     try {
         const { amount, description } = req.body;

@@ -381,7 +381,7 @@ const Transactions: React.FC = () => {
                                 transactions.map(tx => (
                                     <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
                                         <span style={{ color: textColor }}>{tx.type || 'transaction'}</span>
-                                        <strong style={{ color: textColor }}>RWF {(tx.amount || 0).toLocaleString()}</strong>
+                                        <strong style={{ color: textColor }}>RWF {Number(tx.amount || 0).toLocaleString()}</strong>
                                     </div>
                                 ))
                             ) : (
@@ -469,11 +469,11 @@ const Transactions: React.FC = () => {
                                     <div style={{ textAlign: 'right' }}>
                                         <div style={{ fontWeight: 700, color: textColor, fontSize: 15 }}>
                                             {['withdrawal', 'debit', 'payment', 'send', 'transfer'].includes(tx.type) ? '-' : ''}
-                                            RWF {tx.amount.toLocaleString()}
+                                            RWF {Number(tx.amount).toLocaleString()}
                                         </div>
                                         {tx.balance_after != null && (
                                             <div style={{ color: mutedColor, marginTop: 4, fontSize: 11 }}>
-                                                Balance: RWF {tx.balance_after.toLocaleString()}
+                                                Balance: RWF {Number(tx.balance_after).toLocaleString()}
                                             </div>
                                         )}
                                     </div>

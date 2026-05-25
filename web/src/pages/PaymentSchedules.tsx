@@ -177,7 +177,7 @@ const PaymentSchedules: React.FC = () => {
                             <div style={{ fontSize: 22, fontWeight: 700, color: darkMode ? '#f1f5f9' : '#1e293b', marginBottom: 24 }}>{t('schedules.create')}</div>
                             <form onSubmit={handleCreate} style={{ display: 'grid', gap: 16 }}>
                                 <input placeholder={t('schedules.name')} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required {...{style: inputStyle}} />
-                                <input type="number" placeholder={t('schedules.amount')} value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required {...{style: inputStyle}} />
+                                <input type="text" inputMode="decimal" placeholder={t('schedules.amount')} value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required {...{style: inputStyle}} />
                                 <select value={formData.frequency} onChange={(e) => setFormData({ ...formData, frequency: e.target.value })} {...{style: inputStyle}}>
                                     <option value="daily">{t('loanApplication.deductionPeriodDaily')}</option>
                                     <option value="weekly">{t('loanApplication.deductionPeriodWeekly')}</option>

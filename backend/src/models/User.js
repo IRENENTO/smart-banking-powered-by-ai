@@ -99,7 +99,7 @@ class User {
             userData.email_verified || false,
             userData.profile_completed || false,
             userData.pin_set || false,
-            0.00,
+            userData.balance !== undefined ? userData.balance : 0.00,
             accountNumber
         ];
 

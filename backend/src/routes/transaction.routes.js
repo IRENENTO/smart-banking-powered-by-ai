@@ -151,4 +151,6 @@ router.post('/deposit', auth, transactionController.deposit);
  */
 router.post('/withdraw', auth, transactionController.withdraw);
 
+router.get('/deposits/total', auth, transactionController.getTotalDeposits);
+
 module.exports = router;

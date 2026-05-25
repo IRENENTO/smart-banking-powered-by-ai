@@ -427,7 +427,7 @@ const Investments: React.FC = () => {
                   </div>
                   <div>
                     <label style={labelStyle}>Investment Amount (RWF)</label>
-                    <input type="number" value={predictionInput.amount} onChange={e => setPredictionInput(p => ({ ...p, amount: Number(e.target.value) }))} style={inputStyle} />
+                    <input type="text" inputMode="decimal" value={predictionInput.amount} onChange={e => setPredictionInput(p => ({ ...p, amount: e.target.value === '' ? 0 : Number(e.target.value) }))} style={inputStyle} />
                   </div>
                   {predicting && <div style={{ fontSize: 12, color: mutedColor, textAlign: 'center' }}>AI analyzing...</div>}
                 </div>
@@ -493,7 +493,7 @@ const Investments: React.FC = () => {
                           </span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
-                          <span style={{ color: mutedColor }}>Invested: RWF {inv.amount.toLocaleString()}</span>
+                          <span style={{ color: mutedColor }}>Invested: RWF {Number(inv.amount).toLocaleString()}</span>
                           <span style={{ color: '#10b981', fontWeight: 600 }}>Earned: RWF {Math.round(inv.earned || 0).toLocaleString()}</span>
                         </div>
                         <div style={{ height: 4, borderRadius: 2, background: isDark ? '#1e293b' : '#e2e8f0', overflow: 'hidden' }}>
@@ -521,8 +521,8 @@ const Investments: React.FC = () => {
                     {investmentTypes.length === 0 ? (<option value="stocks">Stock Market</option>) : investmentTypes.map(type => (<option key={type.id} value={type.id}>{type.name}</option>))}
                   </select>
                 </label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Amount (RWF)</span><input type="number" value={calculatorData.amount} onChange={(e) => setCalculatorData({ ...calculatorData, amount: e.target.value })} placeholder="10000" className="input-field" style={inputStyle} /></label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Duration (months)</span><input type="number" value={calculatorData.duration} onChange={(e) => setCalculatorData({ ...calculatorData, duration: e.target.value })} placeholder="12" className="input-field" style={inputStyle} /></label>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Amount (RWF)</span><input type="text" inputMode="decimal" value={calculatorData.amount} onChange={(e) => setCalculatorData({ ...calculatorData, amount: e.target.value })} placeholder="10000" className="input-field" style={inputStyle} /></label>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Duration (months)</span><input type="text" inputMode="numeric" value={calculatorData.duration} onChange={(e) => setCalculatorData({ ...calculatorData, duration: e.target.value })} placeholder="12" className="input-field" style={inputStyle} /></label>
                 <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Risk Level</span>
                   <select value={calculatorData.risk_level} onChange={(e) => setCalculatorData({ ...calculatorData, risk_level: e.target.value })} style={inputStyle}>
                     <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
@@ -535,9 +535,9 @@ const Investments: React.FC = () => {
               <div className={`glass-card ${isDark ? 'card-accent' : ''}`} style={{ marginTop: 20, padding: 20, ...(!isDark ? { background: '#f0f9ff', border: '1px solid #bae6fd' } : {}) }}>
                 <h4 style={{ color: isDark ? '#2dcece' : '#0A9396', margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>Projected Returns</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Principal</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a' }}>{calculatorResult.principal?.toLocaleString()} RWF</div></div>
-                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Expected Returns</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#4ade80' : '#059669' }}>{calculatorResult.total_returns?.toLocaleString()} RWF</div></div>
-                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Final Amount</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#2dcece' : '#0A9396' }}>{calculatorResult.final_amount?.toLocaleString()} RWF</div></div>
+                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Principal</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a' }}>{Number(calculatorResult.principal || 0).toLocaleString()} RWF</div></div>
+                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Expected Returns</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#4ade80' : '#059669' }}>{Number(calculatorResult.total_returns || 0).toLocaleString()} RWF</div></div>
+                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Final Amount</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#2dcece' : '#0A9396' }}>{Number(calculatorResult.final_amount || 0).toLocaleString()} RWF</div></div>
                   <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Return Rate</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a' }}>{calculatorResult.expected_return_rate}%</div></div>
                 </div>
               </div>
@@ -556,16 +556,16 @@ const Investments: React.FC = () => {
                     </select>
                   </label>
                 )}
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Amount (RWF)</span><input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} placeholder="10000" required min={typeInfo(formData.type)?.min_amount || 5000} className="input-field" style={inputStyle} />
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Amount (RWF)</span><input type="text" inputMode="decimal" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} placeholder="10000" required className="input-field" style={inputStyle} />
                   {typeInfo(formData.type) && <span style={{ fontSize: 11, color: isDark ? '#5f8fa6' : '#6b7280' }}>Min: {typeInfo(formData.type)!.min_amount.toLocaleString()} RWF</span>}
                 </label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Duration (months)</span><input type="number" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} placeholder="12" required min="1" className="input-field" style={inputStyle} /></label>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Duration (months)</span><input type="text" inputMode="numeric" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} placeholder="12" required className="input-field" style={inputStyle} /></label>
                 <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Risk Level</span>
                   <select value={formData.risk_level} onChange={(e) => setFormData({ ...formData, risk_level: e.target.value })} required style={inputStyle}>
                     {(typeInfo(formData.type)?.risk_levels || ['low', 'medium', 'high']).map(level => (<option key={level} value={level}>{level.charAt(0).toUpperCase() + level.slice(1)}</option>))}
                   </select>
                 </label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Expected Return % (Optional)</span><input type="number" step="0.1" value={formData.expected_return} onChange={(e) => setFormData({ ...formData, expected_return: e.target.value })} placeholder={typeInfo(formData.type)?.expected_returns[formData.risk_level]?.toString()} className="input-field" style={inputStyle} /></label>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Expected Return % (Optional)</span><input type="text" inputMode="decimal" value={formData.expected_return} onChange={(e) => setFormData({ ...formData, expected_return: e.target.value })} placeholder={typeInfo(formData.type)?.expected_returns[formData.risk_level]?.toString()} className="input-field" style={inputStyle} /></label>
               </div>
               <div className="flex flex-wrap gap-3">
                 <button type="submit" className="btn btn-primary" disabled={busy !== null} aria-busy={busy !== null}>{busy === 'create' || busy === 'update' ? 'Processing...' : (editingInvestment ? 'Update Investment' : 'Create Investment')}</button>

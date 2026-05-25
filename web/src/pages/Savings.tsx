@@ -88,7 +88,7 @@ const Savings: React.FC = () => {
         }
     };
 
-    const progress = (goal: any) => Math.min(100, Math.round(((goal.current_amount ?? goal.current) / (goal.target_amount ?? goal.target)) * 100));
+    const progress = (goal: any) => Math.min(100, Math.round((toNum(goal.current_amount ?? goal.current) / toNum(goal.target_amount ?? goal.target)) * 100));
 
     const handleGoalCreated = () => { fetchGoals(); };
 
@@ -112,7 +112,8 @@ const Savings: React.FC = () => {
 
     const mutedColor = isDark ? '#94a3b8' : '#64748b';
     const textColor = isDark ? '#e2e8f0' : '#1e293b';
-    const totalSaved = goals.reduce((sum, g) => sum + (g.current_amount ?? g.current ?? 0), 0);
+    const toNum = (v: any) => typeof v === 'number' ? v : Number(v) || 0;
+const totalSaved = goals.reduce((sum, g) => sum + toNum(g.current_amount ?? g.current), 0);
     const forecastData = aiPrediction?.monthly_forecast || generateMockForecast(balance);
 
     return (
@@ -196,11 +197,11 @@ const Savings: React.FC = () => {
                             </div>
                             <div style={{ padding: 14, background: isDark ? '#18364f' : '#f0fdf4', borderRadius: 12, borderLeft: '4px solid #16a34a' }}>
                                 <div style={{ color: isDark ? '#86efac' : '#16a34a', fontSize: 12, fontWeight: 600 }}>Total Saved</div>
-                                <div style={{ marginTop: 6, fontSize: 22, fontWeight: 700, color: isDark ? '#a7f3d0' : '#15803d' }}>RWF {totalSaved.toLocaleString()}</div>
+                                <div style={{ marginTop: 6, fontSize: 22, fontWeight: 700, color: isDark ? '#a7f3d0' : '#15803d' }}>RWF {Number(totalSaved).toLocaleString()}</div>
                             </div>
                             <div style={{ padding: 14, background: isDark ? '#452a0d' : '#fef3c7', borderRadius: 12, borderLeft: '4px solid #f59e0b' }}>
                                 <div style={{ color: isDark ? '#fb923c' : '#d97706', fontSize: 12, fontWeight: 600 }}>Target Amount</div>
-                                <div style={{ marginTop: 6, fontSize: 22, fontWeight: 700, color: isDark ? '#fcd34d' : '#b45309' }}>RWF {goals.reduce((sum, g) => sum + (g.target_amount ?? g.target ?? 0), 0).toLocaleString()}</div>
+                                <div style={{ marginTop: 6, fontSize: 22, fontWeight: 700, color: isDark ? '#fcd34d' : '#b45309' }}>RWF {goals.reduce((sum, g) => sum + toNum(g.target_amount ?? g.target), 0).toLocaleString()}</div>
                             </div>
                             <div style={{ padding: 14, background: isDark ? '#1e293b' : '#e0e7ff', borderRadius: 12, borderLeft: '4px solid #6366f1' }}>
                                 <div style={{ color: isDark ? '#93c5fd' : '#4f46e5', fontSize: 12, fontWeight: 600 }}>Active Goals</div>
@@ -254,7 +255,7 @@ const Savings: React.FC = () => {
                         {goals.map((goal) => (
                             <SectionCard key={goal.id} title={goal.name} headerRight={<span style={{ fontWeight: 700, color: '#0A9396' }}>{progress(goal)}%</span>}>
                                 <div style={{ marginTop: 6, fontSize: 18, fontWeight: 700, color: textColor }}>
-                                    RWF {(goal.current_amount ?? goal.current).toLocaleString()} / {(goal.target_amount ?? goal.target).toLocaleString()}
+                                    RWF {toNum(goal.current_amount ?? goal.current).toLocaleString()} / {toNum(goal.target_amount ?? goal.target).toLocaleString()}
                                 </div>
                                 <div style={{ marginTop: 18, height: 10, background: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0', borderRadius: 999 }}>
                                     <div style={{ width: `${progress(goal)}%`, height: '100%', background: 'linear-gradient(90deg, #0A9396, #059669)', borderRadius: 999 }} />
@@ -290,7 +291,7 @@ const Savings: React.FC = () => {
                         <div style={{ display: 'grid', gap: 16 }}>
                             <label style={{ display: 'grid', gap: 6, color: textColor }}>
                                 {t('savings.autoDeductionAmount')}
-                                <input type="number" value={autoForm.deductionAmount} onChange={(e) => setAutoForm({ ...autoForm, deductionAmount: e.target.value })} style={{ width: '100%', padding: 12, borderRadius: 12, border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: isDark ? 'rgba(0,0,0,0.2)' : 'white', color: textColor, boxSizing: 'border-box' }} />
+                                <input type="text" inputMode="decimal" value={autoForm.deductionAmount} onChange={(e) => setAutoForm({ ...autoForm, deductionAmount: e.target.value })} style={{ width: '100%', padding: 12, borderRadius: 12, border: isDark ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: isDark ? 'rgba(0,0,0,0.2)' : 'white', color: textColor, boxSizing: 'border-box' }} />
                             </label>
                             <label style={{ display: 'grid', gap: 6, color: textColor }}>
                                 {t('savings.autoDeductionPeriod')}

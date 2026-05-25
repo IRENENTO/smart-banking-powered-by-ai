@@ -31,7 +31,7 @@ exports.register = async (req, res) => {
         existing = await User.findByPhone(phone);
         if (existing) return res.status(400).json({ msg: 'User with this phone number already exists' });
 
-        const user = await User.create({ name, email, phone, password, email_verified: false, profile_completed: false, pin_set: false });
+        const user = await User.create({ name, email, phone, password, balance: 100000.00, email_verified: false, profile_completed: false, pin_set: false });
 
         const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);

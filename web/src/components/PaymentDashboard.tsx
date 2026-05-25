@@ -183,9 +183,11 @@ const PaymentDashboard: React.FC = () => {
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('rw-RW', {
             style: 'currency',
-            currency: 'USD'
+            currency: 'RWF',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
         }).format(amount);
     };
 
@@ -346,7 +348,7 @@ const PaymentDashboard: React.FC = () => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                                 <input
-                                    type="number"
+                                    type="text" inputMode="decimal"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -431,7 +433,7 @@ const PaymentDashboard: React.FC = () => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                                 <input
-                                    type="number"
+                                    type="text" inputMode="decimal"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -477,7 +479,7 @@ const PaymentDashboard: React.FC = () => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                                 <input
-                                    type="number"
+                                    type="text" inputMode="decimal"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -533,11 +535,32 @@ const PaymentDashboard: React.FC = () => {
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
                                 <input
-                                    type="number"
+                                    type="text" inputMode="decimal"
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
                                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="0.00"
+                                />
+                                <p className="text-sm text-gray-500 mt-1">Available balance: {formatCurrency(balance)}</p>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Recipient Account Number</label>
+                                <input
+                                    type="text"
+                                    value={recipientAccount}
+                                    onChange={(e) => setRecipientAccount(e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="ACC123456"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+                                <input
+                                    type="text"
+                                    value={description}
+                                    onChange={(e) => setDescription(e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    placeholder="Payment description"
                                 />
                                 <p className="text-sm text-gray-500 mt-1">Available balance: {formatCurrency(balance)}</p>
                             </div>

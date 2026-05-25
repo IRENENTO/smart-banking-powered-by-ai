@@ -96,7 +96,7 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({ isOpen, onClose, on
                 Target Amount (RWF) *
               </span>
               <input
-                type="number"
+                type="text" inputMode="decimal"
                 value={formData.target}
                 onChange={(e) => setFormData({ ...formData, target: e.target.value })}
                 placeholder="500000"
@@ -110,7 +110,7 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({ isOpen, onClose, on
                 Current Amount (RWF)
               </span>
               <input
-                type="number"
+                type="text" inputMode="decimal"
                 value={formData.current}
                 onChange={(e) => setFormData({ ...formData, current: e.target.value })}
                 placeholder="0"

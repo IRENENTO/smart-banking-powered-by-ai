@@ -13,7 +13,7 @@ import { Plus, Pause, Play, Trash2, Clock } from 'lucide-react';
 type Tab = 'send' | 'deposit' | 'schedules';
 
 const Payments: React.FC = () => {
-    const { balance, deposit, sendPayment, loading } = useBanking();
+    const { balance, realBalance, demoBalance, deposit, sendPayment, loading } = useBanking();
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const toast = useToast();
@@ -143,7 +143,7 @@ const Payments: React.FC = () => {
                 {activeTab === 'deposit' && (
                     <SectionCard title="Deposit Money">
                         <form onSubmit={handleDeposit} style={{ marginTop: 18, display: 'grid', gap: 16 }}>
-                            <input value={depositAmount} placeholder="Amount (RWF)" type="number" min="0.01" step="0.01" onChange={(e) => setDepositAmount(e.target.value)} {...{style: inputStyle}} required />
+                            <input value={depositAmount} placeholder="Amount (RWF)" type="text" inputMode="decimal" onChange={(e) => setDepositAmount(e.target.value)} {...{style: inputStyle}} required />
                             
                             {/* Provider Selector */}
                             <div style={{ display: 'flex', gap: 8 }}>
@@ -194,7 +194,7 @@ const Payments: React.FC = () => {
                             ) : (
                                 <input value={sendData.account} placeholder="Account number" onChange={(e) => setSendData({ ...sendData, account: e.target.value })} {...{style: inputStyle}} required />
                             )}
-                            <input value={sendData.amount} placeholder="Amount (RWF)" type="number" min="0.01" step="0.01" onChange={(e) => setSendData({ ...sendData, amount: e.target.value })} {...{style: inputStyle}} required />
+                            <input value={sendData.amount} placeholder="Amount (RWF)" type="text" inputMode="decimal" onChange={(e) => setSendData({ ...sendData, amount: e.target.value })} {...{style: inputStyle}} required />
                             <input value={sendData.note} placeholder="Note (optional)" onChange={(e) => setSendData({ ...sendData, note: e.target.value })} {...{style: inputStyle}} />
                             <button type="submit" style={{ padding: '12px 20px', background: '#0A9396', color: 'white', border: 'none', borderRadius: 14, fontWeight: 700 }}>Send Payment</button>
                         </form>
@@ -252,7 +252,7 @@ const Payments: React.FC = () => {
                                     <div style={{ fontSize: 22, fontWeight: 700, color: isDark ? '#f1f5f9' : '#1e293b', marginBottom: 24 }}>Create Schedule</div>
                                     <form onSubmit={handleCreateSchedule} style={{ display: 'grid', gap: 16 }}>
                                         <input placeholder="Schedule name" value={schedForm.name} onChange={(e) => setSchedForm({ ...schedForm, name: e.target.value })} required {...{style: inputStyle}} />
-                                        <input type="number" placeholder="Amount (RWF)" value={schedForm.amount} onChange={(e) => setSchedForm({ ...schedForm, amount: e.target.value })} required {...{style: inputStyle}} />
+                                        <input type="text" inputMode="decimal" placeholder="Amount (RWF)" value={schedForm.amount} onChange={(e) => setSchedForm({ ...schedForm, amount: e.target.value })} required {...{style: inputStyle}} />
                                         
                                         {/* Recipient Type Selector */}
                                         <div style={{ display: 'flex', gap: 8 }}>

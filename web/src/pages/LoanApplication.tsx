@@ -251,11 +251,11 @@ const LoanApplication: React.FC = () => {
                 <form onSubmit={handleSubmit} style={{ marginTop: 28, display: 'grid', gap: 18 }}>
                     <label style={{ display: 'grid', gap: 8, color: darkMode ? '#f1f5f9' : '#1e293b' }}>
                         {t('loanApplication.requestedAmount')} {maxEligibleAmount && <span style={{fontSize: '12px', color: '#0A9396'}}>({t('loanApplication.maxEligible')}: {maxEligibleAmount.toLocaleString()} RWF)</span>}
-                        <input type="number" value={formData.amount} onChange={handleAmountChange} max={maxEligibleAmount} required style={{ width: '100%', padding: 12, borderRadius: 12, border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: darkMode ? 'rgba(0,0,0,0.2)' : 'white', color: darkMode ? '#f1f5f9' : '#1e293b' }} />
+                        <input type="text" inputMode="decimal" value={formData.amount} onChange={handleAmountChange} max={maxEligibleAmount} required style={{ width: '100%', padding: 12, borderRadius: 12, border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: darkMode ? 'rgba(0,0,0,0.2)' : 'white', color: darkMode ? '#f1f5f9' : '#1e293b' }} />
                     </label>
                     <label style={{ display: 'grid', gap: 8, color: darkMode ? '#f1f5f9' : '#1e293b' }}>
                         {t('loanApplication.monthlyIncome')}
-                        <input type="number" value={formData.monthlyIncome} onChange={(e) => setFormData({ ...formData, monthlyIncome: e.target.value })} required style={{ width: '100%', padding: 12, borderRadius: 12, border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: darkMode ? 'rgba(0,0,0,0.2)' : 'white', color: darkMode ? '#f1f5f9' : '#1e293b' }} />
+                        <input type="text" inputMode="decimal" value={formData.monthlyIncome} onChange={(e) => setFormData({ ...formData, monthlyIncome: e.target.value })} required style={{ width: '100%', padding: 12, borderRadius: 12, border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: darkMode ? 'rgba(0,0,0,0.2)' : 'white', color: darkMode ? '#f1f5f9' : '#1e293b' }} />
                     </label>
                     <label style={{ display: 'grid', gap: 8, color: darkMode ? '#f1f5f9' : '#1e293b' }}>
                         {t('loanApplication.sector')}
@@ -269,13 +269,13 @@ const LoanApplication: React.FC = () => {
                     </label>
                     <label style={{ display: 'grid', gap: 8, color: darkMode ? '#f1f5f9' : '#1e293b' }}>
                         {t('loanApplication.existingDebt')}
-                        <input type="number" value={formData.existingDebt} onChange={(e) => setFormData({ ...formData, existingDebt: e.target.value })} style={{ width: '100%', padding: 12, borderRadius: 12, border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: darkMode ? 'rgba(0,0,0,0.2)' : 'white', color: darkMode ? '#f1f5f9' : '#1e293b' }} />
+                        <input type="text" inputMode="decimal" value={formData.existingDebt} onChange={(e) => setFormData({ ...formData, existingDebt: e.target.value })} style={{ width: '100%', padding: 12, borderRadius: 12, border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: darkMode ? 'rgba(0,0,0,0.2)' : 'white', color: darkMode ? '#f1f5f9' : '#1e293b' }} />
                     </label>
                     <SectionCard title={t('loanApplication.deductionInfo')} style={{ background: darkMode ? 'rgba(10,147,150,0.08)' : 'rgba(10,147,150,0.04)', border: '1px solid rgba(10,147,150,0.2)' }}>
                         <div style={{ display: 'grid', gap: 18 }}>
                             <label style={{ display: 'grid', gap: 8, color: darkMode ? '#f1f5f9' : '#1e293b' }}>
                                 {t('loanApplication.deductionAmount')}
-                                <input type="number" value={formData.deductionAmount} onChange={(e) => setFormData({ ...formData, deductionAmount: e.target.value })} style={{ width: '100%', padding: 12, borderRadius: 12, border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: darkMode ? 'rgba(0,0,0,0.2)' : 'white', color: darkMode ? '#f1f5f9' : '#1e293b' }} />
+                                <input type="text" inputMode="decimal" value={formData.deductionAmount} onChange={(e) => setFormData({ ...formData, deductionAmount: e.target.value })} style={{ width: '100%', padding: 12, borderRadius: 12, border: darkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #cbd5e1', background: darkMode ? 'rgba(0,0,0,0.2)' : 'white', color: darkMode ? '#f1f5f9' : '#1e293b' }} />
                             </label>
                             <label style={{ display: 'grid', gap: 8, color: darkMode ? '#f1f5f9' : '#1e293b' }}>
                                 {t('loanApplication.deductionPeriod')}

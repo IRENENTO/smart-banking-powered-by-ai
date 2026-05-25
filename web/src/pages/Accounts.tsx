@@ -8,7 +8,7 @@ import { useBanking } from '../context/BankingContext';
 import { useTheme } from '../context/ThemeContext';
 
 const Accounts: React.FC = () => {
-    const { balance, loading } = useBanking();
+    const { balance, realBalance, demoBalance, loading } = useBanking();
     const [account, setAccount] = useState<any>(null);
     const [profile, setProfile] = useState<any>(null);
 
@@ -64,7 +64,7 @@ const Accounts: React.FC = () => {
                             </div>
                             <div style={{ marginTop: 24 }}>
                                 <div style={{ fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>Balance</div>
-                                <div style={{ fontSize: 32, fontWeight: 700, marginTop: 8, color: isDark ? '#f8fafc' : 'inherit' }}>RWF {displayBalance.toLocaleString()}</div>
+                                <div style={{ fontSize: 32, fontWeight: 700, marginTop: 8, color: isDark ? '#f8fafc' : 'inherit' }}>RWF {Number(displayBalance).toLocaleString()}</div>
                                 <div style={{ marginTop: 14, color: isDark ? '#cbd5e1' : '#475569' }}>{accountNumber}</div>
                                 <div style={{ marginTop: 8, fontSize: 12, color: isDark ? '#94a3b8' : '#64748b' }}>{userEmail}</div>
                             </div>

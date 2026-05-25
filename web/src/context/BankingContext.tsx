@@ -45,6 +45,8 @@ interface Insight {
 
 interface BankingState {
     balance: number | null;
+    realBalance: number;
+    demoBalance: number;
     transactions: Transaction[];
     payments: Payment[];
     loans: Loan[];
@@ -75,6 +77,7 @@ interface BankingProviderProps {
 
 export const BankingProvider: React.FC<BankingProviderProps> = ({ children }) => {
     const [balance, setBalance] = useState<number | null>(null);
+    const [realBalance, setRealBalance] = useState(0);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [payments, setPayments] = useState<Payment[]>([]);
     const [loans, setLoans] = useState<Loan[]>([]);
@@ -127,8 +130,13 @@ export const BankingProvider: React.FC<BankingProviderProps> = ({ children }) =>
             if (txRes.status === 'fulfilled') {
                 const txData = txRes.value.data?.transactions ?? [];
                 setTransactions(txData);
+                const totalDeposits = txData
+                    .filter((tx: any) => tx.type === 'deposit' && tx.status === 'completed')
+                    .reduce((sum: number, tx: any) => sum + (parseFloat(tx.amount) || 0), 0);
+                setRealBalance(totalDeposits);
             } else {
                 setTransactions([]);
+                setRealBalance(0);
             }
 
             if (insightsRes.status === 'fulfilled') {
@@ -226,6 +234,8 @@ export const BankingProvider: React.FC<BankingProviderProps> = ({ children }) =>
     return (
         <BankingContext.Provider value={{
             balance,
+            realBalance,
+            demoBalance: Math.max(0, (balance ?? 0) - realBalance),
             transactions,
             payments,
             loans,

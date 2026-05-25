@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Calculator, Shield, Clock, CheckCircle,
@@ -19,15 +19,19 @@ import { useBanking } from '../context/BankingContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { calculateSimpleInterest, calculateCompoundEMI, generateYearlyBreakdown } from '../utils/interestCalculations';
 
 const Loans: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const toast = useToast();
-  const { balance, deposit, applyLoan, loading: bankingLoading, refresh: refreshBankData } = useBanking();
+  const { balance, deposit, loading: bankingLoading, refresh: refreshBankData } = useBanking();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'apply' | 'history' | 'info'>('overview');
+  const eligibilityState = location.state as { eligibleAmount?: number; monthlyIncome?: string; existingDebt?: string } | null;
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'apply' | 'history' | 'info'>(eligibilityState?.eligibleAmount ? 'apply' : 'overview');
   const [loans, setLoans] = useState<any[]>([]);
   const [loadingLoans, setLoadingLoans] = useState(false);
   const [profileCompleted, setProfileCompleted] = useState(false);
@@ -35,12 +39,13 @@ const Loans: React.FC = () => {
 
   const [aiPrediction, setAiPrediction] = useState<any>(null);
   const [predicting, setPredicting] = useState(false);
-  const [predictionForm, setPredictionForm] = useState({ income: 300000, expenses: 150000, amount: 1000000, credit_score: 650 });
+  const [predictionForm, setPredictionForm] = useState({ income: 300000, expenses: 150000, amount: 1000000, credit_score: 650, duration: 12, interestRate: 10 });
 
   const [formData, setFormData] = useState({
     amount: '',
     purpose: '',
     duration: '12',
+    interestRate: '10',
     monthlyIncome: '',
     existingDebt: '',
     sector: 'Employee'
@@ -177,6 +182,18 @@ const Loans: React.FC = () => {
   };
 
   useEffect(() => {
+    if (eligibilityState?.eligibleAmount) {
+      setFormData(prev => ({
+        ...prev,
+        amount: String(eligibilityState.eligibleAmount!),
+        monthlyIncome: eligibilityState.monthlyIncome || '',
+        existingDebt: eligibilityState.existingDebt || '',
+      }));
+      window.history.replaceState({}, '');
+    }
+  }, []);
+
+  useEffect(() => {
     const loadInitialData = async () => {
       setLoadingLoans(true);
       try {
@@ -273,18 +290,22 @@ const Loans: React.FC = () => {
 
   const handleTakeLoan = async () => {
     if (!aiPrediction?.approved) return;
+    const p = predictionForm.amount;
+    const r = predictionForm.interestRate || 10;
+    const n = predictionForm.duration || 12;
+    const compound = calculateCompoundEMI(p, r, n);
     setPinAction({
       cb: async () => {
         const newLoan = {
           id: 'demo-auto-' + Date.now(),
-          amount: predictionForm.amount,
+          amount: p,
           purpose: 'AI-Recommended Loan',
-          duration: 12,
+          duration: n,
           status: 'approved',
           risk_score: aiPrediction?.risk_score || 30,
           created_at: new Date().toISOString(),
-          monthly_payment: Math.round(predictionForm.amount / 12 * 1.1),
-          interest_rate: 10,
+          monthly_payment: compound.emi,
+          interest_rate: r,
           progress: 0,
           aiDecision: {
             riskScore: aiPrediction?.risk_score || 30,
@@ -292,16 +313,16 @@ const Loans: React.FC = () => {
             explanation: aiPrediction?.insight || 'AI-approved loan.',
           },
           paid_amount: 0,
-          total_amount: Math.round(predictionForm.amount * 1.1),
+          total_amount: compound.totalAmount,
           paid_percentage: 0,
           due_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
           next_deduction_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         };
         try {
-          await deposit(predictionForm.amount, 'AI-Recommended Loan disbursement');
+          await deposit(p, 'AI-Recommended Loan disbursement');
           setDemoLoans(prev => [...prev, newLoan]);
           setLoans(prev => [...prev, newLoan]);
-          toast.success(`Loan of RWF ${predictionForm.amount.toLocaleString()} approved and disbursed!`);
+          toast.success(`Loan of RWF ${p.toLocaleString()} approved and disbursed!`);
           await refreshBankData();
           setAiPrediction(null);
         } catch {
@@ -388,23 +409,6 @@ const Loans: React.FC = () => {
     }
     setExtendingLoan(null);
     setExtensionDays('');
-  };
-
-  const handleApplySubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!profileCompleted) {
-      toast.error('Complete your profile first before applying');
-      navigate('/complete-profile');
-      return;
-    }
-    try {
-      await applyLoan(formData);
-      toast.success('Loan application submitted!');
-      const resp = await loanService.getLoans().catch(() => null);
-      if (resp?.data?.loans) setLoans(resp.data.loans);
-    } catch {
-      toast.error('Application failed. Try again.');
-    }
   };
 
   const tabs: { key: 'overview' | 'apply' | 'history' | 'info'; label: string }[] = [
@@ -574,19 +578,34 @@ const Loans: React.FC = () => {
                   <div style={{ display: 'grid', gap: 14, marginTop: 8 }}>
                     <div>
                       <label style={labelStyle}>Monthly Income (RWF)</label>
-                      <input type="number" value={predictionForm.income} onChange={e => setPredictionForm(f => ({ ...f, income: Number(e.target.value) }))} style={inputStyle} />
+                      <input type="text" inputMode="decimal" value={predictionForm.income} onChange={e => setPredictionForm(f => ({ ...f, income: e.target.value === '' ? 0 : Number(e.target.value) }))} style={inputStyle} />
                     </div>
                     <div>
                       <label style={labelStyle}>Monthly Expenses (RWF)</label>
-                      <input type="number" value={predictionForm.expenses} onChange={e => setPredictionForm(f => ({ ...f, expenses: Number(e.target.value) }))} style={inputStyle} />
+                      <input type="text" inputMode="decimal" value={predictionForm.expenses} onChange={e => setPredictionForm(f => ({ ...f, expenses: e.target.value === '' ? 0 : Number(e.target.value) }))} style={inputStyle} />
                     </div>
                     <div>
                       <label style={labelStyle}>Loan Amount (RWF)</label>
-                      <input type="number" value={predictionForm.amount} onChange={e => setPredictionForm(f => ({ ...f, amount: Number(e.target.value) }))} style={inputStyle} />
+                      <input type="text" inputMode="decimal" value={predictionForm.amount} onChange={e => setPredictionForm(f => ({ ...f, amount: e.target.value === '' ? 0 : Number(e.target.value) }))} style={inputStyle} />
                     </div>
                     <div>
                       <label style={labelStyle}>Credit Score</label>
                       <input type="number" value={predictionForm.credit_score} onChange={e => setPredictionForm(f => ({ ...f, credit_score: Number(e.target.value) }))} style={inputStyle} min={300} max={850} />
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Duration (months)</label>
+                      <select value={predictionForm.duration} onChange={e => setPredictionForm(f => ({ ...f, duration: Number(e.target.value) }))} style={inputStyle}>
+                        <option value={3}>3 months</option>
+                        <option value={6}>6 months</option>
+                        <option value={12}>12 months</option>
+                        <option value={18}>18 months</option>
+                        <option value={24}>24 months</option>
+                        <option value={36}>36 months</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle}>Interest Rate (% p.a.)</label>
+                      <input type="number" step="0.1" min="0" max="50" value={predictionForm.interestRate} onChange={e => setPredictionForm(f => ({ ...f, interestRate: Number(e.target.value) }))} style={inputStyle} />
                     </div>
                     {predicting && <div style={{ fontSize: 12, color: mutedColor, textAlign: 'center' }}>AI analyzing...</div>}
                   </div>
@@ -624,21 +643,96 @@ const Loans: React.FC = () => {
                             {aiPrediction.insight}
                           </div>
                         )}
+                        {predictionForm.amount > 0 && (() => {
+                          const p = predictionForm.amount;
+                          const r = predictionForm.interestRate || 10;
+                          const n = predictionForm.duration || 12;
+                          const simple = calculateSimpleInterest(p, r, n);
+                          const compound = calculateCompoundEMI(p, r, n);
+                          const yearly = generateYearlyBreakdown(p, r, n);
+                          return (
+                            <div style={{ marginTop: 16, borderTop: `1px solid ${borderColor}`, paddingTop: 16 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                <Calculator size={16} color="#0A9396" />
+                                <span style={{ fontWeight: 700, fontSize: 15, color: textColor }}>Repayment Calculator</span>
+                              </div>
+                              <div style={{ fontSize: 12, color: mutedColor, marginBottom: 10 }}>
+                                Rate: <strong>{r}% p.a.</strong> &middot; Term: <strong>{n} months</strong>
+                              </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                <div style={{ padding: 14, borderRadius: 12, background: isDark ? 'rgba(10,147,150,0.08)' : '#f0fdfa', border: '1px solid rgba(10,147,150,0.2)' }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0A9396', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Simple Interest</div>
+                                  <div style={{ display: 'grid', gap: 3, fontSize: 13 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Monthly</span><span style={{ fontWeight: 700, color: textColor }}>RWF {simple.monthlyPayment.toLocaleString()}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Interest</span><span style={{ fontWeight: 700, color: '#ef4444' }}>RWF {simple.totalInterest.toLocaleString()}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Repayment</span><span style={{ fontWeight: 700, color: textColor }}>RWF {simple.totalAmount.toLocaleString()}</span></div>
+                                  </div>
+                                </div>
+                                <div style={{ padding: 14, borderRadius: 12, background: isDark ? 'rgba(139,92,246,0.08)' : '#f5f3ff', border: '1px solid rgba(139,92,246,0.2)' }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: '#8b5cf6', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compound (EMI)</div>
+                                  <div style={{ display: 'grid', gap: 3, fontSize: 13 }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Monthly</span><span style={{ fontWeight: 700, color: textColor }}>RWF {compound.emi.toLocaleString()}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Interest</span><span style={{ fontWeight: 700, color: '#ef4444' }}>RWF {compound.totalInterest.toLocaleString()}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Repayment</span><span style={{ fontWeight: 700, color: textColor }}>RWF {compound.totalAmount.toLocaleString()}</span></div>
+                                  </div>
+                                </div>
+                              </div>
+                              {yearly.length > 0 && (
+                                <div style={{ marginTop: 12 }}>
+                                  <div style={{ fontSize: 12, fontWeight: 600, color: mutedColor, marginBottom: 8 }}>Yearly Breakdown (EMI)</div>
+                                  <div style={{ display: 'grid', gap: 2 }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, padding: '6px 10px', fontSize: 11, fontWeight: 700, color: mutedColor, borderBottom: `1px solid ${borderColor}` }}>
+                                      <span>Year</span><span>Payments</span><span>Interest</span><span>Principal</span><span>Balance</span>
+                                    </div>
+                                    {yearly.map(row => (
+                                      <div key={row.year} style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, padding: '6px 10px', fontSize: 12, color: textColor, borderBottom: `1px solid ${borderColor}` }}>
+                                        <span>{row.year}</span>
+                                        <span>RWF {row.totalPaid.toLocaleString()}</span>
+                                        <span style={{ color: '#ef4444' }}>RWF {row.interestPaid.toLocaleString()}</span>
+                                        <span style={{ color: '#10b981' }}>RWF {row.principalPaid.toLocaleString()}</span>
+                                        <span>RWF {row.remainingBalance.toLocaleString()}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                         <div style={{ marginTop: 8, fontSize: 11, color: mutedColor, textAlign: 'right' }}>
                           {aiPrediction.ai_powered ? 'AI Powered' : 'Standard Analysis'}
                         </div>
-                        {aiPrediction.approved && (
+                        {aiPrediction.approved && (() => {
+                          const p = predictionForm.amount;
+                          const r = predictionForm.interestRate || 10;
+                          const n = predictionForm.duration || 12;
+                          const compound = calculateCompoundEMI(p, r, n);
+                          return (
                           <button onClick={handleTakeLoan}
                             style={{
-                              marginTop: 16, width: '100%', padding: '14px 24px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                              fontWeight: 700, fontSize: 15, background: 'linear-gradient(135deg, #10b981, #059669)',
-                              color: 'white', boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
+                              marginTop: 16, width: '100%', padding: '16px 20px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                              background: 'linear-gradient(135deg, #0A9396, #059669)',
+                              color: 'white', boxShadow: '0 6px 24px rgba(10,147,150,0.35)',
+                              transition: 'all 0.2s',
                             }}
                           >
-                            <ThumbsUp size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                            Take Loan — RWF {predictionForm.amount.toLocaleString()}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, opacity: 0.9 }}>
+                                <ThumbsUp size={15} />
+                                You receive
+                              </span>
+                              <span style={{ fontWeight: 800, fontSize: 20 }}>RWF {p.toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+                              <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>Total you repay</span>
+                              <span style={{ fontWeight: 800, fontSize: 20 }}>RWF {compound.totalAmount.toLocaleString()}</span>
+                            </div>
+                            <div style={{ marginTop: 6, fontSize: 11, opacity: 0.7, textAlign: 'center' }}>
+                              {n} monthly payments × RWF {compound.emi.toLocaleString()} at {r}% p.a.
+                            </div>
                           </button>
-                        )}
+                          );
+                        })()}
                         {!aiPrediction.approved && (
                           <div style={{ marginTop: 16, padding: 12, borderRadius: 10, background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: 13, fontWeight: 600, textAlign: 'center' }}>
                             This application does not meet our approval criteria at this time.
@@ -697,12 +791,11 @@ const Loans: React.FC = () => {
           {activeTab === 'apply' && (
             <div style={{ display: 'grid', gap: 24, gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
               <SectionCard title="Apply for a Loan">
-                <form onSubmit={handleApplySubmit}>
-                  <div style={{ display: 'grid', gap: 16, marginTop: 8 }}>
+                <div style={{ display: 'grid', gap: 16, marginTop: 8 }}>
                     <div>
                       <label style={labelStyle}>Loan Amount (RWF)</label>
                       <input
-                        type="number" placeholder="e.g. 500000"
+                        type="text" inputMode="decimal" placeholder="e.g. 500000"
                         value={formData.amount}
                         onChange={e => setFormData(f => ({ ...f, amount: e.target.value }))}
                         style={inputStyle}
@@ -741,9 +834,18 @@ const Loans: React.FC = () => {
                       </select>
                     </div>
                     <div>
+                      <label style={labelStyle}>Interest Rate (% p.a.)</label>
+                      <input
+                        type="number" step="0.1" min="0" max="50"
+                        value={formData.interestRate}
+                        onChange={e => setFormData(f => ({ ...f, interestRate: e.target.value }))}
+                        style={inputStyle}
+                      />
+                    </div>
+                    <div>
                       <label style={labelStyle}>Monthly Income (RWF)</label>
                       <input
-                        type="number" placeholder="e.g. 300000"
+                        type="text" inputMode="decimal" placeholder="e.g. 300000"
                         value={formData.monthlyIncome}
                         onChange={e => setFormData(f => ({ ...f, monthlyIncome: e.target.value }))}
                         style={inputStyle}
@@ -752,7 +854,7 @@ const Loans: React.FC = () => {
                     <div>
                       <label style={labelStyle}>Existing Debt (RWF)</label>
                       <input
-                        type="number" placeholder="e.g. 50000"
+                        type="text" inputMode="decimal" placeholder="e.g. 50000"
                         value={formData.existingDebt}
                         onChange={e => setFormData(f => ({ ...f, existingDebt: e.target.value }))}
                         style={inputStyle}
@@ -772,19 +874,7 @@ const Loans: React.FC = () => {
                         <option value="Student">Student</option>
                       </select>
                     </div>
-                    <LoadingButton
-                      type="submit"
-                      loading={bankingLoading}
-                      style={{
-                        padding: '14px 24px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                        fontWeight: 700, fontSize: 15, background: 'linear-gradient(135deg, #0A9396, #4ECDC4)',
-                        color: 'white', boxShadow: '0 4px 20px rgba(10,147,150,0.3)',
-                      }}
-                    >
-                      Submit Application
-                    </LoadingButton>
                   </div>
-                </form>
               </SectionCard>
 
               <div>
@@ -811,43 +901,138 @@ const Loans: React.FC = () => {
                           {applyPrediction.insight}
                         </div>
                       )}
-                      {applyPrediction.approved && (
-                        <button
-                          onClick={async () => {
-                            const newLoan = {
-                              id: 'demo-apply-' + Date.now(),
-                              amount: Number(formData.amount),
-                              purpose: formData.purpose || 'Loan',
-                              duration: Number(formData.duration) || 12,
-                              status: 'approved',
-                              risk_score: applyPrediction?.risk_score || 30,
-                              created_at: new Date().toISOString(),
-                              monthly_payment: Math.round(Number(formData.amount) / (Number(formData.duration) || 12) * 1.1),
-                              interest_rate: 10, progress: 0,
-                              aiDecision: { riskScore: applyPrediction?.risk_score || 30, confidence: 'Auto-approved', explanation: applyPrediction?.insight || 'AI approved your loan.' },
-                              paid_amount: 0, total_amount: Math.round(Number(formData.amount) * 1.1), paid_percentage: 0,
-                              due_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
-                              next_deduction_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                            };
-                            try {
-                              await deposit(Number(formData.amount), `Loan: ${formData.purpose}`);
-                              setDemoLoans(prev => [...prev, newLoan]);
-                              setLoans(prev => [...prev, newLoan]);
-                              toast.success(`Loan of RWF ${Number(formData.amount).toLocaleString()} approved!`);
-                              await refreshBankData();
-                              setApplyPrediction(null);
-                            } catch { toast.error('Failed to disburse.'); }
-                          }}
-                          style={{
-                            marginTop: 16, width: '100%', padding: '14px 24px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                            fontWeight: 700, fontSize: 15, background: 'linear-gradient(135deg, #10b981, #059669)',
-                            color: 'white', boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
-                          }}
-                        >
-                          <ThumbsUp size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                          Accept & Disburse — RWF {Number(formData.amount).toLocaleString()}
-                        </button>
-                      )}
+                      {Number(formData.amount) > 0 && Number(formData.duration) > 0 && (() => {
+                        const p = Number(formData.amount);
+                        const r = Number(formData.interestRate) || 10;
+                        const n = Number(formData.duration) || 12;
+                        const simple = calculateSimpleInterest(p, r, n);
+                        const compound = calculateCompoundEMI(p, r, n);
+                        const yearly = generateYearlyBreakdown(p, r, n);
+                        return (
+                          <div style={{ marginTop: 16, borderTop: `1px solid ${borderColor}`, paddingTop: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                              <Calculator size={16} color="#0A9396" />
+                              <span style={{ fontWeight: 700, fontSize: 15, color: textColor }}>Repayment Calculator</span>
+                            </div>
+                            <div style={{ fontSize: 12, color: mutedColor, marginBottom: 10 }}>
+                              Rate: <strong>{r}% p.a.</strong> &middot; Term: <strong>{n} months</strong>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                              <div style={{ padding: 14, borderRadius: 12, background: isDark ? 'rgba(10,147,150,0.08)' : '#f0fdfa', border: '1px solid rgba(10,147,150,0.2)' }}>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: '#0A9396', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Simple Interest</div>
+                                <div style={{ display: 'grid', gap: 3, fontSize: 13 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Monthly</span><span style={{ fontWeight: 700, color: textColor }}>RWF {simple.monthlyPayment.toLocaleString()}</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Interest</span><span style={{ fontWeight: 700, color: '#ef4444' }}>RWF {simple.totalInterest.toLocaleString()}</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Repayment</span><span style={{ fontWeight: 700, color: textColor }}>RWF {simple.totalAmount.toLocaleString()}</span></div>
+                                </div>
+                              </div>
+                              <div style={{ padding: 14, borderRadius: 12, background: isDark ? 'rgba(139,92,246,0.08)' : '#f5f3ff', border: '1px solid rgba(139,92,246,0.2)' }}>
+                                <div style={{ fontSize: 11, fontWeight: 700, color: '#8b5cf6', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compound (EMI)</div>
+                                <div style={{ display: 'grid', gap: 3, fontSize: 13 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Monthly</span><span style={{ fontWeight: 700, color: textColor }}>RWF {compound.emi.toLocaleString()}</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Interest</span><span style={{ fontWeight: 700, color: '#ef4444' }}>RWF {compound.totalInterest.toLocaleString()}</span></div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Repayment</span><span style={{ fontWeight: 700, color: textColor }}>RWF {compound.totalAmount.toLocaleString()}</span></div>
+                                </div>
+                              </div>
+                            </div>
+                            {yearly.length > 0 && (
+                              <div style={{ marginTop: 12 }}>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: mutedColor, marginBottom: 8 }}>Yearly Breakdown (EMI)</div>
+                                <div style={{ display: 'grid', gap: 2 }}>
+                                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, padding: '6px 10px', fontSize: 11, fontWeight: 700, color: mutedColor, borderBottom: `1px solid ${borderColor}` }}>
+                                    <span>Year</span><span>Payments</span><span>Interest</span><span>Principal</span><span>Balance</span>
+                                  </div>
+                                  {yearly.map(row => (
+                                    <div key={row.year} style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 4, padding: '6px 10px', fontSize: 12, color: textColor, borderBottom: `1px solid ${borderColor}` }}>
+                                      <span>{row.year}</span>
+                                      <span>RWF {row.totalPaid.toLocaleString()}</span>
+                                      <span style={{ color: '#ef4444' }}>RWF {row.interestPaid.toLocaleString()}</span>
+                                      <span style={{ color: '#10b981' }}>RWF {row.principalPaid.toLocaleString()}</span>
+                                      <span>RWF {row.remainingBalance.toLocaleString()}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                      {applyPrediction.approved && (() => {
+                        const p = Number(formData.amount);
+                        const r = Number(formData.interestRate) || 10;
+                        const n = Number(formData.duration) || 12;
+                        const compound = calculateCompoundEMI(p, r, n);
+                        return (
+                        <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <button
+                            onClick={async () => {
+                              const newLoan = {
+                                id: 'demo-apply-' + Date.now(),
+                                amount: p,
+                                purpose: formData.purpose || 'Loan',
+                                duration: n,
+                                status: 'approved',
+                                risk_score: applyPrediction?.risk_score || 30,
+                                created_at: new Date().toISOString(),
+                                monthly_payment: Math.round(p / n * 1.1),
+                                interest_rate: r, progress: 0,
+                                aiDecision: { riskScore: applyPrediction?.risk_score || 30, confidence: 'Auto-approved', explanation: applyPrediction?.insight || 'AI approved your loan.' },
+                                paid_amount: 0, total_amount: compound.totalAmount, paid_percentage: 0,
+                                due_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+                                next_deduction_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                              };
+                              try {
+                                await deposit(p, `Loan: ${formData.purpose}`);
+                                setDemoLoans(prev => [...prev, newLoan]);
+                                setLoans(prev => [...prev, newLoan]);
+                                toast.success(`Loan of RWF ${p.toLocaleString()} approved and disbursed!`);
+                                await refreshBankData();
+                                setApplyPrediction(null);
+                                setFormData({ amount: '', purpose: '', duration: '12', interestRate: '10', monthlyIncome: '', existingDebt: '', sector: 'Employee' });
+                              } catch { toast.error('Failed to disburse.'); }
+                            }}
+                            style={{
+                              width: '100%', padding: '16px 20px', borderRadius: 14, border: 'none', cursor: 'pointer',
+                              background: 'linear-gradient(135deg, #0A9396, #059669)',
+                              color: 'white', boxShadow: '0 6px 24px rgba(10,147,150,0.35)',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, opacity: 0.9 }}>
+                                <ThumbsUp size={15} />
+                                You receive
+                              </span>
+                              <span style={{ fontWeight: 800, fontSize: 20 }}>RWF {p.toLocaleString()}</span>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.15)' }}>
+                              <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>Total you repay</span>
+                              <span style={{ fontWeight: 800, fontSize: 20 }}>RWF {compound.totalAmount.toLocaleString()}</span>
+                            </div>
+                            <div style={{ marginTop: 6, fontSize: 11, opacity: 0.7, textAlign: 'center' }}>
+                              {n} monthly payments × RWF {compound.emi.toLocaleString()} at {r}% p.a.
+                            </div>
+                          </button>
+                          <div style={{ display: 'flex', gap: 10 }}>
+                            <button
+                              onClick={() => {
+                                setFormData({ amount: '', purpose: '', duration: '12', interestRate: '10', monthlyIncome: '', existingDebt: '', sector: 'Employee' });
+                                setApplyPrediction(null);
+                                toast.info('Loan application cancelled.');
+                              }}
+                              style={{
+                                flex: 1, padding: '12px 24px', borderRadius: 10, cursor: 'pointer',
+                                fontWeight: 600, fontSize: 13, background: isDark ? 'rgba(239,68,68,0.15)' : '#fef2f2',
+                                color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)',
+                              }}
+                            >
+                              <AlertTriangle size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+                              Cancel Loan
+                            </button>
+                          </div>
+                        </div>
+                        );
+                      })()}
                       {!applyPrediction.approved && (
                         <div style={{ marginTop: 16, padding: 12, borderRadius: 10, background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: 13, fontWeight: 600, textAlign: 'center' }}>
                           This application does not meet our approval criteria.
@@ -932,7 +1117,7 @@ const Loans: React.FC = () => {
                             <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
                               <div>
                                 <div style={{ fontSize: 12, color: mutedColor }}>Amount</div>
-                                <div style={{ fontSize: 15, fontWeight: 700, color: textColor }}>RWF {loan.amount.toLocaleString()}</div>
+                                <div style={{ fontSize: 15, fontWeight: 700, color: textColor }}>RWF {Number(loan.amount).toLocaleString()}</div>
                               </div>
                               <div>
                                 <div style={{ fontSize: 12, color: mutedColor }}>Duration</div>
@@ -944,7 +1129,7 @@ const Loans: React.FC = () => {
                               </div>
                               <div>
                                 <div style={{ fontSize: 12, color: mutedColor }}>Monthly Payment</div>
-                                <div style={{ fontSize: 15, fontWeight: 600, color: textColor }}>RWF {(loan.monthly_payment || Math.round(loan.amount / totalMonths)).toLocaleString()}</div>
+                                <div style={{ fontSize: 15, fontWeight: 600, color: textColor }}>RWF {Number(loan.monthly_payment || Math.round(loan.amount / totalMonths)).toLocaleString()}</div>
                               </div>
                             </div>
 

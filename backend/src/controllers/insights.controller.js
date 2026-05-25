@@ -15,8 +15,8 @@ const generateDummyInsights = async (userId) => {
         const monthlyExpenses = Math.max(0, (stats.total_withdrawals || 0) + (stats.total_payments || 0) + (stats.total_transfers || 0));
 
         const savingsPrediction = await aiService.predictSavings({
-            monthly_income: monthlyIncome,
-            monthly_expenses: monthlyExpenses || Math.max(1, monthlyIncome * 0.6),
+            monthlyIncome: monthlyIncome,
+            monthlyExpenses: monthlyExpenses || Math.max(1, monthlyIncome * 0.6),
             existing_savings: balance,
             debt_payments: 0,
             num_dependents: 0,

@@ -5,7 +5,14 @@ exports.getGoals = async (req, res) => {
             'SELECT id, user_id, name, target_amount AS target, current_amount AS current, target_date AS deadline, auto_deduction_amount, auto_deduction_period, last_deduction_date, status, created_at FROM savings_goals WHERE user_id = ? ORDER BY created_at DESC',
             [req.user.id]
         );
-        res.json({ goals: rows });
+        res.json({
+            goals: rows.map(g => ({
+                ...g,
+                target: g.target ? parseFloat(g.target) : 0,
+                current: g.current ? parseFloat(g.current) : 0,
+                auto_deduction_amount: g.auto_deduction_amount ? parseFloat(g.auto_deduction_amount) : null,
+            }))
+        });
     } catch (err) {
         console.error('Get goals error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });
@@ -27,7 +34,13 @@ exports.createGoal = async (req, res) => {
             'SELECT id, user_id, name, target_amount AS target, current_amount AS current, target_date AS deadline, status, created_at FROM savings_goals WHERE id = ?',
             [result.insertId]
         );
-        res.status(201).json({ goal: rows[0] });
+        res.status(201).json({
+            goal: {
+                ...rows[0],
+                target: rows[0].target ? parseFloat(rows[0].target) : 0,
+                current: rows[0].current ? parseFloat(rows[0].current) : 0,
+            }
+        });
     } catch (err) {
         console.error('Create goal error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });
@@ -73,7 +86,14 @@ exports.updateGoal = async (req, res) => {
             [goalId]
         );
 
-        res.json({ goal: rows[0] });
+        res.json({
+            goal: {
+                ...rows[0],
+                target: rows[0].target ? parseFloat(rows[0].target) : 0,
+                current: rows[0].current ? parseFloat(rows[0].current) : 0,
+                auto_deduction_amount: rows[0].auto_deduction_amount ? parseFloat(rows[0].auto_deduction_amount) : null,
+            }
+        });
     } catch (err) {
         console.error('Update goal error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });

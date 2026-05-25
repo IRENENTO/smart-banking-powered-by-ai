@@ -1,3 +1,5 @@
+require('dotenv').config();
+// THEN your other imports
 const mysql = require('mysql2/promise');
 
 let pool;
@@ -9,9 +11,15 @@ function getPool() {
             user: process.env.DB_USER || 'root',
             password: process.env.DB_PASSWORD || '',
             database: process.env.DB_NAME || 'smart_banking_powered_by_ai',
+            port: process.env.DB_PORT || 3306,
             waitForConnections: true,
             connectionLimit: 10,
             queueLimit: 0,
+            // ADD THIS FOR TiDB CLOUD:
+            ssl: {
+                require: true,
+                rejectUnauthorized: true
+            }
         });
     }
     return pool;
@@ -60,11 +68,15 @@ const connectDB = async () => {
     try {
         await getPool().execute('SELECT 1');
         global.dbConnection = compat;
-        console.log('MySQL connected successfully');
+        console.log('✅ MySQL connected successfully to TiDB Cloud');
     } catch (err) {
-        console.error('Database connection error:', err.message || err);
-        console.warn('Server will continue without database — only static and docs routes will work');
+        console.error('❌ Database connection error:', err.message || err);
+        console.warn('⚠️  Server will continue without database — only static and docs routes will work');
     }
 };
 
 module.exports = { query, connectDB, compat };
+const { connectDB, query } = require('./your-database-file');
+
+// Then call connectDB when your app starts
+connectDB();

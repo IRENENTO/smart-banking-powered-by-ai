@@ -116,8 +116,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                     { to: '/savings', label: t('nav.savings') },
                     { to: '/loans', label: t('nav.loans') },
                     { to: '/ai-insights', label: t('nav.aiInsights') },
-                    { to: '/market-insights', label: t('nav.marketInsights') },
-                    { to: '/spending-analysis', label: t('nav.spendingAnalysis') }
+                    { to: '/market-insights', label: t('nav.marketInsights') }
                 ].map((item, index) => (
                     <motion.div
                         key={item.to}

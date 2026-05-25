@@ -681,7 +681,7 @@ const AdminDashboard: React.FC = () => {
                         {!editUser && <InputField label="Password" type="password" value={formData.password || ''} onChange={(v) => setFormData({ ...formData, password: v })} />}
                         <SelectField label="Role" value={formData.role || 'user'} onChange={(v) => setFormData({ ...formData, role: v })} options={[{ value: 'user', label: 'User' }, { value: 'admin', label: 'Admin' }]} />
                         <SelectField label="Status" value={formData.status || 'active'} onChange={(v) => setFormData({ ...formData, status: v })} options={[{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }, { value: 'suspended', label: 'Suspended' }]} />
-                        <InputField label="Balance" type="number" value={formData.balance ?? ''} onChange={(v) => setFormData({ ...formData, balance: Number(v) })} />
+                        <InputField label="Balance" type="text" inputMode="decimal" value={formData.balance ?? ''} onChange={(v) => setFormData({ ...formData, balance: Number(v) })} />
                         <div className="flex gap-3 justify-end mt-4">
                             <button onClick={() => { setShowUserModal(false); setEditUser(null); }} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Cancel</button>
                             <button onClick={editUser ? handleUpdateUser : handleCreateUser} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
@@ -698,7 +698,7 @@ const AdminDashboard: React.FC = () => {
                     <div className="space-y-3">
                         <InputField label="Sender ID" type="number" value={formData.sender_id ?? ''} onChange={(v) => setFormData({ ...formData, sender_id: v ? Number(v) : null })} />
                         <InputField label="Receiver ID" type="number" value={formData.receiver_id ?? ''} onChange={(v) => setFormData({ ...formData, receiver_id: v ? Number(v) : null })} />
-                        <InputField label="Amount" type="number" value={formData.amount ?? ''} onChange={(v) => setFormData({ ...formData, amount: Number(v) })} />
+                        <InputField label="Amount" type="text" inputMode="decimal" value={formData.amount ?? ''} onChange={(v) => setFormData({ ...formData, amount: Number(v) })} />
                         <SelectField label="Type" value={formData.type || 'transfer'} onChange={(v) => setFormData({ ...formData, type: v })} options={[
                             { value: 'transfer', label: 'Transfer' }, { value: 'deposit', label: 'Deposit' },
                             { value: 'withdrawal', label: 'Withdrawal' }, { value: 'payment', label: 'Payment' }
@@ -724,8 +724,8 @@ const AdminDashboard: React.FC = () => {
                     </h3>
                     <div className="space-y-3">
                         {!editLoan && <InputField label="User ID" type="number" value={formData.user_id ?? ''} onChange={(v) => setFormData({ ...formData, user_id: Number(v) })} />}
-                        <InputField label="Amount" type="number" value={formData.amount ?? ''} onChange={(v) => setFormData({ ...formData, amount: Number(v) })} />
-                        <InputField label="Duration (months)" type="number" value={formData.duration ?? 12} onChange={(v) => setFormData({ ...formData, duration: Number(v) })} />
+                        <InputField label="Amount" type="text" inputMode="decimal" value={formData.amount ?? ''} onChange={(v) => setFormData({ ...formData, amount: Number(v) })} />
+                        <InputField label="Duration (months)" type="text" inputMode="numeric" value={formData.duration ?? 12} onChange={(v) => setFormData({ ...formData, duration: Number(v) })} />
                         <InputField label="Interest Rate (%)" type="number" value={formData.interest_rate ?? 5} onChange={(v) => setFormData({ ...formData, interest_rate: Number(v) })} />
                         <SelectField label="Status" value={formData.status || 'pending'} onChange={(v) => setFormData({ ...formData, status: v })} options={[
                             { value: 'pending', label: 'Pending' }, { value: 'approved', label: 'Approved' },
@@ -816,10 +816,10 @@ const ModalOverlay: React.FC<{ onClose: () => void; children: React.ReactNode }>
 );
 
 // Input Field
-const InputField: React.FC<{ label: string; type?: string; value: string | number; onChange: (v: string) => void }> = ({ label, type = 'text', value, onChange }) => (
+const InputField: React.FC<{ label: string; type?: string; inputMode?: string; value: string | number; onChange: (v: string) => void }> = ({ label, type = 'text', inputMode, value, onChange }) => (
     <div>
         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-        <input type={type} value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input type={type} inputMode={inputMode as any} value={value} onChange={(e) => onChange(e.target.value)} className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
     </div>
 );
 
