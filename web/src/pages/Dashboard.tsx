@@ -10,6 +10,7 @@ import SmartAlertBanner from '../components/SmartAlertBanner';
 import SpendingAnalytics from '../components/SpendingAnalytics';
 import LoanEligibility from '../components/LoanEligibility';
 import QuickActions from '../components/QuickActions';
+import AICharts from '../components/AICharts';
 import AIFinancialAdvisor from '../components/AIFinancialAdvisor';
 import MarketInsights from '../components/MarketInsights';
 import IncomePattern from '../components/IncomePattern';
@@ -50,6 +51,15 @@ const Dashboard: React.FC = () => {
       status: 'Active'
     };
   });
+  {/* Add AI Charts Section */}
+<motion.div
+    initial={{ opacity: 0, y: 50 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: 1.5 }}
+    style={{ marginBottom: 32, position: 'relative', zIndex: 1 }}
+>
+    <AICharts />
+</motion.div>
   const { t } = useLanguage();
   const { balance, realBalance, demoBalance, transactions, insights, loading: bankingLoading } = useBanking();
 

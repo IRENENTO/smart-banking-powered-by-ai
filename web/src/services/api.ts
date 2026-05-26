@@ -33,7 +33,14 @@ api.interceptors.response.use(
     (response) => {
         // Unpack custom API response structure { success, data, message }
         if (response.data && typeof response.data === 'object' && 'success' in response.data) {
-            response.data = response.data.data;
+            // If success is true and data exists, return the data
+            if (response.data.success && response.data.data) {
+                response.data = response.data.data;
+            }
+            // If success is true and no data, return the whole response
+            else if (response.data.success) {
+                response.data = response.data;
+            }
         }
         return response;
     },
@@ -86,15 +93,50 @@ export const aiService = {
     generateInsights: () => api.post('/insights/generate'),
     chat: (message: string) => api.post('/chat', { message }),
 
-    // AI Engine endpoints
-    predictLoan: (data: any) => api.post('/ai/predict-loan', data),
-    detectFraud: (data: any) => api.post('/ai/detect-fraud', data),
-    predictSavings: (data: any) => api.post('/ai/predict-savings', data),
-    analyzeSpending: (transactions: any[], monthlyIncome?: number) =>
-        api.post('/ai/spending-analysis', { transactions, monthly_income: monthlyIncome }),
-    getRecommendations: (data: any) => api.post('/ai/recommendations', data),
-    getModelStatus: () => api.get('/ai/model-status'),
-    retrainModel: (model?: string) => api.post('/ai/retrain', { model }),
+    // AI Engine endpoints (updated with proper response handling)
+    predictLoan: async (data: any) => {
+        const response = await api.post('/ai/predict-loan', data);
+        return response.data;
+    },
+    detectFraud: async (data: any) => {
+        const response = await api.post('/ai/detect-fraud', data);
+        return response.data;
+    },
+    predictSavings: async (data: any) => {
+        const response = await api.post('/ai/predict-savings', data);
+        return response.data;
+    },
+    analyzeSpending: async (transactions: any[], monthlyIncome?: number) => {
+        const response = await api.post('/ai/spending-analysis', { 
+            transactions, 
+            monthly_income: monthlyIncome 
+        });
+        return response.data;
+    },
+    getRecommendations: async (data: any) => {
+        const response = await api.post('/ai/recommendations', data);
+        return response.data;
+    },
+    getModelStatus: async () => {
+        const response = await api.get('/ai/model-status');
+        return response.data;
+    },
+    retrainModel: async (model?: string) => {
+        const response = await api.post('/ai/retrain', { model });
+        return response.data;
+    },
+};
+
+// Add AI Engine direct test endpoint
+export const aiEngineTest = {
+    testConnection: async () => {
+        const response = await api.get('/test-ai-connection');
+        return response.data;
+    },
+    getStatus: async () => {
+        const response = await api.get('/ai-engine/status');
+        return response.data;
+    }
 };
 
 export const savingsService = {

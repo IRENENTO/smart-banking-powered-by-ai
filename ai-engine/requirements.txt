@@ -10,3 +10,5 @@ xgboost
 imbalanced-learn
 httpx
 mysql-connector-python
+scikit-learn
+python-multipart

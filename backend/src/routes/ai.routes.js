@@ -2,6 +2,29 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth.middleware');
 const aiController = require('../controllers/ai.controller');
+const { getAIEngineHealth, getModelStatus } = require('../services/ai.service');
+
+// Public route - no auth required
+router.get('/engine-status', async (req, res) => {
+    try {
+        const status = await getAIEngineHealth();
+        res.json(status);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+// Public model status (no auth for testing)
+router.get('/public-model-status', async (req, res) => {
+    try {
+        const status = await getModelStatus();
+        res.json(status);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Your existing protected routes below...
+// router.get('/model-status', auth, ...)
 
 /**
  * @swagger
