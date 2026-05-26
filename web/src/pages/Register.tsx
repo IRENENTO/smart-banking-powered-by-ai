@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { authService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
+import { useNotifications } from '../context/NotificationContext';
+import { calculateProfileLevel, getGreeting } from '../utils/notifications';
 import styles from './Auth.module.css';
 
 const Register: React.FC = () => {
@@ -18,6 +20,7 @@ const Register: React.FC = () => {
     const location = useLocation();
     const returnPath = (location.state as any)?.from || '/dashboard';
     const { theme, toggleTheme } = useTheme();
+    const { addNotification } = useNotifications();
 
     const translations: any = {
         EN: {
@@ -99,6 +102,13 @@ const Register: React.FC = () => {
                 localStorage.setItem('userEmail', returned.user.email || email);
                 localStorage.setItem('otpAutoSend', 'false');
                 localStorage.removeItem('otpSent');
+                const profileLevel = calculateProfileLevel(returned.user);
+                addNotification({
+                    title: `${getGreeting()}, ${returned.user.name || 'there'}!`,
+                    message: `Account created successfully. Profile level: ${profileLevel.label} (${profileLevel.level}/4). Please verify your email to continue.`,
+                    type: 'success',
+                    link: '/dashboard',
+                });
                 navigate('/verify-otp', { state: { email: returned.user.email || email, from: returnPath, autoSend: false } });
             } else {
                 navigate('/login');

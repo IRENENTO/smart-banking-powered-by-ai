@@ -7,6 +7,7 @@ import PinModal from '../components/PinModal';
 import { useBanking } from '../context/BankingContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import { useNotifications } from '../context/NotificationContext';
 import { scheduleService } from '../services/api';
 import { Plus, Pause, Play, Trash2, Clock } from 'lucide-react';
 
@@ -17,6 +18,7 @@ const Payments: React.FC = () => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const toast = useToast();
+    const { addNotification } = useNotifications();
     const [activeTab, setActiveTab] = useState<Tab>('send');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
@@ -65,6 +67,12 @@ const Payments: React.FC = () => {
                     await sendPayment(amountValue, recipientId, sendData.recipient, sendData.note);
                     setMessage(`Sent RWF ${amountValue.toLocaleString()} to ${sendData.recipient}`);
                     setSendData({ recipient: '', phone: '', account: '', amount: '', note: '' });
+                    addNotification({
+                        title: 'Payment Sent',
+                        message: `RWF ${amountValue.toLocaleString()} sent to ${sendData.recipient} successfully.`,
+                        type: 'success',
+                        link: '/transactions',
+                    });
                 } catch (err: any) { setError(err.response?.data?.msg || 'Payment failed'); }
             }
         });
@@ -79,6 +87,14 @@ const Payments: React.FC = () => {
             await deposit(amountValue, `Deposit via ${depositProvider.toUpperCase()}`, depositPhoneNumber || undefined);
             setMessage(depositPhoneNumber ? `Deposit initiated via ${depositProvider.toUpperCase()} on ${depositPhoneNumber}.` : `Deposited RWF ${amountValue.toLocaleString()}`);
             setDepositAmount(''); setDepositPhoneNumber('');
+            addNotification({
+                title: 'Deposit Successful',
+                message: depositPhoneNumber
+                    ? `RWF ${amountValue.toLocaleString()} deposited via ${depositProvider.toUpperCase()} on ${depositPhoneNumber}.`
+                    : `RWF ${amountValue.toLocaleString()} deposited to your account.`,
+                type: 'success',
+                link: '/transactions',
+            });
         } catch (err: any) { setError(err.response?.data?.msg || 'Deposit failed'); }
     };
 

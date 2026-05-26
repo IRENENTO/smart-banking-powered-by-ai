@@ -20,6 +20,8 @@ import { useBanking } from '../context/BankingContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import { useNotifications } from '../context/NotificationContext';
+import { getGreeting } from '../utils/notifications';
 import { accountService, aiService } from '../services/api';
 import * as aiEngine from '../services/aiService';
 
@@ -76,6 +78,8 @@ const Dashboard: React.FC = () => {
   const [spendingInsight, setSpendingInsight] = useState({ totalSpent: 0, category: 'All', insight: 'Track your spending for AI insights.' });
   const [fraudAlertScore, setFraudAlertScore] = useState(0);
   const { info: toastInfo } = useToast();
+  const { addNotification } = useNotifications();
+  const welcomeShown = React.useRef(false);
 
   const handleQuickAction = async (action: string) => {
     setLoading(action);
@@ -139,6 +143,15 @@ const Dashboard: React.FC = () => {
             email: account.user?.email ?? initialEmail,
             status: account.account_type ? 'Active' : 'Active'
           });
+          if (!welcomeShown.current) {
+            welcomeShown.current = true;
+            addNotification({
+              title: `${getGreeting()}, ${account.user?.name || 'there'}!`,
+              message: 'Welcome back to your AI Smart Banking dashboard.',
+              type: 'info',
+              link: '/dashboard',
+            });
+          }
         }
       } catch (error) {
         console.error('Failed to load account details:', error);

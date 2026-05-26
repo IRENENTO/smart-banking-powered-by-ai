@@ -6,6 +6,8 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/Button';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import { useNotifications } from '../context/NotificationContext';
+import { getGreeting } from '../utils/notifications';
 
 const Login: React.FC = () => {
     const { t } = useTranslation();
@@ -17,6 +19,7 @@ const Login: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { theme, toggleTheme } = useTheme();
     const { error: toastError, info: toastInfo, success: toastSuccess, warning: toastWarning } = useToast();
+    const { addNotification } = useNotifications();
     const location = useLocation();
     const savedRoute = localStorage.getItem('saved_route');
     const returnPath = (location.state as any)?.from || savedRoute || '/dashboard';
@@ -34,6 +37,14 @@ const Login: React.FC = () => {
             localStorage.setItem('user', JSON.stringify(res.data.user));
             localStorage.removeItem('isAdmin');
             window.dispatchEvent(new Event('auth-change'));
+
+            const userName = res.data.user?.name || 'there';
+            addNotification({
+              title: `${getGreeting()}, ${userName}!`,
+              message: 'You have successfully signed in to your account.',
+              type: 'success',
+              link: '/dashboard',
+            });
             
             const user = res.data.user;
             if (!user.email_verified) {

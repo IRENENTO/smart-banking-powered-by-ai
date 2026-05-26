@@ -7,6 +7,7 @@ interface Notification {
   type: 'info' | 'success' | 'warning' | 'error';
   timestamp: Date;
   read?: boolean;
+  link?: string;
 }
 
 interface NotificationContextType {

@@ -18,6 +18,7 @@ import * as aiEngine from '../services/aiService';
 import { useBanking } from '../context/BankingContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
+import { useNotifications } from '../context/NotificationContext';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
 import { calculateSimpleInterest, calculateCompoundEMI, generateYearlyBreakdown, SimpleInterestResult, CompoundInterestResult } from '../utils/interestCalculations';
 
@@ -27,6 +28,7 @@ const Loans: React.FC = () => {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const toast = useToast();
+  const { addNotification } = useNotifications();
   const { balance, deposit, loading: bankingLoading, refresh: refreshBankData } = useBanking();
 
   const eligibilityState = location.state as { eligibleAmount?: number; monthlyIncome?: string; existingDebt?: string } | null;
@@ -325,6 +327,12 @@ const Loans: React.FC = () => {
           setDemoLoans(prev => [...prev, newLoan]);
           setLoans(prev => [...prev, newLoan]);
           toast.success(`Loan of RWF ${p.toLocaleString()} approved and disbursed!`);
+          addNotification({
+            title: 'Loan Approved',
+            message: `Your loan of RWF ${p.toLocaleString()} has been approved and disbursed to your account.`,
+            type: 'success',
+            link: '/loans',
+          });
           await refreshBankData();
           setAiPrediction(null);
         } catch {
@@ -387,6 +395,12 @@ const Loans: React.FC = () => {
         l.id === loanId ? { ...l, status: 'approved', progress: 5 } : l
       ));
       toast.success(`Loan approved! RWF ${loan.amount.toLocaleString()} added to balance`);
+      addNotification({
+        title: 'Loan Approved',
+        message: `Your loan of RWF ${loan.amount.toLocaleString()} for ${loan.purpose} has been approved and disbursed.`,
+        type: 'success',
+        link: '/loans',
+      });
       await refreshBankData();
     } catch (err) {
       toast.error('Failed to disburse loan. API may be offline.');
@@ -1135,6 +1149,12 @@ const Loans: React.FC = () => {
                                 setDemoLoans(prev => [...prev, newLoan]);
                                 setLoans(prev => [...prev, newLoan]);
                                 toast.success(`Loan of RWF ${p.toLocaleString()} approved and disbursed!`);
+                                addNotification({
+                                  title: 'Loan Approved',
+                                  message: `Your ${interestType === 'simple' ? 'Simple Interest' : 'Compound EMI'} loan of RWF ${p.toLocaleString()} for ${formData.purpose || 'personal use'} has been approved and disbursed.`,
+                                  type: 'success',
+                                  link: '/loans',
+                                });
                                 await refreshBankData();
                                 setApplyPrediction(null);
                                 setFormData({ amount: '', purpose: '', duration: '12', interestRate: '10', monthlyIncome: '', existingDebt: '', sector: 'Employee' });

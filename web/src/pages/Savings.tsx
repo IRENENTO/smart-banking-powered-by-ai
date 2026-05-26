@@ -10,6 +10,7 @@ import { Plus, Settings, DollarSign, TrendingUp, Brain, Target, Shield } from 'l
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { useNotifications } from '../context/NotificationContext';
 import { motion } from 'framer-motion';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, AreaChart, Area } from 'recharts';
 
@@ -25,6 +26,8 @@ const Savings: React.FC = () => {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
     const toast = useToast();
+    const { addNotification } = useNotifications();
+    const [notifiedCompletedGoals, setNotifiedCompletedGoals] = useState<Set<number>>(new Set());
 
     const [aiPrediction, setAiPrediction] = useState<any>(null);
     const [aiLoading, setAiLoading] = useState(true);
@@ -89,6 +92,21 @@ const Savings: React.FC = () => {
     };
 
     const progress = (goal: any) => Math.min(100, Math.round((toNum(goal.current_amount ?? goal.current) / toNum(goal.target_amount ?? goal.target)) * 100));
+
+    useEffect(() => {
+      goals.forEach(goal => {
+        const pct = progress(goal);
+        if (pct >= 100 && !notifiedCompletedGoals.has(goal.id)) {
+          setNotifiedCompletedGoals(prev => new Set(prev).add(goal.id));
+          addNotification({
+            title: 'Goal Completed!',
+            message: `Congratulations! You have fully funded your savings goal: "${goal.name}".`,
+            type: 'success',
+            link: '/savings',
+          });
+        }
+      });
+    }, [goals]);
 
     const handleGoalCreated = () => { fetchGoals(); };
 

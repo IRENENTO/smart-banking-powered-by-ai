@@ -1,6 +1,7 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, Check, CheckCheck, AlertCircle, Info, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Bell, X, Check, CheckCheck, AlertCircle, Info, AlertTriangle, CheckCircle, ExternalLink } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
 import { useTheme } from '../context/ThemeContext';
 
@@ -13,6 +14,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
   const { notifications, markAsRead, markAllAsRead, removeNotification, unreadCount } = useNotifications();
   const { theme } = useTheme();
   const darkMode = theme === 'dark';
+  const navigate = useNavigate();
 
   const getIcon = (type: string) => {
     switch (type) {
@@ -156,7 +158,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
                       cursor: 'pointer',
                       transition: 'background-color 0.15s ease'
                     }}
-                    onClick={() => markAsRead(notification.id)}
+                    onClick={() => {
+                      markAsRead(notification.id);
+                      if (notification.link) {
+                        navigate(notification.link);
+                        onClose();
+                      }
+                    }}
                   >
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
                       <div style={{ marginTop: '2px' }}>
