@@ -127,7 +127,17 @@ const Dashboard: React.FC = () => {
     const initialAccountType = localUser.accountType || 'Savings';
     const initialName = localUser.name || 'Your account';
     const initialEmail = localUser.email || '';
-
+// Add this useEffect to check authentication on mount
+useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = '/login';
+        return;
+    }
+    
+    // Load your dashboard data
+    loadDashboardData();
+}, []);
     const loadAccountDetails = async () => {
       try {
         const response = await accountService.getAccount();

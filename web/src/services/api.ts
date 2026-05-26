@@ -219,6 +219,28 @@ export const marketService = {
     getRiskAnalysis: () => api.get('/market/risk-analysis'),
     getFraudAlerts: () => api.get('/market/fraud-alerts'),
 };
+// Add this interceptor for better error handling
+api.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        if (error.response?.status === 404) {
+            console.warn('API endpoint not found:', error.config?.url);
+            // Don't redirect, just log
+            return Promise.reject(error);
+        }
+        if (error.response?.status === 401) {
+            // Only redirect to login if not already on login page
+            if (!window.location.pathname.includes('/login')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
 
 export const investmentService = {
     getInvestments: () => api.get('/investments'),

@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import './imigongo.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { NotificationProvider } from './context/NotificationContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -10,6 +11,15 @@ import ErrorBoundary from './components/ErrorBoundary';
 import RouteGuard from './components/RouteGuard';
 import AIChatbot from './components/AIChatbot';
 import AutoLogout from './components/AutoLogout';
+// Instead of BrowserRouter, use HashRouter
+import { HashRouter, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import NotFound from './pages/NotFound';
+
+// Add this route at the end of your Routes
+<Route path="*" element={<NotFound />} />
 
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -51,7 +61,61 @@ const MarketInsightsPage = lazy(() => import('./pages/MarketInsightsPage'));
 const CreditCards = lazy(() => import('./pages/CreditCards'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const SpendingAnalysisPage = lazy(() => import('./pages/SpendingAnalysisPage'));
+// Change this:
+// <BrowserRouter>
+// To this:
+<HashRouter>
+    {/* Your routes */}
+</HashRouter>
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const token = localStorage.getItem('token');
+    
+    if (!token) {
+        return <Navigate to="/login" replace />;
+    }
+    
+    return <>{children}</>;
+};
 
+const AppRoutes = () => {
+    const navigate = useNavigate();
+    
+    useEffect(() => {
+        // Handle initial load and refresh
+        const token = localStorage.getItem('token');
+         const currentPath = window.location.pathname;
+        
+        if (!token && currentPath !== '/login') {
+            navigate('/login');
+        }
+    }, [navigate]);
+    
+    return (
+        <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/" element={
+                <ProtectedRoute>
+                    <Dashboard />
+                </ProtectedRoute>
+                  } />
+            <Route path="/dashboard" element={
+                <ProtectedRoute>
+                    <Dashboard />
+                </ProtectedRoute>
+            } />
+            <Route path="*" element={<NotFound />} />
+        </Routes>
+    );
+};
+
+function App() {
+    return (
+          return (
+        <BrowserRouter>
+            <AppRoutes />
+        </BrowserRouter>
+    );
+}
 const App: React.FC = () => {
     return (
         <ThemeProvider>
