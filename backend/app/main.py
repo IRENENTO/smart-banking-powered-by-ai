@@ -1,0 +1,1 @@
+API_KEY = os.getenv("AI_ENGINE_API_KEY", "dev-key-change-in-production")

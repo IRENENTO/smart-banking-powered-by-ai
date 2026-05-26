@@ -1,30 +1,51 @@
 const axios = require('axios');
 const { AI_ENGINE_URL, AI_ENGINE_API_KEY } = require('../config/env');
 
-const AI_TIMEOUT = 10000;
+const AI_TIMEOUT = 30000; // Increased timeout for ML predictions
+
+// Log configuration on startup
+console.log(`[AI Service] Configuring AI Engine at: ${AI_ENGINE_URL}`);
+console.log(`[AI Service] API Key configured: ${AI_ENGINE_API_KEY ? '✅ Yes' : '❌ Missing'}`);
 
 const aiClient = axios.create({
     baseURL: AI_ENGINE_URL,
     timeout: AI_TIMEOUT,
     headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': AI_ENGINE_API_KEY,
+        'X-API-Key': AI_ENGINE_API_KEY || 'dev-key-change-in-production',
     }
 });
 
+// Add response interceptor for better error handling
+aiClient.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response) {
+            console.error(`[AI Engine] HTTP ${error.response.status}: ${error.response.data?.detail || error.message}`);
+        } else if (error.code === 'ECONNABORTED') {
+            console.error(`[AI Engine] Timeout after ${AI_TIMEOUT}ms`);
+        } else {
+            console.error(`[AI Engine] Connection error: ${error.message}`);
+        }
+        return Promise.reject(error);
+    }
+);
+
 const safeAICall = async (fn, fallback) => {
     try {
-        return await fn();
+        const result = await fn();
+        return result;
     } catch (err) {
         console.warn(`[AI Engine] Unavailable (${err.message}) — using fallback`);
         return fallback();
     }
 };
 
+// ==================== LOAN PREDICTION ====================
 exports.predictLoan = async (data) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/predict-loan', {
+            const { data: result } = await aiClient.post('/api/ai/predict-loan', {
                 income: data.income || data.monthlyIncome || 0,
                 expenses: data.expenses || data.monthlyExpenses || 0,
                 savings: data.savings || data.existingSavings || 0,
@@ -57,10 +78,11 @@ exports.predictLoan = async (data) => {
     );
 };
 
+// ==================== FRAUD DETECTION ====================
 exports.detectFraud = async (data) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/detect-fraud', {
+            const { data: result } = await aiClient.post('/api/ai/detect-fraud', {
                 amount: data.amount || 0,
                 location: data.location || 'unknown',
                 device: data.device || 'unknown',
@@ -97,10 +119,11 @@ exports.detectFraud = async (data) => {
     );
 };
 
+// ==================== SAVINGS PREDICTION ====================
 exports.predictSavings = async (data) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/predict-savings', {
+            const { data: result } = await aiClient.post('/api/ai/predict-savings', {
                 monthly_income: data.income || data.monthlyIncome || 0,
                 monthly_expenses: data.expenses || data.monthlyExpenses || 0,
                 existing_savings: data.savings || data.existingSavings || 0,
@@ -137,10 +160,11 @@ exports.predictSavings = async (data) => {
     );
 };
 
+// ==================== SPENDING ANALYSIS ====================
 exports.analyzeSpending = async (transactions, monthlyIncome) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/spending-analysis', {
+            const { data: result } = await aiClient.post('/api/ai/spending-analysis', {
                 transactions: (transactions || []).map(tx => ({
                     amount: tx.amount,
                     category: tx.category || 'other',
@@ -181,10 +205,11 @@ exports.analyzeSpending = async (transactions, monthlyIncome) => {
     );
 };
 
+// ==================== RECOMMENDATIONS ====================
 exports.getRecommendations = async (data) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/recommendations', {
+            const { data: result } = await aiClient.post('/api/ai/recommendations', {
                 monthly_income: data.income || data.monthlyIncome || 0,
                 monthly_expenses: data.expenses || data.monthlyExpenses || 0,
                 existing_savings: data.savings || data.existingSavings || 0,
@@ -231,10 +256,11 @@ exports.getRecommendations = async (data) => {
     );
 };
 
+// ==================== MODEL STATUS ====================
 exports.getModelStatus = async () => {
     return safeAICall(
         async () => {
-            const { data } = await aiClient.get('/model-status');
+            const { data } = await aiClient.get('/api/ai/model-status');
             return {
                 success: true,
                 models: data.models || data,
@@ -259,10 +285,11 @@ exports.getModelStatus = async () => {
     );
 };
 
+// ==================== RETRAIN MODEL ====================
 exports.retrainModel = async (modelName) => {
     return safeAICall(
         async () => {
-            const { data } = await aiClient.post('/retrain', {
+            const { data } = await aiClient.post('/api/ai/retrain', {
                 model: modelName || 'all'
             });
             return {
@@ -282,6 +309,27 @@ exports.retrainModel = async (modelName) => {
     );
 };
 
+// ==================== HEALTH CHECK ====================
+exports.getAIEngineHealth = async () => {
+    try {
+        const response = await aiClient.get('/');
+        return {
+            status: 'healthy',
+            service: response.data.service,
+            version: response.data.version,
+            endpoints: response.data.endpoints
+        };
+    } catch (error) {
+        console.error('AI Engine health check failed:', error.message);
+        return {
+            status: 'unhealthy',
+            error: error.message,
+            ai_powered: false
+        };
+    }
+};
+
+// ==================== ECONOMIC FORECAST ====================
 exports.getEconomicForecast = async () => {
     return safeAICall(
         async () => {
@@ -304,8 +352,7 @@ exports.getEconomicForecast = async () => {
     );
 };
 
-// ─── DEPRECATED ALIASES (backward compat) ──────────────────────────────────────
-
+// ==================== HELPER FUNCTIONS ====================
 const ruleBasedRisk = (data) => {
     let score = 50;
     const income = data.monthlyIncome || data.income || 0;
@@ -327,8 +374,10 @@ const ruleBasedRisk = (data) => {
     return Math.max(0, Math.min(100, score));
 };
 
+// ==================== DEPRECATED ALIASES (backward compat) ====================
 exports.analyzeLoanRisk = exports.predictLoan;
 exports.analyzeLoanRiskLegacy = exports.predictLoan;
+
 exports.generateInsightMessage = (transactionData, accountBalance) => {
     const messages = [];
     if (accountBalance > 50000) {
