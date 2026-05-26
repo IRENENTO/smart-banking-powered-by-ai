@@ -175,7 +175,7 @@ app.use(session({
         secure: process.env.NODE_ENV === 'production',
         httpOnly: true,
         maxAge: 1000 * 60 * 60 * 24, // 24 hours
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' for cross-origin
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     }
 }));
 
@@ -221,6 +221,82 @@ app.get('/api/cors-test', (req, res) => {
         origin: req.headers.origin,
         timestamp: new Date().toISOString()
     });
+});
+
+// ==================== AI ENGINE TEST ENDPOINTS (NO AUTH) ====================
+
+// Test AI Engine connection directly (no auth required)
+app.get('/api/ai-engine/status', async (req, res) => {
+    const { getAIEngineHealth } = require('./services/ai.service');
+    try {
+        const health = await getAIEngineHealth();
+        res.json({
+            success: true,
+            ai_engine: health,
+            config: {
+                url: process.env.AI_ENGINE_URL,
+                has_api_key: !!process.env.AI_ENGINE_API_KEY
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message,
+            ai_engine_url: process.env.AI_ENGINE_URL
+        });
+    }
+});
+
+// Simple AI Engine connection test (direct HTTP)
+app.get('/api/test-ai-connection', async (req, res) => {
+    const axios = require('axios');
+    
+    const AI_URL = process.env.AI_ENGINE_URL || 'https://smart-banking-ai-engine1.onrender.com';
+    const AI_KEY = process.env.AI_ENGINE_API_KEY || 'smart-banking-ai-key-2024';
+    
+    console.log(`Testing AI Engine connection to: ${AI_URL}`);
+    
+    try {
+        const response = await axios.get(`${AI_URL}/api/ai/model-status`, {
+            headers: {
+                'X-API-Key': AI_KEY
+            },
+            timeout: 10000
+        });
+        
+        res.json({
+            success: true,
+            message: '✅ AI Engine is connected and responding!',
+            ai_engine_status: response.data,
+            config: {
+                url: AI_URL,
+                has_api_key: !!AI_KEY,
+                api_key_preview: AI_KEY ? AI_KEY.substring(0, 10) + '...' : 'none'
+            }
+        });
+    } catch (error) {
+        console.error('AI Engine test failed:', error.message);
+        res.status(500).json({
+            success: false,
+            message: '❌ AI Engine connection failed',
+            error: error.message,
+            config: {
+                url: AI_URL,
+                has_api_key: !!AI_KEY
+            }
+        });
+    }
+});
+
+// Test prediction without auth (for debugging)
+app.post('/api/ai-engine/test-prediction', async (req, res) => {
+    const { predictLoan } = require('./services/ai.service');
+    try {
+        const result = await predictLoan(req.body);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // ==================== HEALTH CHECK ENDPOINT ====================
@@ -302,6 +378,8 @@ app.get('/', (req, res) => {
             health: '/api/health',
             health_detailed: '/api/health/detailed',
             cors_test: '/api/cors-test',
+            test_ai: '/api/test-ai-connection',
+            ai_status: '/api/ai-engine/status',
             auth: '/api/auth',
             public: '/api/public',
             profile: '/api/profile',
@@ -334,6 +412,7 @@ if (require.main === module) {
         logger.info(`📝 API Documentation: http://localhost:${PORT}/api-docs`);
         logger.info(`🏥 Health Check: http://localhost:${PORT}/api/health`);
         logger.info(`🔍 Detailed Health: http://localhost:${PORT}/api/health/detailed`);
+        logger.info(`🤖 AI Test: http://localhost:${PORT}/api/test-ai-connection`);
         logger.info(`🔒 Database: TiDB Cloud (SSL enabled)`);
         logger.info(`💾 Session Store: MySQL (TiDB Cloud)`);
         logger.info(`🌐 CORS enabled for Netlify and localhost`);
