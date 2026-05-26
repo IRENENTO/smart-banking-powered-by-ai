@@ -18,22 +18,32 @@ const AICharts: React.FC = () => {
     const loadAIData = async () => {
         setLoading(true);
         
-        // Get model status
-        const status = await getModelStatus();
-        setModelStatus(status);
-        
-        // Analyze spending
-        if (transactions && transactions.length > 0) {
-            const analysis = await analyzeSpending(transactions, 5000);
-            setSpendingData(analysis);
+        try {
+            // Get model status
+            const status = await getModelStatus();
+            setModelStatus(status);
+            
+            // Analyze spending
+            if (transactions && transactions.length > 0) {
+                const analysis = await analyzeSpending(transactions, 5000);
+                setSpendingData(analysis);
+            }
+        } catch (error) {
+            console.error('Error loading AI data:', error);
+        } finally {
+            setLoading(false);
         }
-        
-        setLoading(false);
     };
 
     if (loading) {
         return <div className="p-8 text-center">Loading AI insights...</div>;
     }
+
+    // Custom label renderer to handle undefined percent
+    const renderCustomLabel = ({ name, percent }: { name?: string; percent?: number }) => {
+        if (percent === undefined) return name;
+        return `${name ?? ''}: ${(percent * 100).toFixed(0)}%`;
+    };
 
     return (
         <div className="ai-charts-container" style={{ padding: '20px' }}>
@@ -74,16 +84,17 @@ const AICharts: React.FC = () => {
                                 cx="50%"
                                 cy="50%"
                                 labelLine={false}
-                                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                                label={renderCustomLabel}
                                 outerRadius={150}
                                 fill="#8884d8"
                                 dataKey="value"
+                                nameKey="name"
                             >
                                 {spendingData.category_breakdown.map((entry: any, index: number) => (
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                 ))}
                             </Pie>
-                            <Tooltip formatter={(value) => `RWF ${value?.toLocaleString()}`} />
+                            <Tooltip formatter={(value: any) => `RWF ${value?.toLocaleString()}`} />
                             <Legend />
                         </PieChart>
                     </ResponsiveContainer>
@@ -113,17 +124,30 @@ const AICharts: React.FC = () => {
                 }}>
                     <h3 style={{ marginBottom: '16px' }}>Spending Trend</h3>
                     <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={transactions.slice(0, 30).map(t => ({
+                        <LineChart data={transactions.slice(0, 30).map((t: any) => ({
                             date: new Date(t.created_at).toLocaleDateString(),
                             amount: t.amount
                         }))}>
                             <CartesianGrid strokeDasharray="3 3" />
                             <XAxis dataKey="date" />
                             <YAxis />
-                            <Tooltip formatter={(value) => `RWF ${value?.toLocaleString()}`} />
+                            <Tooltip formatter={(value: any) => `RWF ${value?.toLocaleString()}`} />
                             <Line type="monotone" dataKey="amount" stroke="#0A9396" name="Spending" />
                         </LineChart>
                     </ResponsiveContainer>
+                </div>
+            )}
+            
+            {/* No Data Message */}
+            {(!spendingData?.category_breakdown || spendingData.category_breakdown.length === 0) && (
+                <div style={{ 
+                    textAlign: 'center', 
+                    padding: '40px',
+                    background: '#f8f9fa',
+                    borderRadius: '12px'
+                }}>
+                    <p>No transaction data available for AI analysis.</p>
+                    <p>Make some transactions to see AI-powered insights!</p>
                 </div>
             )}
         </div>

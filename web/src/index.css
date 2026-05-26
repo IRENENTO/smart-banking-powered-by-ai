@@ -351,6 +351,136 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+/* ── Mobile hamburger menu ──────────────────────────────── */
+.navbar-desktop-links {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.navbar-hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.08);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.navbar-hamburger:hover {
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(10,147,150,0.4);
+}
+
+.navbar-mobile-panel-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.navbar-mobile-panel-wrapper.open {
+  pointer-events: auto;
+}
+
+.navbar-mobile-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.navbar-mobile-panel-wrapper.open .navbar-mobile-backdrop {
+  opacity: 1;
+}
+
+.navbar-mobile-panel-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #0B1F3A;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding: 16px 20px;
+  transform: translateY(-100%);
+  transition: transform 0.3s ease;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.navbar-mobile-panel-wrapper.open .navbar-mobile-panel-content {
+  transform: translateY(0);
+}
+
+.navbar-mobile-link-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.navbar-mobile-link-item:hover {
+  background: rgba(255,255,255,0.08);
+  color: white;
+}
+
+.navbar-mobile-link-item.active {
+  background: rgba(10,147,150,0.15);
+  color: #2dcece;
+}
+
+@media (max-width: 920px) {
+  .navbar-desktop-links {
+    display: none;
+  }
+  .navbar-hamburger {
+    display: flex;
+  }
+}
+
+/* ── Responsive loan page helpers ──────────────────────────── */
+@media (max-width: 640px) {
+  .loan-tabs-wrapper {
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 8px;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .loan-tabs-wrapper::-webkit-scrollbar {
+    display: none;
+  }
+  .loan-grid-2cols {
+    grid-template-columns: 1fr !important;
+  }
+  .loan-grid-400 {
+    grid-template-columns: 1fr !important;
+  }
+  .loan-stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .loan-banner {
+    padding: 20px 16px !important;
+  }
+  .loan-section-title {
+    font-size: 18px !important;
+  }
+}
+
 /* ── Hide number input spinners ──────────────────────────── */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
-import { Moon, Sun, Bell, User, Settings, LogOut, CreditCard, LogIn, UserPlus } from 'lucide-react';
+import { Moon, Sun, Bell, User, Settings, LogOut, CreditCard, LogIn, UserPlus, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationDropdown from './NotificationDropdown';
 import LanguageToggle from './LanguageToggle';
@@ -11,12 +12,14 @@ import { useTheme } from '../context/ThemeContext';
 const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
     const { unreadCount } = useNotifications();
     const { t } = useLanguage();
     const { theme, toggleTheme } = useTheme();
     const darkMode = theme === 'dark';
     const isAuthenticated = authenticated || !!localStorage.getItem('token');
+    const location = useLocation();
 
     const parseJSON = (value: string | null) => {
         if (!value || value === 'undefined' || value === 'null') return null;
@@ -39,6 +42,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
     }, []);
 
     return (
+        <>
         <motion.nav 
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -106,8 +110,8 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                 initial={{ x: 50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
-                className="navbar-links"
-                style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 4 }}
+                className="navbar-desktop-links"
+                style={{ alignItems: 'center', gap: 6 }}
             >
                 {[
                     { to: '/dashboard', label: t('nav.dashboard') },
@@ -158,6 +162,15 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                         </Link>
                     </motion.div>
                 ))}
+
+                {/* Hamburger Menu Button */}
+                <button
+                    className="navbar-hamburger"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    title="Toggle menu"
+                >
+                    {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
 
                 {/* Dark Mode Toggle */}
                 <motion.button
@@ -523,6 +536,106 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                 </div>
             </motion.div>
         </motion.nav>
+
+            {/* Mobile Menu Panel */}
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            onClick={() => setMobileMenuOpen(false)}
+                            style={{
+                                position: 'fixed',
+                                inset: 0,
+                                background: 'rgba(0,0,0,0.5)',
+                                zIndex: 999,
+                            }}
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.25, ease: 'easeOut' }}
+                            style={{
+                                position: 'fixed',
+                                top: '72px',
+                                left: '12px',
+                                right: '12px',
+                                zIndex: 1000,
+                                borderRadius: 18,
+                                border: `1px solid ${darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.2)'}`,
+                                background: darkMode
+                                    ? 'linear-gradient(135deg, rgba(26,32,44,0.96), rgba(45,55,72,0.96))'
+                                    : 'linear-gradient(135deg, rgba(11,31,58,0.96), rgba(10,147,150,0.15))',
+                                backdropFilter: 'blur(20px)',
+                                WebkitBackdropFilter: 'blur(20px)',
+                                padding: '12px',
+                                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <div style={{ display: 'grid', gap: '6px' }}>
+                                {[
+                                    { to: '/dashboard', label: t('nav.dashboard') },
+                                    { to: '/transactions', label: t('nav.transactions') },
+                                    { to: '/payments', label: t('nav.payments') },
+                                    { to: '/savings', label: t('nav.savings') },
+                                    { to: '/loans', label: t('nav.loans') },
+                                    { to: '/ai-insights', label: t('nav.aiInsights') },
+                                    { to: '/market-insights', label: t('nav.marketInsights') }
+                                ].map((item, index) => {
+                                    const isActive = location.pathname === item.to || location.pathname.startsWith(item.to + '/');
+                                    return (
+                                        <motion.div
+                                            key={item.to}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: 0.03 * index }}
+                                        >
+                                            <Link
+                                                to={item.to}
+                                                onClick={() => setMobileMenuOpen(false)}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    gap: 10,
+                                                    padding: '12px 14px',
+                                                    borderRadius: 14,
+                                                    border: `1px solid ${isActive ? 'rgba(10,147,150,0.45)' : 'rgba(255,255,255,0.08)'}`,
+                                                    background: isActive ? 'rgba(10,147,150,0.16)' : 'rgba(255,255,255,0.03)',
+                                                    color: isActive ? '#2dcece' : 'rgba(255,255,255,0.85)',
+                                                    textDecoration: 'none',
+                                                    fontSize: 15,
+                                                    fontWeight: isActive ? 600 : 500,
+                                                    transition: 'all 0.2s',
+                                                }}
+                                            >
+                                                <span>{item.label}</span>
+                                                {isActive && (
+                                                    <motion.div
+                                                        layoutId="mobile-active-dot"
+                                                        style={{
+                                                            width: 8,
+                                                            height: 8,
+                                                            borderRadius: '50%',
+                                                            background: '#0A9396',
+                                                        }}
+                                                    />
+                                                )}
+                                            </Link>
+                                        </motion.div>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
+    </>
     );
 };
 

@@ -19,7 +19,7 @@ import { useBanking } from '../context/BankingContext';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../context/ToastContext';
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
-import { calculateSimpleInterest, calculateCompoundEMI, generateYearlyBreakdown } from '../utils/interestCalculations';
+import { calculateSimpleInterest, calculateCompoundEMI, generateYearlyBreakdown, SimpleInterestResult, CompoundInterestResult } from '../utils/interestCalculations';
 
 const Loans: React.FC = () => {
   const navigate = useNavigate();
@@ -40,6 +40,8 @@ const Loans: React.FC = () => {
   const [aiPrediction, setAiPrediction] = useState<any>(null);
   const [predicting, setPredicting] = useState(false);
   const [predictionForm, setPredictionForm] = useState({ income: 300000, expenses: 150000, amount: 1000000, credit_score: 650, duration: 12, interestRate: 10 });
+
+  const [interestType, setInterestType] = useState<'simple' | 'compound' | null>(null);
 
   const [formData, setFormData] = useState({
     amount: '',
@@ -789,8 +791,146 @@ const Loans: React.FC = () => {
           )}
 
           {activeTab === 'apply' && (
-            <div style={{ display: 'grid', gap: 24, gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
-              <SectionCard title="Apply for a Loan">
+            <>
+              {!interestType ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                >
+                  <div style={{ textAlign: 'center', marginBottom: 32 }}>
+                    <h2 style={{ color: textColor, margin: '0 0 8px' }}>Choose Your Interest Plan</h2>
+                    <p style={{ color: mutedColor, margin: 0, fontSize: 15 }}>
+                      Select how your loan interest will be calculated
+                    </p>
+                  </div>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: 20,
+                    maxWidth: 700,
+                    margin: '0 auto',
+                  }}>
+                    <motion.div
+                      whileHover={{ scale: 1.02, y: -4 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setInterestType('simple')}
+                      style={{
+                        padding: 32,
+                        borderRadius: 20,
+                        background: cardBg,
+                        border: `2px solid ${borderColor}`,
+                        backdropFilter: 'blur(10px)',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.3s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#0A9396'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(10,147,150,0.2)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = borderColor; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{
+                        width: 60, height: 60, borderRadius: 16,
+                        background: 'linear-gradient(135deg, #0A9396, #4ECDC4)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 16px',
+                      }}>
+                        <Calculator size={28} color="white" />
+                      </div>
+                      <h3 style={{ color: textColor, margin: '0 0 8px', fontSize: 20 }}>Simple Interest</h3>
+                      <p style={{ color: mutedColor, margin: '0 0 16px', fontSize: 14, lineHeight: 1.6 }}>
+                        Interest calculated only on the principal amount. Predictable and easy to understand.
+                      </p>
+                      <div style={{
+                        display: 'grid', gap: 8, textAlign: 'left',
+                        background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                        padding: 16, borderRadius: 12,
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: mutedColor }}>
+                          <span>Monthly Payment</span>
+                          <span style={{ fontWeight: 700, color: textColor }}>Fixed</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: mutedColor }}>
+                          <span>Total Interest</span>
+                          <span style={{ fontWeight: 700, color: '#0A9396' }}>Lower</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: mutedColor }}>
+                          <span>Best For</span>
+                          <span style={{ fontWeight: 700, color: textColor }}>Short-term loans</span>
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    <motion.div
+                      whileHover={{ scale: 1.02, y: -4 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setInterestType('compound')}
+                      style={{
+                        padding: 32,
+                        borderRadius: 20,
+                        background: cardBg,
+                        border: `2px solid ${borderColor}`,
+                        backdropFilter: 'blur(10px)',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.3s',
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = '#8b5cf6'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(139,92,246,0.2)'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = borderColor; e.currentTarget.style.boxShadow = 'none'; }}
+                    >
+                      <div style={{
+                        width: 60, height: 60, borderRadius: 16,
+                        background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        margin: '0 auto 16px',
+                      }}>
+                        <TrendingUp size={28} color="white" />
+                      </div>
+                      <h3 style={{ color: textColor, margin: '0 0 8px', fontSize: 20 }}>Compound Interest (EMI)</h3>
+                      <p style={{ color: mutedColor, margin: '0 0 16px', fontSize: 14, lineHeight: 1.6 }}>
+                        Standard EMI with interest on interest. Common for longer-term loans.
+                      </p>
+                      <div style={{
+                        display: 'grid', gap: 8, textAlign: 'left',
+                        background: isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                        padding: 16, borderRadius: 12,
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: mutedColor }}>
+                          <span>Monthly Payment</span>
+                          <span style={{ fontWeight: 700, color: textColor }}>Fixed EMI</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: mutedColor }}>
+                          <span>Total Interest</span>
+                          <span style={{ fontWeight: 700, color: '#8b5cf6' }}>Standard</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: mutedColor }}>
+                          <span>Best For</span>
+                          <span style={{ fontWeight: 700, color: textColor }}>Long-term loans</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                </motion.div>
+              ) : (
+              <div style={{ display: 'grid', gap: 24, gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
+              <SectionCard title={`Apply for a Loan (${interestType === 'simple' ? 'Simple Interest' : 'Compound EMI'})`}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <span style={{
+                    padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600,
+                    background: interestType === 'simple' ? 'rgba(10,147,150,0.15)' : 'rgba(139,92,246,0.15)',
+                    color: interestType === 'simple' ? '#0A9396' : '#8b5cf6',
+                  }}>
+                    {interestType === 'simple' ? 'Simple Interest' : 'Compound EMI'}
+                  </span>
+                  <button
+                    onClick={() => { setInterestType(null); setApplyPrediction(null); }}
+                    style={{
+                      padding: '6px 12px', borderRadius: 8, border: `1px solid ${borderColor}`,
+                      background: 'transparent', cursor: 'pointer', color: mutedColor,
+                      fontSize: 12, fontWeight: 500,
+                    }}
+                  >
+                    Change
+                  </button>
+                </div>
                 <div style={{ display: 'grid', gap: 16, marginTop: 8 }}>
                     <div>
                       <label style={labelStyle}>Loan Amount (RWF)</label>
@@ -961,7 +1101,10 @@ const Loans: React.FC = () => {
                         const p = Number(formData.amount);
                         const r = Number(formData.interestRate) || 10;
                         const n = Number(formData.duration) || 12;
+                        const simple = calculateSimpleInterest(p, r, n);
                         const compound = calculateCompoundEMI(p, r, n);
+                        const calc = interestType === 'simple' ? simple : compound;
+                        const monthlyLabel = interestType === 'simple' ? 'monthly (fixed)' : 'EMI';
                         return (
                         <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 10 }}>
                           <button
@@ -974,10 +1117,16 @@ const Loans: React.FC = () => {
                                 status: 'approved',
                                 risk_score: applyPrediction?.risk_score || 30,
                                 created_at: new Date().toISOString(),
-                                monthly_payment: Math.round(p / n * 1.1),
+                                monthly_payment: interestType === 'simple'
+                                  ? calculateSimpleInterest(p, r, n).monthlyPayment
+                                  : calculateCompoundEMI(p, r, n).emi,
                                 interest_rate: r, progress: 0,
+                                interest_type: interestType,
                                 aiDecision: { riskScore: applyPrediction?.risk_score || 30, confidence: 'Auto-approved', explanation: applyPrediction?.insight || 'AI approved your loan.' },
-                                paid_amount: 0, total_amount: compound.totalAmount, paid_percentage: 0,
+                                paid_amount: 0, total_amount: interestType === 'simple'
+                                  ? calculateSimpleInterest(p, r, n).totalAmount
+                                  : calculateCompoundEMI(p, r, n).totalAmount,
+                                paid_percentage: 0,
                                 due_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
                                 next_deduction_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
                               };
@@ -1007,10 +1156,10 @@ const Loans: React.FC = () => {
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: 6, borderTop: '1px solid rgba(255,255,255,0.15)' }}>
                               <span style={{ fontSize: 13, fontWeight: 600, opacity: 0.85 }}>Total you repay</span>
-                              <span style={{ fontWeight: 800, fontSize: 20 }}>RWF {compound.totalAmount.toLocaleString()}</span>
+                              <span style={{ fontWeight: 800, fontSize: 20 }}>RWF {calc.totalAmount.toLocaleString()}</span>
                             </div>
                             <div style={{ marginTop: 6, fontSize: 11, opacity: 0.7, textAlign: 'center' }}>
-                              {n} monthly payments × RWF {compound.emi.toLocaleString()} at {r}% p.a.
+                              {n} monthly payments × RWF {(interestType === 'simple' ? (calc as SimpleInterestResult).monthlyPayment : (calc as CompoundInterestResult).emi).toLocaleString()} at {r}% p.a. ({interestType === 'simple' ? 'Simple Interest' : 'Compound EMI'})
                             </div>
                           </button>
                           <div style={{ display: 'flex', gap: 10 }}>
@@ -1061,6 +1210,8 @@ const Loans: React.FC = () => {
               </div>
             </div>
           )}
+          </>
+        )}
 
           {activeTab === 'history' && (
             <div>
@@ -1107,6 +1258,15 @@ const Loans: React.FC = () => {
                           <div style={{ flex: 1, minWidth: 200 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
                               <h3 style={{ margin: 0, fontSize: 16, color: textColor }}>{loan.purpose || 'Loan'}</h3>
+                              {loan.interest_type && (
+                                <span style={{
+                                  padding: '3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 700,
+                                  background: loan.interest_type === 'simple' ? 'rgba(10,147,150,0.15)' : 'rgba(139,92,246,0.15)',
+                                  color: loan.interest_type === 'simple' ? '#0A9396' : '#8b5cf6',
+                                }}>
+                                  {loan.interest_type === 'simple' ? 'Simple' : 'Compound'}
+                                </span>
+                              )}
                               <span style={{
                                 padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700,
                                 background: status.bg, color: status.color,

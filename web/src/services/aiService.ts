@@ -33,6 +33,10 @@ export interface FraudDetectionResponse {
     fraud_risk: 'LOW' | 'MEDIUM' | 'HIGH';
     risk_percentage: number;
     is_anomaly: boolean;
+    is_fraudulent?: boolean;
+    risk_level?: string;
+    reason?: string;
+    location?: string;
     action_required: boolean;
     risk_flags: string[];
     ai_powered: boolean;
@@ -77,6 +81,7 @@ export interface RecommendationResponse {
     budgeting_advice: string[];
     sector_recommendations: Array<{ sector_name: string; expected_return: string; risk_level: string }>;
     priority_actions: string[];
+    total_predictions?: number;
     ai_powered: boolean;
 }
 
@@ -89,6 +94,8 @@ export interface SpendingAnalysisResponse {
     top_spending_category: string;
     spending_insights: string[];
     recommendations: string[];
+    insight?: string;
+    summary?: string;
     ai_powered: boolean;
 }
 
