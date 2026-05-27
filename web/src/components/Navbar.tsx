@@ -177,51 +177,6 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
 
             {/* Right-side Actions (always visible) */}
             <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {/* Dark Mode Toggle */}
-                <motion.button
-                    whileHover={{ scale: 1.1, rotate: 180 }}
-                    whileTap={{ scale: 0.9 }}
-                    onClick={toggleTheme}
-                    style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        color: 'white',
-                        cursor: 'pointer',
-                        padding: '10px',
-                        borderRadius: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backdropFilter: 'blur(10px)',
-                        transition: 'all 0.3s ease'
-                    }}
-                    title={darkMode ? t('nav.lightMode') : t('nav.darkMode')}
-                >
-                    <AnimatePresence mode="wait">
-                        {darkMode ? (
-                            <motion.div
-                                key="sun"
-                                initial={{ rotate: -180, opacity: 0 }}
-                                animate={{ rotate: 0, opacity: 1 }}
-                                exit={{ rotate: 180, opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <Sun size={20} />
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="moon"
-                                initial={{ rotate: -180, opacity: 0 }}
-                                animate={{ rotate: 0, opacity: 1 }}
-                                exit={{ rotate: 180, opacity: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <Moon size={20} />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </motion.button>
-
                 {/* Notifications */}
                 <div style={{ position: 'relative' }}>
                     <motion.button
@@ -326,9 +281,9 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                                     transition={{ duration: 0.2 }}
                                     style={{
-                                        position: 'fixed',
-                                        top: '72px',
-                                        right: '24px',
+                                        position: 'absolute',
+                                        top: 'calc(100% + 8px)',
+                                        right: '0',
                                         background: darkMode 
                                             ? 'linear-gradient(135deg, rgba(45, 55, 72, 0.95), rgba(26, 32, 44, 0.95))'
                                             : 'linear-gradient(135deg, rgba(26, 32, 44, 0.95), rgba(11, 31, 58, 0.95))',

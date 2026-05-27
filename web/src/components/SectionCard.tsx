@@ -52,7 +52,7 @@ const SectionCard: React.FC<SectionCardProps> = ({
                 backdropFilter: 'blur(20px)',
                 WebkitBackdropFilter: 'blur(20px)',
                 border: style?.border ?? defaultBorder,
-                padding: 28,
+                padding: 'clamp(20px, 3vw, 28px)',
                 borderRadius: 20,
                 boxShadow: style?.boxShadow ?? defaultBoxShadow,
                 position: 'relative',

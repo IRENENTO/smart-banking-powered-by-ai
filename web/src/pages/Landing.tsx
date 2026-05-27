@@ -202,10 +202,10 @@ const Landing: React.FC = () => {
                         viewport={{ once: true }}
                         style={{ textAlign: 'center', marginBottom: 60 }}
                     >
-                        <h2 style={{ fontSize: '36px', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                        <h2 style={{ fontSize: 'clamp(24px, 4vw, 36px)', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                             Why Choose AI Smart Banking?
                         </h2>
-                        <p style={{ color: darkMode ? '#cfeff5' : '#475569', fontSize: '18px', marginTop: 16 }}>
+                        <p style={{ color: darkMode ? '#cfeff5' : '#475569', fontSize: 'clamp(15px, 2vw, 18px)', marginTop: 16 }}>
                             Experience the future of banking with our innovative features
                         </p>
                     </motion.div>
@@ -217,13 +217,13 @@ const Landing: React.FC = () => {
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 transition={{ duration: 0.6, ease: 'easeOut' }}
                                 whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(15, 23, 42, 0.15)' }}
-                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 28, borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
                             >
                                 <motion.div whileHover={{ scale: 1.1, rotate: 5 }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                                     <Shield size={48} style={{ color: '#0A9396' }} />
                                 </motion.div>
-                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>Smart Accounts</h3>
-                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 14, lineHeight: 1.5, textAlign: 'center' }}>Manage your checking and savings with guaranteed clarity and AI-powered insights.</p>
+                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>Smart Accounts</h3>
+                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Manage your checking and savings with guaranteed clarity and AI-powered insights.</p>
                             </motion.div>
                         </Link>
                         <Link to={isAuthenticated ? "/payments" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
@@ -232,13 +232,13 @@ const Landing: React.FC = () => {
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 transition={{ duration: 0.6, ease: 'easeOut' }}
                                 whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(15, 23, 42, 0.15)' }}
-                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 28, borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
                             >
                                 <motion.div whileHover={{ scale: 1.1 }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                                     <Zap size={48} style={{ color: '#F4A261' }} />
                                 </motion.div>
-                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>Instant Payments</h3>
-                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 14, lineHeight: 1.5, textAlign: 'center' }}>Fast transfers, mobile money, and scheduled payments from one beautiful dashboard.</p>
+                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>Instant Payments</h3>
+                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Fast transfers, mobile money, and scheduled payments from one beautiful dashboard.</p>
                             </motion.div>
                         </Link>
                         <Link to={isAuthenticated ? "/ai-insights" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
@@ -247,13 +247,13 @@ const Landing: React.FC = () => {
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 transition={{ duration: 0.6, ease: 'easeOut' }}
                                 whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(15, 23, 42, 0.15)' }}
-                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 28, borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
                             >
                                 <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 4, repeat: Infinity }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                                     <Star size={48} style={{ color: '#0A9396' }} />
                                 </motion.div>
-                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>AI Insights</h3>
-                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 14, lineHeight: 1.5, textAlign: 'center' }}>Get intelligent spending guidance and personalised financial alerts that learn from you.</p>
+                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>AI Insights</h3>
+                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Get intelligent spending guidance and personalised financial alerts that learn from you.</p>
                             </motion.div>
                         </Link>
                     </div>
@@ -264,7 +264,7 @@ const Landing: React.FC = () => {
                         whileInView={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.4 }}
                         viewport={{ once: true }}
-                        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 20, marginBottom: 60 }}
+                        style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 'clamp(16px, 2vw, 20px)', marginBottom: 60 }}
                     >
                         <Link to={isAuthenticated ? "/dashboard" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                             <SectionCard 
@@ -341,20 +341,20 @@ const Landing: React.FC = () => {
                         </SectionCard>
                     </motion.div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.4fr .9fr', gap: 24, alignItems: 'stretch' }}>
+                    <div className="ai-benefits-grid">
                         <motion.div
                             initial={{ opacity: 0, x: -50 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.6 }}
                             viewport={{ once: true }}
-                            style={{ 
-                                background: 'linear-gradient(135deg, #0B1F3A, #0A9396)', 
-                                padding: 40, 
-                                borderRadius: 24, 
-                                color: 'white',
-                                position: 'relative',
-                                overflow: 'hidden'
-                            }}
+                                style={{ 
+                                    background: 'linear-gradient(135deg, #0B1F3A, #0A9396)', 
+                                    padding: 'clamp(24px, 4vw, 40px)', 
+                                    borderRadius: 24, 
+                                    color: 'white',
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                }}
                         >
                             {/* Animated background pattern */}
                             <motion.div
@@ -372,7 +372,7 @@ const Landing: React.FC = () => {
                             />
                             
                             <motion.h2 
-                                style={{ fontSize: '28px', margin: 0, position: 'relative', zIndex: 1 }}
+                                style={{ fontSize: 'clamp(22px, 3.5vw, 28px)', margin: 0, position: 'relative', zIndex: 1 }}
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.7 }}
@@ -381,7 +381,7 @@ const Landing: React.FC = () => {
                                 🤖 AI-powered benefits
                             </motion.h2>
                             <motion.p 
-                                style={{ marginTop: 20, lineHeight: 1.75, color: '#cfeff5', fontSize: '16px', position: 'relative', zIndex: 1 }}
+                                style={{ marginTop: 20, lineHeight: 1.75, color: '#cfeff5', fontSize: 'clamp(14px, 1.8vw, 16px)', position: 'relative', zIndex: 1 }}
                                 initial={{ opacity: 0 }}
                                 whileInView={{ opacity: 1 }}
                                 transition={{ delay: 0.8 }}
@@ -389,7 +389,7 @@ const Landing: React.FC = () => {
                             >
                                 Use AI to uncover better saving opportunities, protect your money, and make smarter decisions with every transaction.
                             </motion.p>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 16, marginTop: 32, position: 'relative', zIndex: 1 }}>
+                            <div className="ai-benefit-cards">
                                 {[
                                     { icon: '⚡', title: 'Real-time alerts', desc: 'Stay ahead of suspicious activity and payment due dates.' },
                                     { icon: '📊', title: 'Smarter budgeting', desc: 'Understand how spending impacts your goals instantly.' },
@@ -431,16 +431,16 @@ const Landing: React.FC = () => {
                                 whileHover={{ scale: 1.02, y: -4 }}
                                 style={{ 
                                     background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9))', 
-                                    padding: 28, 
+                                    padding: 'clamp(20px, 3vw, 28px)', 
                                     borderRadius: 20, 
                                     boxShadow: '0 20px 40px rgba(15, 23, 42, 0.1)',
                                     backdropFilter: 'blur(20px)',
                                     border: '1px solid rgba(255,255,255,0.5)'
                                 }}
                             >
-                                <h3 style={{ fontSize: '20px', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>💡 Financial Insight</h3>
-                                <p style={{ color: '#475569', marginTop: 12, lineHeight: 1.5 }}>Your latest spending snapshot with AI guidance.</p>
-                                <div style={{ marginTop: 24, display: 'grid', gap: 16 }}>
+                                <h3 style={{ fontSize: 'clamp(17px, 2.5vw, 20px)', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>💡 Financial Insight</h3>
+                                <p style={{ color: '#475569', marginTop: 12, lineHeight: 1.5, fontSize: 'clamp(13px, 1.5vw, 15px)' }}>Your latest spending snapshot with AI guidance.</p>
+                                <div style={{ marginTop: 'clamp(16px, 2vw, 24px)', display: 'grid', gap: 16 }}>
                                     {[
                                         { title: '🚨 Spending alert', subtitle: 'You are spending too much on transport.', type: 'warning' },
                                         { title: '💰 Loan prediction', subtitle: 'You can borrow up to 500,000 RWF.', type: 'success' }
@@ -453,7 +453,7 @@ const Landing: React.FC = () => {
                                             viewport={{ once: true }}
                                             whileHover={{ scale: 1.02, x: 8 }}
                                             style={{ 
-                                                padding: 16, 
+                                                padding: 'clamp(12px, 1.5vw, 16px)', 
                                                 background: insight.type === 'warning' ? '#fef2f2' : '#f0fdf4', 
                                                 borderRadius: 16,
                                                 border: `1px solid ${insight.type === 'warning' ? '#fecaca' : '#bbf7d0'}`,
@@ -461,10 +461,10 @@ const Landing: React.FC = () => {
                                                 transition: 'all 0.3s ease'
                                             }}
                                         >
-                                            <div style={{ fontWeight: 600, fontSize: '14px', color: insight.type === 'warning' ? '#dc2626' : '#059669' }}>
+                                            <div style={{ fontWeight: 600, fontSize: 'clamp(13px, 1.5vw, 14px)', color: insight.type === 'warning' ? '#dc2626' : '#059669' }}>
                                                 {insight.title}
                                             </div>
-                                            <div style={{ marginTop: 6, color: '#64748b', fontSize: '12px' }}>{insight.subtitle}</div>
+                                            <div style={{ marginTop: 6, color: '#64748b', fontSize: 'clamp(11px, 1.3vw, 12px)' }}>{insight.subtitle}</div>
                                         </motion.div>
                                     ))}
                                 </div>
@@ -474,15 +474,15 @@ const Landing: React.FC = () => {
                                 whileHover={{ scale: 1.02, y: -4 }}
                                 style={{ 
                                     background: 'linear-gradient(135deg, rgba(255,255,255,0.9), rgba(248,250,252,0.9))', 
-                                    padding: 28, 
+                                    padding: 'clamp(20px, 3vw, 28px)', 
                                     borderRadius: 20, 
                                     boxShadow: '0 20px 40px rgba(15, 23, 42, 0.1)',
                                     backdropFilter: 'blur(20px)',
                                     border: '1px solid rgba(255,255,255,0.5)'
                                 }}
                             >
-                                <h3 style={{ fontSize: '20px', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>💳 Financial Overview</h3>
-                                <div style={{ marginTop: 24, display: 'grid', gap: 16 }}>
+                                <h3 style={{ fontSize: 'clamp(17px, 2.5vw, 20px)', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>💳 Financial Overview</h3>
+                                <div style={{ marginTop: 'clamp(16px, 2vw, 24px)', display: 'grid', gap: 16 }}>
                                     {[
                                         { label: 'Account balance', value: 'RWF 452,800', icon: '💎', color: '#0A9396' },
                                         { label: 'AI score', value: '88/100 financial health', icon: '🤖', color: '#F4A261' },
@@ -496,7 +496,7 @@ const Landing: React.FC = () => {
                                             viewport={{ once: true }}
                                             whileHover={{ scale: 1.05, x: 8 }}
                                             style={{ 
-                                                padding: 16, 
+                                                padding: 'clamp(12px, 1.5vw, 16px)', 
                                                 background: 'linear-gradient(135deg, #f8fafc, #f1f5f9)', 
                                                 borderRadius: 16,
                                                 display: 'flex',
@@ -507,12 +507,12 @@ const Landing: React.FC = () => {
                                             }}
                                         >
                                             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                <div style={{ fontSize: '20px' }}>{stat.icon}</div>
+                                                <div style={{ fontSize: 'clamp(16px, 2.5vw, 20px)' }}>{stat.icon}</div>
                                                 <div>
-                                                    <div style={{ fontWeight: 600, fontSize: '14px', color: '#334155' }}>{stat.label}</div>
+                                                    <div style={{ fontWeight: 600, fontSize: 'clamp(13px, 1.5vw, 14px)', color: '#334155' }}>{stat.label}</div>
                                                 </div>
                                             </div>
-                                            <div style={{ fontWeight: 700, fontSize: '16px', color: stat.color }}>{stat.value}</div>
+                                            <div style={{ fontWeight: 700, fontSize: 'clamp(13px, 1.8vw, 16px)', color: stat.color }}>{stat.value}</div>
                                         </motion.div>
                                     ))}
                                 </div>
@@ -622,20 +622,20 @@ const Landing: React.FC = () => {
                         </p>
                     </motion.div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: 28 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'clamp(16px, 2vw, 28px)' }}>
                         {/* Smart Savings */}
                         <Link to={isAuthenticated ? "/savings" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
                             <motion.div
                                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                                 whileHover={{ y: -8, scale: 1.02 }}
-                                style={{ background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', borderRadius: 20, padding: 32, boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(10,147,150,0.08)', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(10,147,150,0.1)', height: '100%' }}
+                                style={{ background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', borderRadius: 20, padding: 'clamp(20px, 3vw, 32px)', boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(10,147,150,0.08)', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(10,147,150,0.1)', height: '100%' }}
                             >
                                 <motion.div whileHover={{ scale: 1.1 }} style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
                                     <TrendingUp size={40} style={{ color: '#10b981' }} />
                                 </motion.div>
-                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Smart Savings</h3>
-                                <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+                                <h3 style={{ margin: '0 0 8px', fontSize: 'clamp(17px, 2.2vw, 20px)', fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Smart Savings</h3>
+                                <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
                                     AI-powered savings accounts that help you save smarter with personalized recommendations and automated savings goals.
                                 </p>
                                 <div style={{ display: 'grid', gap: 10 }}>
