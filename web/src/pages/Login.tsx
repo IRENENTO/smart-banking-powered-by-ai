@@ -156,35 +156,6 @@ const Login: React.FC = () => {
                             </Button>
                         </form>
 
-                        <div className="mt-8">
-                            <div className="relative">
-                                <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-gray-200 dark:border-gray-700"></div>
-                                </div>
-                                <div className="relative flex justify-center text-sm">
-                                    <span className="px-2 bg-white dark:bg-[#0B1F3A] text-gray-500 dark:text-gray-400">{t('Or Sign in with')}</span>
-                                </div>
-                            </div>
-
-                            <div className="mt-6 grid grid-cols-3 gap-3">
-                                <button onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:4000/api'}/auth/google`} className="flex justify-center items-center py-2.5 px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
-                                    <svg className="h-5 w-5 fill-gray-600 group-hover:fill-[#DB4437] dark:fill-gray-400 dark:group-hover:fill-[#DB4437] transition-colors" viewBox="0 0 488 512">
-                                        <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
-                                    </svg>
-                                </button>
-                                <button onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:4000/api'}/auth/facebook`} className="flex justify-center items-center py-2.5 px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
-                                    <svg className="h-5 w-5 fill-gray-600 group-hover:fill-[#1877F2] dark:fill-gray-400 dark:group-hover:fill-[#1877F2] transition-colors" viewBox="0 0 24 24">
-                                        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                    </svg>
-                                </button>
-                                <button onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:4000/api'}/auth/twitter`} className="flex justify-center items-center py-2.5 px-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors group">
-                                    <svg className="h-5 w-5 fill-gray-600 group-hover:fill-[#1DA1F2] dark:fill-gray-400 dark:group-hover:fill-[#1DA1F2] transition-colors" viewBox="0 0 512 512">
-                                        <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-
                         <div className="mt-8 text-center space-y-2">
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                                 {t("Don't have an account?")} <Link to="/register" className="font-bold text-[#0A9396] hover:text-[#087F82] transition-colors">{t('Create Account')}</Link>

@@ -194,7 +194,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, {
 app.use('/api/public', require('./routes/public.routes'));
 app.use('/api/auth', require('./routes/auth.routes'));
 app.use('/api/admin/auth', require('./routes/admin-auth.routes'));
-app.use('/api/auth', require('./routes/oauth.routes'));
 app.use('/api/otp', require('./routes/otp.routes'));
 app.use('/api/profile', require('./routes/profile.routes'));
 app.use('/api/security', require('./routes/security.routes'));

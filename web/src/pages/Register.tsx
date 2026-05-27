@@ -30,7 +30,6 @@ const Register: React.FC = () => {
             password: 'Password',
             phone: 'Phone Number',
             button: 'Sign Up',
-            or: 'Or Sign up with',
             hasAccount: 'Already have an account?',
             signIn: 'Sign In',
             agreement: 'Learn user licence agreement'
@@ -43,7 +42,6 @@ const Register: React.FC = () => {
             confirm: 'Confirmer le mot de passe',
             phone: 'Numéro de téléphone',
             button: "S'inscrire",
-            or: "Ou s'inscrire avec",
             hasAccount: 'Vous avez déjà un compte ?',
             signIn: 'Se Connecter',
             agreement: "En savoir plus sur l'accord de licence utilisateur"
@@ -56,7 +54,6 @@ const Register: React.FC = () => {
             confirm: "Mwemeze ijambo ry'ibanga",
             phone: 'Nomero ya telephone',
             button: 'Iyandikishe',
-            or: 'Cyangwa iyandikishe kuri',
             hasAccount: 'Usanzwe ufite konti?',
             signIn: 'Injira',
             agreement: "Menya amasezerano y'ukoresha"
@@ -257,38 +254,6 @@ const Register: React.FC = () => {
                         {error && <div className={styles.errorMsg}>{error}</div>}
                         <input className={styles.loginButton} type="submit" value={t.button} />
                     </form>
-                    <div className={styles.socialAccountContainer}>
-                        <span className={styles.title}>{t.or}</span>
-                        <div className={styles.socialAccounts}>
-                            <button 
-                                type="button"
-                                onClick={() => window.location.href = 'http://localhost:5001/api/auth/google'}
-                                className={`${styles.socialButton} ${styles.google}`}
-                            >
-                                <svg className={styles.svg} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 488 512">
-                                    <path d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-                                </svg>
-                            </button>
-                            <button 
-                                type="button"
-                                onClick={() => window.location.href = 'http://localhost:5001/api/auth/facebook'}
-                                className={`${styles.socialButton} ${styles.facebook}`}
-                            >
-                                <svg className={styles.svg} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 24 24">
-                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"></path>
-                                </svg>
-                            </button>
-                            <button 
-                                type="button"
-                                onClick={() => window.location.href = 'http://localhost:5001/api/auth/twitter'}
-                                className={`${styles.socialButton} ${styles.twitter}`}
-                            >
-                                <svg className={styles.svg} xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 512 512">
-                                    <path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8L200.7 275.5 26.8 48H172.4L272.9 180.9 389.2 48zM364.4 421.8h39.1L151.1 88h-42L364.4 421.8z"></path>
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
                     <span className={styles.agreement}>
                         {t.hasAccount} <Link to="/login">{t.signIn}</Link>
                     </span>

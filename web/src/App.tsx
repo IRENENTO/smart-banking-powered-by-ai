@@ -17,7 +17,6 @@ const Register = lazy(() => import('./pages/Register'));
 const VerifyOTP = lazy(() => import('./pages/VerifyOTP'));
 const CompleteProfile = lazy(() => import('./pages/CompleteProfile'));
 const SetSecurity = lazy(() => import('./pages/SetSecurity'));
-const AuthSuccess = lazy(() => import('./pages/AuthSuccess'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Settings = lazy(() => import('./pages/Settings'));
@@ -66,8 +65,16 @@ const LoadingFallback = () => (
 );
 
 // Protected Route wrapper
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode; adminOnly?: boolean }> = ({ children, adminOnly }) => {
     const token = localStorage.getItem('token');
+    const adminToken = localStorage.getItem('admin_token');
+    
+    if (adminOnly) {
+        if (!adminToken) {
+            return <Navigate to="/admin/login" replace />;
+        }
+        return <>{children}</>;
+    }
     
     if (!token) {
         return <Navigate to="/login" replace />;
@@ -97,7 +104,6 @@ function App() {
                                                 <Route path="/register" element={<ErrorBoundary><Register /></ErrorBoundary>} />
                                                 <Route path="/verify-otp" element={<ErrorBoundary><VerifyOTP /></ErrorBoundary>} />
                                                 <Route path="/complete-profile" element={<ErrorBoundary><CompleteProfile /></ErrorBoundary>} />
-                                                <Route path="/auth-success" element={<ErrorBoundary><AuthSuccess /></ErrorBoundary>} />
                                                 <Route path="/admin/login" element={<ErrorBoundary><AdminLogin /></ErrorBoundary>} />
                                                 
                                                 {/* Protected Routes */}
@@ -310,7 +316,7 @@ function App() {
                                                 {/* Admin Routes */}
                                                 <Route path="/admin" element={
                                                     <ErrorBoundary>
-                                                        <ProtectedRoute>
+                                                        <ProtectedRoute adminOnly={true}>
                                                             <AdminDashboard />
                                                         </ProtectedRoute>
                                                     </ErrorBoundary>
@@ -318,7 +324,7 @@ function App() {
                                                 
                                                 <Route path="/admin/dashboard" element={
                                                     <ErrorBoundary>
-                                                        <ProtectedRoute>
+                                                        <ProtectedRoute adminOnly={true}>
                                                             <AdminDashboard />
                                                         </ProtectedRoute>
                                                     </ErrorBoundary>

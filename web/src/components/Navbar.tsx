@@ -69,7 +69,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                 initial={{ x: -50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                style={{ display: 'flex', alignItems: 'center', gap: 16 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 12 }}
             >
                 <motion.div 
                     whileHover={{ scale: 1.1 }}
@@ -104,8 +104,19 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                         Banking Reimagined
                     </motion.div>
                 </div>
+
+                {/* Hamburger Menu Button (mobile) */}
+                <button
+                    className="navbar-hamburger"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    title="Toggle menu"
+                    style={{ marginLeft: 8 }}
+                >
+                    {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
             </motion.div>
 
+            {/* Desktop Nav Links */}
             <motion.div 
                 initial={{ x: 50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
@@ -162,16 +173,10 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                         </Link>
                     </motion.div>
                 ))}
+            </motion.div>
 
-                {/* Hamburger Menu Button */}
-                <button
-                    className="navbar-hamburger"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    title="Toggle menu"
-                >
-                    {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-                </button>
-
+            {/* Right-side Actions (always visible) */}
+            <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {/* Dark Mode Toggle */}
                 <motion.button
                     whileHover={{ scale: 1.1, rotate: 180 }}
@@ -534,7 +539,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                         )}
                     </AnimatePresence>
                 </div>
-            </motion.div>
+            </div>
         </motion.nav>
 
             {/* Mobile Menu Panel */}
@@ -630,6 +635,109 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                         </motion.div>
                                     );
                                 })}
+                            </div>
+
+                            {/* Mobile Menu - Theme & Auth Actions */}
+                            <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                <button
+                                    onClick={() => { toggleTheme(); setMobileMenuOpen(false); }}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 10,
+                                        padding: '12px 14px',
+                                        borderRadius: 14,
+                                        border: '1px solid rgba(255,255,255,0.08)',
+                                        background: 'rgba(255,255,255,0.03)',
+                                        color: 'rgba(255,255,255,0.85)',
+                                        cursor: 'pointer',
+                                        fontSize: 15,
+                                        fontWeight: 500,
+                                        textAlign: 'left',
+                                        transition: 'all 0.2s',
+                                        width: '100%',
+                                    }}
+                                >
+                                    {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+                                    <span>{darkMode ? t('nav.lightMode') : t('nav.darkMode')}</span>
+                                </button>
+                                {isAuthenticated ? (
+                                    <button
+                                        onClick={() => {
+                                            localStorage.removeItem('token');
+                                            localStorage.removeItem('user');
+                                            localStorage.removeItem('admin_token');
+                                            localStorage.removeItem('admin');
+                                            localStorage.removeItem('saved_route');
+                                            window.dispatchEvent(new Event('auth-change'));
+                                            setMobileMenuOpen(false);
+                                            window.location.href = '/login';
+                                        }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                            padding: '12px 14px',
+                                            borderRadius: 14,
+                                            border: '1px solid rgba(239,68,68,0.2)',
+                                            background: 'rgba(239,68,68,0.08)',
+                                            color: '#ef4444',
+                                            cursor: 'pointer',
+                                            fontSize: 15,
+                                            fontWeight: 500,
+                                            textAlign: 'left',
+                                            transition: 'all 0.2s',
+                                            width: '100%',
+                                        }}
+                                    >
+                                        <LogOut size={18} />
+                                        <span>{t('auth.signOut')}</span>
+                                    </button>
+                                ) : (
+                                    <>
+                                        <Link
+                                            to="/login"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: 8,
+                                                padding: '12px 14px',
+                                                borderRadius: 14,
+                                                color: 'white',
+                                                background: '#0A9396',
+                                                textDecoration: 'none',
+                                                fontSize: 15,
+                                                fontWeight: 600,
+                                            }}
+                                        >
+                                            <LogIn size={18} />
+                                            {t('auth.login')}
+                                        </Link>
+                                        <Link
+                                            to="/register"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                gap: 8,
+                                                padding: '12px 14px',
+                                                borderRadius: 14,
+                                                color: 'rgba(255,255,255,0.85)',
+                                                background: 'rgba(255,255,255,0.08)',
+                                                border: '1px solid rgba(255,255,255,0.15)',
+                                                textDecoration: 'none',
+                                                fontSize: 15,
+                                                fontWeight: 500,
+                                            }}
+                                        >
+                                            <UserPlus size={18} />
+                                            {t('auth.register')}
+                                        </Link>
+                                    </>
+                                )}
                             </div>
                         </motion.div>
                     </>

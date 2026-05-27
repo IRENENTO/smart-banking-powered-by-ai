@@ -24,7 +24,7 @@ const AdminLogin: React.FC = () => {
         setError('');
 
         try {
-            const response = await axios.post(`${API_BASE_URL}/api/admin/auth/login`, {
+            const response = await axios.post(`${API_BASE_URL}/admin/auth/login`, {
                 email,
                 password
             });
@@ -35,6 +35,8 @@ const AdminLogin: React.FC = () => {
                 // Store admin info and token
                 localStorage.setItem('admin_token', token);
                 localStorage.setItem('admin', JSON.stringify(admin));
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(admin));
 
                 // Redirect to admin dashboard
                 navigate('/admin');
