@@ -393,6 +393,9 @@
   .navbar-brand-text {
     display: none;
   }
+  .navbar-theme-toggle {
+    display: none !important;
+  }
 }
 
 /* ── Responsive AI Benefits grid ──────────────────────────── */

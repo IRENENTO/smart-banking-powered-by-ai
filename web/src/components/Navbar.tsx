@@ -177,6 +177,52 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
 
             {/* Right-side Actions (always visible) */}
             <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {/* Dark Mode Toggle - hidden on mobile */}
+                <motion.button
+                    whileHover={{ scale: 1.1, rotate: 180 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={toggleTheme}
+                    className="navbar-theme-toggle"
+                    style={{
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.2)',
+                        color: 'white',
+                        cursor: 'pointer',
+                        padding: '10px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backdropFilter: 'blur(10px)',
+                        transition: 'all 0.3s ease'
+                    }}
+                    title={darkMode ? t('nav.lightMode') : t('nav.darkMode')}
+                >
+                    <AnimatePresence mode="wait">
+                        {darkMode ? (
+                            <motion.div
+                                key="sun"
+                                initial={{ rotate: -180, opacity: 0 }}
+                                animate={{ rotate: 0, opacity: 1 }}
+                                exit={{ rotate: 180, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <Sun size={20} />
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="moon"
+                                initial={{ rotate: -180, opacity: 0 }}
+                                animate={{ rotate: 0, opacity: 1 }}
+                                exit={{ rotate: 180, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <Moon size={20} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.button>
+
                 {/* Notifications - only when authenticated */}
                 {isAuthenticated && (
                 <div style={{ position: 'relative' }}>
