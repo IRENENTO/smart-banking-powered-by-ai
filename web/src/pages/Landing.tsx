@@ -151,15 +151,7 @@ const Landing: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.7 }}
                     >
-                        {isAuthenticated ? (
-                            <div style={{ width: '100%', maxWidth: 920, borderRadius: 28, overflow: 'hidden', boxShadow: '0 35px 80px rgba(0, 0, 0, 0.2)' }}>
-                                <img
-                                    src="/banner.png"
-                                    alt="AI Banking banner"
-                                    style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover', minHeight: 260 }}
-                                />
-                            </div>
-                        ) : (
+                        {!isAuthenticated && (
                             <>
                                 <LoadingButton
                                     loading={loading === 'register'}

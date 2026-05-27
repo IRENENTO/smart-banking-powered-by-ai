@@ -177,7 +177,8 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
 
             {/* Right-side Actions (always visible) */}
             <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {/* Notifications */}
+                {/* Notifications - only when authenticated */}
+                {isAuthenticated && (
                 <div style={{ position: 'relative' }}>
                     <motion.button
                         whileHover={{ scale: 1.1 }}
@@ -235,6 +236,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                     />
                 </div>
 
+                )}
                 {/* User Profile Menu */}
                 <div style={{ position: 'relative' }}>
                     <motion.button

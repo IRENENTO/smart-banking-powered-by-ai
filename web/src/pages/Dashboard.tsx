@@ -226,71 +226,63 @@ const Dashboard: React.FC = () => {
     <div style={{ minHeight: '100vh', background: isDark ? '#0B1F3A' : '#f8fafc' }}>
       <Navbar authenticated={!!localStorage.getItem('token')} />
       <SmartAlertBanner />
-      <div style={{ position: 'relative', width: '100%' }}>
-        <img src="/banner.png" alt="AI Banking banner" style={{ width: '100%', height: '180px', display: 'block', objectFit: 'cover' }} />
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            padding: '24px 32px',
-            background: 'linear-gradient(transparent, rgba(0,0,0,0.5))',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            flexWrap: 'wrap',
-            gap: 16
-          }}
-        >
-          <div>
-            <motion.h1
-              style={{
-                fontSize: 'clamp(22px, 3vw, 32px)',
-                margin: 0,
-                color: 'white',
-                fontWeight: 800,
-                textShadow: '0 2px 8px rgba(0,0,0,0.3)'
-              }}
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              {t('dash.welcomeTitle')}
-            </motion.h1>
-            <motion.p
-              style={{ color: 'rgba(255,255,255,0.9)', margin: '8px 0 0', fontSize: '15px', lineHeight: 1.5, textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              {t('dash.welcomeSub')}
-            </motion.p>
-          </div>
-          <motion.div
-            style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}
-            initial={{ opacity: 0, x: 30 }}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        style={{
+          padding: '32px 32px 16px',
+          background: 'linear-gradient(135deg, #0A9396, #059669)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: 16
+        }}
+      >
+        <div>
+          <motion.h1
+            style={{
+              fontSize: 'clamp(22px, 3vw, 32px)',
+              margin: 0,
+              color: 'white',
+              fontWeight: 800,
+            }}
+            initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.3 }}
           >
-            <Link to="/transactions">
-              <LoadingButton variant="primary" size="md">
-                <BarChart3 size={16} />
-                {t('nav.transactions')}
-              </LoadingButton>
-            </Link>
-            <Link to="/payments">
-              <LoadingButton variant="secondary" size="md">
-                <Sparkles size={16} />
-                {t('nav.payments')}
-              </LoadingButton>
-            </Link>
-          </motion.div>
+            {t('dash.welcomeTitle')}
+          </motion.h1>
+          <motion.p
+            style={{ color: 'rgba(255,255,255,0.9)', margin: '8px 0 0', fontSize: '15px', lineHeight: 1.5 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            {t('dash.welcomeSub')}
+          </motion.p>
+        </div>
+        <motion.div
+          style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}
+          initial={{ opacity: 0, x: 30 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Link to="/transactions">
+            <LoadingButton variant="primary" size="md">
+              <BarChart3 size={16} />
+              {t('nav.transactions')}
+            </LoadingButton>
+          </Link>
+          <Link to="/payments">
+            <LoadingButton variant="secondary" size="md">
+              <Sparkles size={16} />
+              {t('nav.payments')}
+            </LoadingButton>
+          </Link>
         </motion.div>
-      </div>
+      </motion.div>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
