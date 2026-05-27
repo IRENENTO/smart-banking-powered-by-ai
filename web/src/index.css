@@ -387,6 +387,12 @@
   .navbar-desktop-links {
     display: none;
   }
+  .navbar-hamburger {
+    display: flex;
+  }
+  .navbar-brand-text {
+    display: none;
+  }
 }
 
 /* ── Responsive loan page helpers ──────────────────────────── */

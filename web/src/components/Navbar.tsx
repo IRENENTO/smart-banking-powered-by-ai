@@ -88,7 +88,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                 >
                     <img src="/logo.png" alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }} />
                 </motion.div>
-                <div>
+                <div className="navbar-brand-text">
                     <motion.div 
                         style={{ fontWeight: 700, fontSize: '20px', background: 'linear-gradient(135deg, #ffffff, #e0f2fe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                         whileHover={{ scale: 1.05 }}

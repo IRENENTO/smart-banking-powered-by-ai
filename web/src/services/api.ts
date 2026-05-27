@@ -208,7 +208,9 @@ export const accountService = {
 
 export const securityService = {
     setPin: (pin: string) => api.post('/security/set-pin', { transactionPin: pin }),
-    verifyPin: (pin: string) => api.post('/security/verify-pin', { pin })
+    verifyPin: (pin: string) => api.post('/security/verify-pin', { pin }),
+    forgotPinSendOTP: () => api.post('/security/forgot-pin-send-otp'),
+    forgotPinReset: (otp: string, newPin: string) => api.post('/security/forgot-pin-reset', { otp, newPin })
 };
 
 export const marketService = {
