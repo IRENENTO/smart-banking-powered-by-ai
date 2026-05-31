@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Moon, Sun, Bell, User, Settings, LogOut, CreditCard, LogIn, UserPlus, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import NotificationDropdown from './NotificationDropdown';
@@ -15,6 +14,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
     const { unreadCount } = useNotifications();
+    const navigate = useNavigate();
     const { t } = useLanguage();
     const { theme, toggleTheme } = useTheme();
     const darkMode = theme === 'dark';
@@ -462,7 +462,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                                 localStorage.removeItem('user');
                                                 localStorage.removeItem('saved_route');
                                                 window.dispatchEvent(new Event('auth-change'));
-                                                window.location.href = '/login';
+                                                navigate('/login');
                                             }}
                                             style={{
                                                 display: 'flex',
@@ -674,7 +674,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                                             localStorage.removeItem('saved_route');
                                             window.dispatchEvent(new Event('auth-change'));
                                             setMobileMenuOpen(false);
-                                            window.location.href = '/login';
+                                            navigate('/login');
                                         }}
                                         style={{
                                             display: 'flex',

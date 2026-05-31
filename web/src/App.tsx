@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, useEffect } from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import './imigongo.css';
 import { NotificationProvider } from './context/NotificationContext';
 import { LanguageProvider } from './context/LanguageContext';
@@ -356,16 +356,17 @@ function App() {
                                                         <h1 style={{ fontSize: '80px', margin: '0', color: '#0A9396' }}>404</h1>
                                                         <h2>Page Not Found</h2>
                                                         <p>The page you're looking for doesn't exist or has been moved.</p>
-                                                        <a href="/#/" style={{
+                                                        <Link to="/" style={{
                                                             marginTop: '20px',
                                                             padding: '12px 24px',
                                                             background: '#0A9396',
                                                             color: 'white',
                                                             textDecoration: 'none',
-                                                            borderRadius: '8px'
+                                                            borderRadius: '8px',
+                                                            display: 'inline-block'
                                                         }}>
                                                             Go to Home
-                                                        </a>
+                                                        </Link>
                                                     </div>
                                                 } />
                                             </Routes>

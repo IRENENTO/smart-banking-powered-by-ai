@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BarChart3, FileText, ArrowRight, Sparkles, Zap, Shield, TrendingUp, DollarSign, Activity, AlertTriangle, Brain, Smartphone } from 'lucide-react';
 import Navbar from '../components/Navbar';
@@ -62,6 +62,7 @@ const Dashboard: React.FC = () => {
 >
     <AICharts />
 </motion.div>
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const { balance, realBalance, demoBalance, transactions, insights, loading: bankingLoading } = useBanking();
 
@@ -91,28 +92,28 @@ const Dashboard: React.FC = () => {
         setAnalyticsOpen(true);
         break;
       case 'send-money':
-        window.location.href = '/payments';
+        navigate('/payments');
         break;
       case 'save-money':
-        window.location.href = '/savings';
+        navigate('/savings');
         break;
       case 'invest':
         toastInfo(t('dash.investComing'));
         break;
       case 'request-loan':
-        window.location.href = '/apply-loan';
+        navigate('/apply-loan');
         break;
       case 'pay-bills':
-        window.location.href = '/payments';
+        navigate('/payments');
         break;
       case 'mobile-money':
-        window.location.href = '/payments';
+        navigate('/payments');
         break;
       case 'qr-pay':
         toastInfo(t('dash.qrComing'));
         break;
       case 'save-goal':
-        window.location.href = '/savings';
+        navigate('/savings');
         break;
       default:
         break;
