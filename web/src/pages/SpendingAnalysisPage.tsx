@@ -60,10 +60,11 @@ const DEFAULT_MONTHLY = [
 const SpendingAnalysisPage: React.FC = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<'pie' | 'trend'>('pie');
-  const [categoryData, setCategoryData] = useState<any[]>(DEFAULT_CATEGORIES);
-  const [monthlyData, setMonthlyData] = useState<any[]>(DEFAULT_MONTHLY);
-  const [loading, setLoading] = useState(false);
-  const [totalSpent, setTotalSpent] = useState(124600);
+  const [categoryData, setCategoryData] = useState<any[]>([]);
+  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [totalSpent, setTotalSpent] = useState(0);
+  const [totalIncome, setTotalIncome] = useState(0);
   const [guidanceLoading, setGuidanceLoading] = useState(false);
   const [marketGuide, setMarketGuide] = useState('');
   const [marketInsights, setMarketInsights] = useState<string[]>([]);
@@ -83,6 +84,89 @@ const SpendingAnalysisPage: React.FC = () => {
   }, [chatMessages]);
 
   // Data initializes with DEFAULT_CATEGORIES / DEFAULT_MONTHLY — no blocking API call needed
+
+  useEffect(() => {
+    loadSpendingData();
+  }, []);
+
+  const COLORS_PALETTE = ['#0A9396', '#005F73', '#94D2BD', '#E9C46A', '#F4A261', '#E76F51', '#CA6702', '#9B2226'];
+
+  const COLORS_MAP: Record<string, string> = {
+    payment: '#E76F51',
+    withdraw: '#CA6702',
+    withdrawal: '#CA6702',
+    transfer: '#0A9396',
+    deposit: '#005F73',
+    food: '#0A9396',
+    transport: '#005F73',
+    bills: '#94D2BD',
+    mobile_money: '#E9C46A',
+    entertainment: '#F4A261',
+    other: '#E76F51',
+  };
+
+  const loadSpendingData = async () => {
+    setLoading(true);
+    try {
+      const txResponse = await bankService.getTransactions();
+      let transactions = txResponse.data?.transactions || [];
+
+      if (!transactions.length) {
+        setCategoryData(DEFAULT_CATEGORIES);
+        setMonthlyData(DEFAULT_MONTHLY);
+        setTotalSpent(124600);
+        setLoading(false);
+        return;
+      }
+
+      const expenseTypes = new Set(['payment', 'withdraw', 'withdrawal']);
+      const incomeTypes = new Set(['transfer', 'deposit']);
+
+      // Build category breakdown from expense transactions
+      const catMap: Record<string, number> = {};
+      let spent = 0;
+      let income = 0;
+      transactions.forEach((tx: any) => {
+        const amt = Number(tx.amount || 0);
+        const cat = tx.type || 'other';
+        if (expenseTypes.has(cat)) {
+          catMap[cat] = (catMap[cat] || 0) + amt;
+          spent += amt;
+        } else if (incomeTypes.has(cat)) {
+          income += amt;
+        }
+      });
+
+      const cats = Object.entries(catMap)
+        .map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value, color: COLORS_MAP[name] || '#94D2BD' }))
+        .sort((a, b) => b.value - a.value);
+
+      setCategoryData(cats.length ? cats : DEFAULT_CATEGORIES);
+      setTotalSpent(spent);
+      setTotalIncome(income);
+
+      // Build monthly trend data
+      const monthMap: Record<string, { spending: number; income: number }> = {};
+      transactions.forEach((tx: any) => {
+        const amt = Number(tx.amount || 0);
+        const date = tx.created_at ? new Date(tx.created_at) : new Date();
+        const key = date.toLocaleString('en-US', { month: 'short' });
+        if (!monthMap[key]) monthMap[key] = { spending: 0, income: 0 };
+        const cat = tx.type || '';
+        if (expenseTypes.has(cat)) monthMap[key].spending += amt;
+        else if (incomeTypes.has(cat)) monthMap[key].income += amt;
+      });
+
+      const months = Object.entries(monthMap).map(([month, data]) => ({ month, ...data }));
+      setMonthlyData(months.length ? months : DEFAULT_MONTHLY);
+    } catch {
+      setCategoryData(DEFAULT_CATEGORIES);
+      setMonthlyData(DEFAULT_MONTHLY);
+      setTotalSpent(124600);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChatSend = async () => {
     if (!chatInput.trim() || chatLoading) return;
@@ -106,7 +190,7 @@ const SpendingAnalysisPage: React.FC = () => {
     setGuidanceLoading(true);
 
     try {
-      // First try ML-powered spending analysis with demo/real transactions
+      // First try ML-powered spending analysis with real transactions
       const txResponse = await bankService.getTransactions();
       let transactions = txResponse.data?.transactions || [];
       if (!transactions.length) transactions = DEMO_TRANSACTIONS;
@@ -122,9 +206,15 @@ const SpendingAnalysisPage: React.FC = () => {
         type: expenseTypes.has(tx.type) ? 'expense' : incomeTypes.has(tx.type) ? 'income' : 'expense'
       }));
 
+      let totalIncomeVal = totalIncome || 0;
+      mappedTx.forEach((tx: any) => {
+        if (tx.type === 'income') totalIncomeVal += Number(tx.amount || 0);
+      });
+      const estimatedMonthlyIncome = totalIncomeVal || totalSpent * 1.5 || 500000;
+
       let mlInsights: string[] = [];
       try {
-        const mlResult = await aiService.analyzeSpending(mappedTx, totalSpent * 1.5);
+        const mlResult = await aiService.analyzeSpending(mappedTx, estimatedMonthlyIncome);
         const mlData = mlResult?.data;
         if (mlData?.recommendations) {
           mlInsights = mlData.recommendations;
@@ -219,7 +309,10 @@ const SpendingAnalysisPage: React.FC = () => {
                 transition={{ duration: 0.25 }}
               >
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                  Total spent: <strong className="text-gray-800 dark:text-white">RWF {totalSpent.toLocaleString()}</strong>
+                  Total spent: <strong className="text-red-500">RWF {totalSpent.toLocaleString()}</strong>
+                  {totalIncome > 0 && (
+                    <> &nbsp;|&nbsp; Total received: <strong className="text-teal-500">RWF {totalIncome.toLocaleString()}</strong></>
+                  )}
                 </p>
                 {loading ? (
                   <div className="flex items-center justify-center h-[350px]">
