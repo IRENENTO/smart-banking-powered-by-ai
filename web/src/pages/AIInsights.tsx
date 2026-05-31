@@ -100,11 +100,12 @@ const AIInsights: React.FC = () => {
                     economicIndicators: { inflation_rate: 2.5, gdp_growth: 3.2, market_sentiment: 'positive' },
                 });
             } else {
+                const fallbackSectors = generateSectors(null);
                 setMarketData({
                     trends: generateTrendData(null),
-                    sectors: [],
+                    sectors: fallbackSectors,
                     recommendations: null,
-                    riskAnalysis: { sectors: [], overall_market_risk: 'moderate', ai_insight: 'Connect AI Engine for detailed market analysis.' },
+                    riskAnalysis: { sectors: generateRiskSectors(null), overall_market_risk: 'moderate', ai_insight: 'Connect AI Engine for detailed market analysis.' },
                     fraudAlerts: { alerts: [], total: 0, critical_count: 0 },
                     economicIndicators: { inflation_rate: 2.5, gdp_growth: 3.2, market_sentiment: 'positive' },
                 });
