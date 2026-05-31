@@ -45,7 +45,7 @@ const safeAICall = async (fn, fallback) => {
 exports.predictLoan = async (data) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/api/ai/predict-loan', {
+            const { data: result } = await aiClient.post('/predict-loan', {
                 income: data.income || data.monthlyIncome || 0,
                 expenses: data.expenses || data.monthlyExpenses || 0,
                 savings: data.savings || data.existingSavings || 0,
@@ -82,7 +82,7 @@ exports.predictLoan = async (data) => {
 exports.detectFraud = async (data) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/api/ai/detect-fraud', {
+            const { data: result } = await aiClient.post('/detect-fraud', {
                 amount: data.amount || 0,
                 location: data.location || 'unknown',
                 device: data.device || 'unknown',
@@ -123,7 +123,7 @@ exports.detectFraud = async (data) => {
 exports.predictSavings = async (data) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/api/ai/predict-savings', {
+            const { data: result } = await aiClient.post('/predict-savings', {
                 monthly_income: data.income || data.monthlyIncome || 0,
                 monthly_expenses: data.expenses || data.monthlyExpenses || 0,
                 existing_savings: data.savings || data.existingSavings || 0,
@@ -164,7 +164,7 @@ exports.predictSavings = async (data) => {
 exports.analyzeSpending = async (transactions, monthlyIncome) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/api/ai/spending-analysis', {
+            const { data: result } = await aiClient.post('/spending-analysis', {
                 transactions: (transactions || []).map(tx => ({
                     amount: tx.amount,
                     category: tx.category || 'other',
@@ -209,7 +209,7 @@ exports.analyzeSpending = async (transactions, monthlyIncome) => {
 exports.getRecommendations = async (data) => {
     return safeAICall(
         async () => {
-            const { data: result } = await aiClient.post('/api/ai/recommendations', {
+            const { data: result } = await aiClient.post('/recommendations', {
                 monthly_income: data.income || data.monthlyIncome || 0,
                 monthly_expenses: data.expenses || data.monthlyExpenses || 0,
                 existing_savings: data.savings || data.existingSavings || 0,
@@ -260,7 +260,7 @@ exports.getRecommendations = async (data) => {
 exports.getModelStatus = async () => {
     return safeAICall(
         async () => {
-            const { data } = await aiClient.get('/api/ai/model-status');
+            const { data } = await aiClient.get('/model-status');
             return {
                 success: true,
                 models: data.models || data,
@@ -289,7 +289,7 @@ exports.getModelStatus = async () => {
 exports.retrainModel = async (modelName) => {
     return safeAICall(
         async () => {
-            const { data } = await aiClient.post('/api/ai/retrain', {
+            const { data } = await aiClient.post('/retrain', {
                 model: modelName || 'all'
             });
             return {
