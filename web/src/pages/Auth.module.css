@@ -468,4 +468,25 @@
   border: 1px solid #a7f3d0;
 }
 
+.fallbackOtp {
+  background: #fff3cd;
+  color: #856404;
+  padding: 16px;
+  border-radius: 15px;
+  font-size: 14px;
+  margin-top: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  border: 1px solid #ffc107;
+  line-height: 1.6;
+}
+
+.fallbackOtp strong {
+  font-size: 1.8em;
+  letter-spacing: 0.3em;
+  display: block;
+  margin-top: 4px;
+}
+
 

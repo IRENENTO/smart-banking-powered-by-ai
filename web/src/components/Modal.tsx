@@ -25,9 +25,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, subtitle, childre
   }, [isOpen]);
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
+    <>
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
             key="backdrop"
             initial={{ opacity: 0 }}
@@ -36,6 +36,10 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, subtitle, childre
             onClick={onClose}
             className="fixed inset-0 z-[999] bg-black/50 backdrop-blur-sm"
           />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
             key="modal"
             initial={{ opacity: 0, scale: 0.92, y: 40 }}
@@ -65,9 +69,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, subtitle, childre
               </div>
             </div>
           </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

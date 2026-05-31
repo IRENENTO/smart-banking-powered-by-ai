@@ -20,12 +20,14 @@ const VerifyOTP: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [resendLoading, setResendLoading] = useState(false);
     const [sendStatus, setSendStatus] = useState('');
+    const [fallbackOtp, setFallbackOtp] = useState('');
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === 'dark';
     const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'EN');
     const navigate = useNavigate();
     const location = useLocation();
     const returnPath = (location.state as any)?.from || '/dashboard';
+    const locationOtp = (location.state as any)?.otp;
 
     useEffect(() => {
         document.body.style.backgroundColor = isDark ? '#0f172a' : '#e6f7ff';
@@ -49,6 +51,17 @@ const VerifyOTP: React.FC = () => {
             localStorage.setItem('userEmail', userEmail);
         } else {
             navigate('/register');
+        }
+
+        // Use OTP from location state (passed from Register) or restore from localStorage
+        if (locationOtp) {
+            setFallbackOtp(locationOtp);
+            localStorage.setItem('otpData', JSON.stringify({ email: stateEmail || userEmail, otp: locationOtp }));
+        } else {
+            const storedOtpData = parseJSON(localStorage.getItem('otpData'));
+            if (storedOtpData?.otp && storedOtpData?.email === (stateEmail || userEmail)) {
+                setFallbackOtp(storedOtpData.otp);
+            }
         }
     }, [location.state, navigate]);
 
@@ -74,7 +87,9 @@ const VerifyOTP: React.FC = () => {
             try {
                 const result = await otpService.sendOTP(email);
                 if (result.emailSent === false) {
-                    setSendStatus('Warning: Could not send email automatically. The code may still arrive, or try the "Resend Code" button. If the issue persists, check that EMAIL_USER/EMAIL_PASS are configured on the server.');
+                    setSendStatus('Email delivery failed. Use the code below to verify.');
+                    setFallbackOtp(result.otp || '');
+                    localStorage.setItem('otpData', JSON.stringify({ email, otp: result.otp }));
                 } else {
                     localStorage.setItem('otpSent', 'true');
                     setSendStatus('A new verification code was sent to your email.');
@@ -182,11 +197,14 @@ const VerifyOTP: React.FC = () => {
         setError('');
         setSendStatus('Sending code...');
         setResendLoading(true);
+        setFallbackOtp('');
         
         try {
             const result = await otpService.sendOTP(email);
             if (result.emailSent === false) {
-                setSendStatus('Warning: Could not send email. Verify EMAIL_USER/EMAIL_PASS are set on the server.' + (result.msg ? ' ' + result.msg : ''));
+                setSendStatus('Email delivery failed. Use the code below to verify.');
+                setFallbackOtp(result.otp || '');
+                localStorage.setItem('otpData', JSON.stringify({ email, otp: result.otp }));
             } else {
                 localStorage.setItem('otpSent', 'true');
                 setSendStatus('A new verification code was sent to your email.');
@@ -251,6 +269,11 @@ const VerifyOTP: React.FC = () => {
                         </div>
                         
                         {sendStatus && !error && <div className={styles.infoMsg}>{sendStatus}</div>}
+                        {fallbackOtp && (
+                            <div className={styles.fallbackOtp}>
+                                Your verification code: <strong>{fallbackOtp}</strong>
+                            </div>
+                        )}
                         {error && <div className={styles.errorMsg}>{error}</div>}
                         
                         <input 

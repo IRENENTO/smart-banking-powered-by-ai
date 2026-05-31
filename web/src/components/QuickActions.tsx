@@ -65,93 +65,87 @@ const QuickActions: React.FC<QuickActionsProps> = ({ onAction, anchor = 'bottom-
 
       <AnimatePresence>
         {isOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsOpen(false)}
-              style={{
-                position: 'fixed',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                background: 'rgba(0, 0, 0, 0.5)',
-                zIndex: 999
-              }}
-            />
-
-            <div
-              style={{
-                position: 'fixed',
-                bottom: '100px',
-                zIndex: 1000,
-                ...anchorStyle
-              }}
-            >
-              {actions.map((action, index) => (
-                <motion.button
-                  key={action.id}
-                  initial={{ scale: 0, opacity: 0, y: 20 }}
-                  animate={{
-                    scale: 1,
-                    opacity: 1,
-                    y: 0,
-                    transition: { delay: index * 0.1 }
-                  }}
-                  exit={{
-                    scale: 0,
-                    opacity: 0,
-                    y: 20,
-                    transition: { delay: (actions.length - index - 1) * 0.05 }
-                  }}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    onAction(action.id);
-                    setIsOpen(false);
-                  }}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    padding: '12px 16px',
-                    marginBottom: '8px',
-                    background: 'white',
-                    border: 'none',
-                    borderRadius: '12px',
-                    color: '#1a202c',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '600',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                    minWidth: '160px',
-                    justifyContent: 'flex-start'
-                  }}
-                  title={action.label}
-                >
-                  <div
-                    style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '8px',
-                      background: action.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: 'white'
-                    }}
-                  >
-                    {action.icon}
-                  </div>
-                  {action.label}
-                </motion.button>
-              ))}
-            </div>
-          </>
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsOpen(false)}
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.5)',
+              zIndex: 999
+            }}
+          />
         )}
       </AnimatePresence>
+
+      <div
+        style={{
+          position: 'fixed',
+          bottom: '100px',
+          zIndex: 1000,
+          ...anchorStyle,
+          display: isOpen ? 'block' : 'none'
+        }}
+      >
+        {actions.map((action, index) => (
+          <motion.button
+            key={action.id}
+            initial={isOpen ? { scale: 0, opacity: 0, y: 20 } : false}
+            animate={{
+              scale: 1,
+              opacity: 1,
+              y: 0,
+              transition: { delay: index * 0.1 }
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => {
+              onAction(action.id);
+              setIsOpen(false);
+            }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '12px 16px',
+              marginBottom: '8px',
+              background: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              color: '#1a202c',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+              minWidth: '160px',
+              justifyContent: 'flex-start'
+            }}
+            title={action.label}
+          >
+            <div
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '8px',
+                background: action.color,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white'
+              }}
+            >
+              {action.icon}
+            </div>
+            {action.label}
+          </motion.button>
+        ))}
+      </div>
     </>
   );
 };

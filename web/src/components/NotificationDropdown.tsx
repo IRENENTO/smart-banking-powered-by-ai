@@ -43,11 +43,11 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
   };
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
+    <>
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
+            key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -62,9 +62,13 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
               zIndex: 999
             }}
           />
+        )}
+      </AnimatePresence>
 
-          {/* Dropdown */}
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
+            key="dropdown"
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
@@ -227,9 +231,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({ isOpen, onC
               )}
             </div>
           </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </>
   );
 };
 

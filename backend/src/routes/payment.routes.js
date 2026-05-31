@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const paymentController = require('../controllers/payment.controller');
-const { requireProfileCompleted } = require('../middleware/auth');
+const { auth, requireProfileCompleted } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -304,7 +304,7 @@ router.post('/transfer', requireProfileCompleted, paymentController.transfer);
  *                       account_number:
  *                         type: string
  */
-router.get('/users', requireProfileCompleted, paymentController.getUsersForTransfer);
+router.get('/users', auth, paymentController.getUsersForTransfer);
 
 /**
  * @swagger
@@ -344,7 +344,7 @@ router.get('/users', requireProfileCompleted, paymentController.getUsersForTrans
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/balance', requireProfileCompleted, paymentController.getBalance);
+router.get('/balance', auth, paymentController.getBalance);
 
 /**
  * @swagger
@@ -404,7 +404,7 @@ router.get('/balance', requireProfileCompleted, paymentController.getBalance);
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/history', requireProfileCompleted, paymentController.getTransactionHistory);
+router.get('/history', auth, paymentController.getTransactionHistory);
 
 /**
  * @swagger
@@ -456,7 +456,7 @@ router.get('/history', requireProfileCompleted, paymentController.getTransaction
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/stats', requireProfileCompleted, paymentController.getTransactionStats);
+router.get('/stats', auth, paymentController.getTransactionStats);
 
 /**
  * @swagger
@@ -498,7 +498,7 @@ router.get('/stats', requireProfileCompleted, paymentController.getTransactionSt
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get('/recent', requireProfileCompleted, paymentController.getRecentTransactions);
+router.get('/recent', auth, paymentController.getRecentTransactions);
 
 /**
  * @swagger
@@ -561,216 +561,15 @@ router.post('/bill', requireProfileCompleted, paymentController.makeBillPayment)
  *       500:
  *         description: Server error
  */
-router.get('/methods', requireProfileCompleted, paymentController.getPaymentMethods);
+router.get('/methods', auth, paymentController.getPaymentMethods);
 
-/**
- * @swagger
- * /api/payment/methods:
- *   post:
- *     summary: Save a new payment method
- *     tags: [Payment]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - method_type
- *               - provider_name
- *               - account_identifier
- *             properties:
- *               method_type:
- *                 type: string
- *                 enum: [card, mobile_money, bank_account, wallet]
- *               provider_name:
- *                 type: string
- *                 example: MTN MoMo
- *               account_identifier:
- *                 type: string
- *                 example: +250781234567
- *               is_default:
- *                 type: boolean
- *                 default: false
- *     responses:
- *       201:
- *         description: Payment method saved successfully
- *       400:
- *         description: Bad request
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-router.post('/methods', requireProfileCompleted, paymentController.savePaymentMethod);
+router.get('/records/:paymentId', auth, paymentController.getPaymentById);
 
-/**
- * @swagger
- * /api/payment/methods/{methodId}:
- *   delete:
- *     summary: Delete a saved payment method
- *     tags: [Payment]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: methodId
- *         required: true
- *         schema:
- *           type: integer
- *         description: The payment method ID
- *     responses:
- *       200:
- *         description: Payment method deleted successfully
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Payment method not found
- *       500:
- *         description: Server error
- */
-router.delete('/methods/:methodId', requireProfileCompleted, paymentController.deletePaymentMethod);
+router.get('/records', auth, paymentController.getPaymentHistory);
 
-/**
- * @swagger
- * /api/payment/records/{paymentId}:
- *   get:
- *     summary: Get payment record by ID
- *     tags: [Payment]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: paymentId
- *         required: true
- *         schema:
- *           type: integer
- *         description: The payment record ID
- *     responses:
- *       200:
- *         description: Payment record retrieved successfully
- *       401:
- *         description: Unauthorized
- *       404:
- *         description: Payment record not found
- *       500:
- *         description: Server error
- */
-router.get('/records/:paymentId', requireProfileCompleted, paymentController.getPaymentById);
+router.get('/pending', auth, paymentController.getPendingPaypackPayments);
 
-/**
- * @swagger
- * /api/payment/records:
- *   get:
- *     summary: Get user's payment history
- *     tags: [Payment]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: payment_type
- *         schema:
- *           type: string
- *           enum: [bill, merchant, subscription, invoice, top_up, other]
- *         description: Filter by payment type
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *           enum: [pending, processing, completed, failed, refunded, cancelled]
- *         description: Filter by payment status
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *         description: Number of records to return
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *           default: 0
- *         description: Number of records to skip
- *     responses:
- *       200:
- *         description: Payment history retrieved successfully
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-router.get('/records', requireProfileCompleted, paymentController.getPaymentHistory);
-
-/**
- * @swagger
- * /api/payment/pending:
- *   get:
- *     summary: Get pending PayPack payments for the authenticated user
- *     tags: [Payment]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *           default: 50
- *         description: Number of pending payments to return
- *       - in: query
- *         name: offset
- *         schema:
- *           type: integer
- *           default: 0
- *         description: Number of pending payments to skip
- *     responses:
- *       200:
- *         description: Pending PayPack payments retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 payments:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Payment'
- *                 count:
- *                   type: integer
- *                   description: Number of pending payments returned
- *       401:
- *         description: Unauthorized
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- *       500:
- *         description: Server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/ErrorResponse'
- */
-router.get('/pending', requireProfileCompleted, paymentController.getPendingPaypackPayments);
-
-/**
- * @swagger
- * /api/payment/records/stats:
- *   get:
- *     summary: Get payment statistics
- *     tags: [Payment]
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: Payment statistics retrieved successfully
- *       401:
- *         description: Unauthorized
- *       500:
- *         description: Server error
- */
-router.get('/records/stats', requireProfileCompleted, paymentController.getPaymentStats);
+router.get('/records/stats', auth, paymentController.getPaymentStats);
 
 /**
  * @swagger

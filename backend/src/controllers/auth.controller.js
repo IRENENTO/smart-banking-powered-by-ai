@@ -37,18 +37,15 @@ exports.register = async (req, res) => {
         const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
         await User.update(user.id, { otp_code: otpCode, otp_expires_at: otpExpiresAt });
 
-        try {
-            await sendOTPEmail(email, otpCode);
-        } catch (emailError) {
-            console.error('OTP email send error:', emailError);
-            console.log(`[FALLBACK] OTP for ${email}: ${otpCode}`);
-        }
+        const result = await sendOTPEmail(email, otpCode);
 
         const payload = { user: { id: user.id, role: user.role } };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 
-        res.status(201).json({
-            msg: 'Registration successful. Please verify your email to continue.',
+        const response = {
+            msg: result.sent
+                ? 'Registration successful. Please verify your email to continue.'
+                : 'Registration successful but email delivery failed. Use the OTP below to verify.',
             token,
             user: {
                 id: user.id,
@@ -57,12 +54,19 @@ exports.register = async (req, res) => {
                 phone: user.phone,
                 role: user.role,
                 account_number: user.account_number,
-                email_verified: user.email_verified || false,
-                profile_completed: user.profile_completed || false,
-                pin_set: user.pin_set || false,
-                profile_picture: user.profile_picture || null
-            }
-        });
+                email_verified: user.email_verified,
+                profile_completed: user.profile_completed,
+                pin_set: user.pin_set,
+            },
+            emailSent: result.sent,
+            expiresAt: otpExpiresAt,
+        };
+
+        if (!result.sent) {
+            response.otp = result.otp;
+        }
+
+        res.status(201).json(response);
     } catch (err) {
         console.error('Registration error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });

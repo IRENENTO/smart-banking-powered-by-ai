@@ -152,18 +152,19 @@ exports.forgotPinSendOTP = async (req, res) => {
             otp_expires_at: expiresAt
         });
 
-        try {
-            await sendOTPEmail(user.email, otpCode);
-        } catch (emailError) {
-            console.error('PIN reset OTP email error:', emailError);
+        const result = await sendOTPEmail(user.email, otpCode);
+
+        const response = {
+            msg: result.sent ? 'OTP sent to your email' : 'Email delivery failed. Use the OTP below to proceed.',
+            expiresAt,
+            emailSent: result.sent,
+        };
+
+        if (!result.sent) {
+            response.otp = result.otp;
         }
 
-        console.log(`PIN reset OTP for ${user.email}: ${otpCode}`);
-
-        res.json({
-            msg: 'OTP sent to your email',
-            expiresAt
-        });
+        res.json(response);
     } catch (err) {
         console.error('Forgot PIN send OTP error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });

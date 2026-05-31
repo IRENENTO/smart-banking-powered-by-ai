@@ -106,7 +106,11 @@ const Register: React.FC = () => {
                     type: 'success',
                     link: '/dashboard',
                 });
-                navigate('/verify-otp', { state: { email: returned.user.email || email, from: returnPath, autoSend: false } });
+                const navState: any = { email: returned.user.email || email, from: returnPath, autoSend: false };
+                if (returned.emailSent === false && returned.otp) {
+                    navState.otp = returned.otp;
+                }
+                navigate('/verify-otp', { state: navState });
             } else {
                 navigate('/login');
             }
