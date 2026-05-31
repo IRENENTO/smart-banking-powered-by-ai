@@ -179,17 +179,31 @@ const getFallbackRecommendationsResponse = (data: RecommendationRequest): Recomm
 };
 
 const getFallbackSpendingResponse = (transactions: any[], monthlyIncome?: number): SpendingAnalysisResponse => {
-    const expenses = (transactions || []).filter(t => t.type === 'expense' || !t.type);
+    const expenseTypes = new Set(['payment', 'withdraw', 'withdrawal', 'expense']);
+    const incomeTypes = new Set(['transfer', 'deposit', 'income']);
+    const expenses = (transactions || []).filter(t => expenseTypes.has(t.type));
+    const incomes = (transactions || []).filter(t => incomeTypes.has(t.type));
     const totalSpent = expenses.reduce((s, t) => s + Number(t.amount || 0), 0);
-    const income = monthlyIncome || 0;
-    
+    const totalIncome = incomes.reduce((s, t) => s + Number(t.amount || 0), 0);
+    const income = monthlyIncome || totalIncome || 1;
+
+    // Build category breakdown from expense transactions
+    const catMap: Record<string, number> = {};
+    expenses.forEach(t => {
+        const cat = t.category || t.type || 'other';
+        catMap[cat] = (catMap[cat] || 0) + Number(t.amount || 0);
+    });
+    const category_breakdown = Object.entries(catMap)
+        .map(([name, value]) => ({ name, value }))
+        .sort((a, b) => b.value - a.value);
+
     return {
         success: false,
-        category_breakdown: [],
+        category_breakdown,
         total_spent: totalSpent,
-        total_income: income,
+        total_income: totalIncome,
         savings_rate: income > 0 ? Math.max(0, Math.round((1 - totalSpent / income) * 100)) : 0,
-        top_spending_category: 'N/A',
+        top_spending_category: category_breakdown[0]?.name || 'N/A',
         spending_insights: ['Connect to AI Engine for detailed analysis.'],
         recommendations: ['Enable AI Engine for personalized spending insights.'],
         ai_powered: false

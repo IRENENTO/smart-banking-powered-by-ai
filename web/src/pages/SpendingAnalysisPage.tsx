@@ -112,12 +112,14 @@ const SpendingAnalysisPage: React.FC = () => {
       if (!transactions.length) transactions = DEMO_TRANSACTIONS;
 
       // Map transactions to the format the AI engine expects
+      const expenseTypes = new Set(['payment', 'withdraw', 'withdrawal']);
+      const incomeTypes = new Set(['transfer', 'deposit']);
       const mappedTx = transactions.map((tx: any) => ({
         amount: tx.amount,
         category: tx.type || 'other',
         description: tx.description || '',
         date: tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        type: 'expense'
+        type: expenseTypes.has(tx.type) ? 'expense' : incomeTypes.has(tx.type) ? 'income' : 'expense'
       }));
 
       let mlInsights: string[] = [];
