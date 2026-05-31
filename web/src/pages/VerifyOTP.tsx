@@ -72,9 +72,13 @@ const VerifyOTP: React.FC = () => {
         const sendInitialOTP = async () => {
             setSendStatus('Sending code...');
             try {
-                await otpService.sendOTP(email);
-                localStorage.setItem('otpSent', 'true');
-                setSendStatus('A new verification code was sent to your email.');
+                const result = await otpService.sendOTP(email);
+                if (result.emailSent === false) {
+                    setSendStatus('Warning: Could not send email automatically. The code may still arrive, or try the "Resend Code" button. If the issue persists, check that EMAIL_USER/EMAIL_PASS are configured on the server.');
+                } else {
+                    localStorage.setItem('otpSent', 'true');
+                    setSendStatus('A new verification code was sent to your email.');
+                }
             } catch (err: any) {
                 setSendStatus('Unable to send code automatically. Please use resend.');
                 console.error('VerifyOTP auto-send error:', err);
@@ -180,9 +184,13 @@ const VerifyOTP: React.FC = () => {
         setResendLoading(true);
         
         try {
-            await otpService.sendOTP(email);
-            localStorage.setItem('otpSent', 'true');
-            setSendStatus('A new verification code was sent to your email.');
+            const result = await otpService.sendOTP(email);
+            if (result.emailSent === false) {
+                setSendStatus('Warning: Could not send email. Verify EMAIL_USER/EMAIL_PASS are set on the server.' + (result.msg ? ' ' + result.msg : ''));
+            } else {
+                localStorage.setItem('otpSent', 'true');
+                setSendStatus('A new verification code was sent to your email.');
+            }
         } catch (err: any) {
             const errorMsg = err.response?.data?.msg || 
                            (lang === 'EN' ? 'Failed to resend code' : 

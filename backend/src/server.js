@@ -298,6 +298,45 @@ app.post('/api/ai-engine/test-prediction', async (req, res) => {
     }
 });
 
+// ==================== EMAIL DIAGNOSTIC ENDPOINT ====================
+app.get('/api/health/email', async (req, res) => {
+    const sendOTPEmail = require('./services/email.service');
+    const testEmail = req.query.email || process.env.EMAIL_USER;
+    const hasEmailUser = !!process.env.EMAIL_USER;
+    const hasEmailPass = !!process.env.EMAIL_PASS;
+    const emailUser = process.env.EMAIL_USER || 'NOT SET';
+
+    const result = {
+        env: {
+            EMAIL_USER: hasEmailUser ? `${emailUser.substring(0, 3)}****@${emailUser.split('@')[1] || '...'}` : 'NOT SET',
+            EMAIL_PASS_SET: hasEmailPass,
+            NODE_ENV: process.env.NODE_ENV || 'not set',
+        },
+        test: null,
+        error: null,
+    };
+
+    if (!hasEmailUser || !hasEmailPass) {
+        result.error = 'EMAIL_USER or EMAIL_PASS environment variables are not set';
+        return res.status(200).json(result);
+    }
+
+    try {
+        const testOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        await sendOTPEmail(testEmail, testOtp);
+        result.test = {
+            sent_to: testEmail,
+            otp: testOtp,
+            message: 'Test email sent successfully. Check your inbox (and spam folder).',
+        };
+    } catch (err) {
+        result.error = err.message;
+        console.error('Email diagnostic failed:', err);
+    }
+
+    res.json(result);
+});
+
 // ==================== HEALTH CHECK ENDPOINT ====================
 app.get('/api/health', async (req, res) => {
     const { query } = require('./config/db');
@@ -376,6 +415,7 @@ app.get('/', (req, res) => {
         endpoints: {
             health: '/api/health',
             health_detailed: '/api/health/detailed',
+            health_email: '/api/health/email?email=you@test.com',
             cors_test: '/api/cors-test',
             test_ai: '/api/test-ai-connection',
             ai_status: '/api/ai-engine/status',

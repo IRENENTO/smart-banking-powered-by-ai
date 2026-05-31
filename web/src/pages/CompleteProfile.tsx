@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { profileService } from '../services/api';
+import { profileService, uploadService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import styles from './Auth.module.css';
 
@@ -18,8 +18,12 @@ const CompleteProfile: React.FC = () => {
     const [address, setAddress] = useState('');
     const [nationalId, setNationalId] = useState('');
     const [profilePicture, setProfilePicture] = useState('');
+    const [profilePictureFile, setProfilePictureFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string>('');
+    const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { theme, toggleTheme } = useTheme();
     const isDark = theme === 'dark';
     const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'EN');
@@ -61,7 +65,9 @@ const CompleteProfile: React.FC = () => {
             addressPlaceholder: 'Enter your full address',
             nationalId: 'National ID',
             nationalIdPlaceholder: 'Enter your national ID number',
-            profilePicPlaceholder: 'Profile Picture URL (optional)',
+            profilePicPlaceholder: 'Upload Profile Picture (optional)',
+            uploadPhoto: 'Choose Photo',
+            changePhoto: 'Change Photo',
             button: 'Complete Profile',
             skipForNow: 'Skip for now'
         },
@@ -74,7 +80,9 @@ const CompleteProfile: React.FC = () => {
             addressPlaceholder: 'Entrez votre adresse complète',
             nationalId: 'Carte d\'identité nationale',
             nationalIdPlaceholder: 'Entrez votre numéro de carte d\'identité nationale',
-            profilePicPlaceholder: 'URL de la photo de profil (optionnel)',
+            profilePicPlaceholder: 'Télécharger une photo de profil (optionnel)',
+            uploadPhoto: 'Choisir une photo',
+            changePhoto: 'Changer la photo',
             button: 'Compléter le profil',
             skipForNow: 'Passer pour le moment'
         },
@@ -87,7 +95,9 @@ const CompleteProfile: React.FC = () => {
             addressPlaceholder: 'Andika aderesi yawe yose',
             nationalId: 'Indangamuntu',
             nationalIdPlaceholder: 'Andika nomero y\'indangamuntu yawe',
-            profilePicPlaceholder: 'URL y\'ifoto (sitingombwa)',
+            profilePicPlaceholder: 'Shyiramo ifoto (sitingombwa)',
+            uploadPhoto: 'Hitamo ifoto',
+            changePhoto: 'Hindura ifoto',
             button: 'Kuzamura profil',
             skipForNow: 'Kureka nonaha'
         }
@@ -127,9 +137,26 @@ const CompleteProfile: React.FC = () => {
             return;
         }
 
+        let finalProfilePicture = profilePicture;
+
+        if (profilePictureFile) {
+            setUploading(true);
+            try {
+                const uploadResponse = await uploadService.uploadProfilePicture(profilePictureFile);
+                if (uploadResponse.data.imageUrl) {
+                    finalProfilePicture = uploadResponse.data.imageUrl;
+                }
+            } catch (uploadErr: any) {
+                setError(uploadErr.response?.data?.msg || 'Failed to upload profile picture');
+                setUploading(false);
+                return;
+            }
+            setUploading(false);
+        }
+
         setLoading(true);
         try {
-            const response = await profileService.completeProfile({ dateOfBirth, address, nationalId, profilePicture });
+            const response = await profileService.completeProfile({ dateOfBirth, address, nationalId, profilePicture: finalProfilePicture });
             const returned = response.data || {};
             const currentUser = parseJSON(localStorage.getItem('user')) || {};
             const updatedUser = {
@@ -238,14 +265,57 @@ const CompleteProfile: React.FC = () => {
                                 </svg>
                             </div>
                             <input
+                                ref={fileInputRef}
                                 className={styles.input}
-                                type="text"
+                                type="file"
+                                accept="image/*"
                                 name="profilePicture"
                                 id="profilePicture"
-                                placeholder={t.profilePicPlaceholder}
-                                value={profilePicture}
-                                onChange={(e) => setProfilePicture(e.target.value)}
+                                style={{ display: 'none' }}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                        setProfilePictureFile(file);
+                                        const reader = new FileReader();
+                                        reader.onload = (event) => {
+                                            setPreviewUrl(event.target?.result as string);
+                                        };
+                                        reader.readAsDataURL(file);
+                                    }
+                                }}
                             />
+                            <div
+                                onClick={() => fileInputRef.current?.click()}
+                                style={{
+                                    cursor: 'pointer',
+                                    padding: '8px 12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    width: '100%'
+                                }}
+                            >
+                                {previewUrl ? (
+                                    <img
+                                        src={previewUrl}
+                                        alt="Preview"
+                                        style={{
+                                            width: '48px',
+                                            height: '48px',
+                                            borderRadius: '50%',
+                                            objectFit: 'cover',
+                                            border: '2px solid #ccc'
+                                        }}
+                                    />
+                                ) : (
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="#999">
+                                        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
+                                    </svg>
+                                )}
+                                <span style={{ color: '#666', fontSize: '14px' }}>
+                                    {previewUrl ? t.changePhoto : t.uploadPhoto}
+                                </span>
+                            </div>
                         </div>
                         
                         {error && <div className={styles.errorMsg}>{error}</div>}
@@ -253,8 +323,8 @@ const CompleteProfile: React.FC = () => {
                         <input 
                             className={styles.loginButton} 
                             type="submit" 
-                            value={loading ? 'Saving...' : t.button}
-                            disabled={loading}
+                            value={uploading ? 'Uploading...' : loading ? 'Saving...' : t.button}
+                            disabled={loading || uploading}
                         />
                     </form>
                     
@@ -262,7 +332,7 @@ const CompleteProfile: React.FC = () => {
                         <button
                             onClick={handleSkip}
                             className={styles.resendButton}
-                            disabled={loading}
+                            disabled={loading || uploading}
                         >
                             {t.skipForNow}
                         </button>

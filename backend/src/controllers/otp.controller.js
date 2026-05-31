@@ -34,17 +34,18 @@ exports.sendOTP = async (req, res) => {
         });
 
         // Send OTP email
+        let emailSent = true;
         try {
             await sendOTPEmail(email, otpCode);
         } catch (emailError) {
+            emailSent = false;
             console.error('Failed to send OTP email:', emailError);
+            console.log(`[FALLBACK] OTP for ${email}: ${otpCode}`);
         }
 
-        // For development, log the OTP to console
-        console.log(`OTP for ${email}: ${otpCode}`);
-
         res.json({ 
-            msg: 'OTP sent successfully',
+            msg: emailSent ? 'OTP sent successfully' : 'Failed to send email. Please check server configuration or contact support.',
+            emailSent,
             expiresAt: expiresAt
         });
     } catch (err) {

@@ -41,6 +41,7 @@ exports.register = async (req, res) => {
             await sendOTPEmail(email, otpCode);
         } catch (emailError) {
             console.error('OTP email send error:', emailError);
+            console.log(`[FALLBACK] OTP for ${email}: ${otpCode}`);
         }
 
         const payload = { user: { id: user.id, role: user.role } };
