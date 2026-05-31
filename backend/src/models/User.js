@@ -202,7 +202,9 @@ class User {
 
     async getBalance(userId) {
         const result = await db.query('SELECT balance FROM users WHERE id = ?', [userId]);
-        return result.rows[0] ? result.rows[0].balance : 0;
+        if (!result.rows[0]) return 0;
+        const balance = parseFloat(result.rows[0].balance);
+        return Number.isFinite(balance) ? balance : 0;
     }
 }
 

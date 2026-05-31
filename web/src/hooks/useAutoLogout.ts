@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const INACTIVITY_TIMEOUT = 5 * 60 * 1000;
-const HEALTH_CHECK_INTERVAL = 30 * 1000;
-const MAX_CONSECUTIVE_FAILURES = 2;
+const HEALTH_CHECK_INTERVAL = 60 * 1000;
+const MAX_CONSECUTIVE_FAILURES = 3;
 
 const LOGOUT_EVENTS = ['mousemove', 'keydown', 'mousedown', 'scroll', 'touchstart', 'click'];
 

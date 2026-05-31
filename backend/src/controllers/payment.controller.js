@@ -10,35 +10,28 @@ exports.deposit = async (req, res) => {
         const { amount, description } = req.body;
         const userId = req.user.id;
         const amountValue = parseFloat(amount);
-        const sourcePhone = (req.body.phoneNumber || req.user.phone || '').toString().trim();
 
         if (!Number.isFinite(amountValue) || amountValue <= 0) {
             return res.status(400).json({ msg: 'Amount must be greater than 0' });
         }
 
         const currentBalance = await User.getBalance(userId);
+        const currentBalanceNum = Number.isFinite(currentBalance) ? currentBalance : 0;
+        const newBalance = currentBalanceNum + amountValue;
+        const sourcePhone = (req.body.phoneNumber || req.user.phone || '').toString().trim();
 
-        // Credit balance immediately (works for both phone and internal deposits)
-        const newBalance = parseFloat(currentBalance) + amountValue;
-        await User.updateBalance(userId, newBalance);
-
-        // Try PayPack cashin if phone provided (non-blocking - balance already credited)
+        // Try PayPack cashin if phone provided (non-blocking)
         if (sourcePhone) {
             let providerRef = null;
-            try {
-                const paypackRes = await paypack.initiateCashin(sourcePhone, amountValue);
-                providerRef = paypackRes?.ref || null;
-            } catch (err) {
-                console.warn('PayPack cashin initiation failed (balance already credited):', err.message);
-            }
 
+            // Create records BEFORE crediting balance
             const transaction = await Transaction.create({
                 user_id: userId,
                 type: 'deposit',
                 amount: amountValue,
                 description: description || `Mobile money deposit from ${sourcePhone}`,
-                balance_before: parseFloat(currentBalance),
-                balance_after: parseFloat(newBalance),
+                balance_before: currentBalanceNum,
+                balance_after: newBalance,
                 status: 'completed'
             });
 
@@ -46,15 +39,32 @@ exports.deposit = async (req, res) => {
                 user_id: userId,
                 payment_type: 'deposit',
                 provider: 'paypack',
-                provider_reference: providerRef,
+                provider_reference: null,
                 account_or_phone: sourcePhone,
                 amount: amountValue,
-                status: providerRef ? 'completed' : 'pending',
+                status: 'pending',
                 description: description || `Mobile money deposit from ${sourcePhone}`,
                 transaction_reference: transaction.reference_number,
-                balance_before: parseFloat(currentBalance),
-                balance_after: parseFloat(newBalance)
+                balance_before: currentBalanceNum,
+                balance_after: newBalance
             });
+
+            // Credit balance AFTER records are created
+            await User.updateBalance(userId, newBalance);
+
+            // Non-blocking PayPack attempt
+            try {
+                const paypackRes = await paypack.initiateCashin(sourcePhone, amountValue);
+                providerRef = paypackRes?.ref || null;
+                if (providerRef) {
+                    await global.dbConnection.execute(
+                        'UPDATE payments SET provider_reference = ?, status = ? WHERE id = ?',
+                        [providerRef, 'completed', payment.id]
+                    );
+                }
+            } catch (err) {
+                console.warn('PayPack cashin initiation failed (balance already credited):', err.message);
+            }
 
             return res.status(201).json({
                 msg: 'Deposit successful. Your balance has been updated.',
@@ -76,20 +86,22 @@ exports.deposit = async (req, res) => {
                     status: payment.status,
                     created_at: payment.created_at
                 },
-                new_balance: parseFloat(newBalance)
+                new_balance: newBalance
             });
         }
 
-        // Internal deposit (no phone) - instant
+        // Internal deposit (no phone) - create record first, then credit
         const transaction = await Transaction.create({
             user_id: userId,
             type: 'deposit',
             amount: amountValue,
             description: description || 'Deposit',
-            balance_before: parseFloat(currentBalance),
-            balance_after: parseFloat(newBalance),
+            balance_before: currentBalanceNum,
+            balance_after: newBalance,
             status: 'completed'
         });
+
+        await User.updateBalance(userId, newBalance);
 
         res.status(201).json({
             msg: 'Deposit successful',
@@ -102,7 +114,7 @@ exports.deposit = async (req, res) => {
                 balance_after: transaction.balance_after,
                 created_at: transaction.created_at
             },
-            new_balance: parseFloat(newBalance)
+            new_balance: newBalance
         });
     } catch (err) {
         console.error('Deposit error:', err);
@@ -116,17 +128,19 @@ exports.withdraw = async (req, res) => {
         const { amount, description } = req.body;
         const userId = req.user.id;
         const amountValue = parseFloat(amount);
-        const phoneNumber = (req.body.phoneNumber || req.user.phone || '').toString().trim();
 
         if (!Number.isFinite(amountValue) || amountValue <= 0) {
             return res.status(400).json({ msg: 'Amount must be greater than 0' });
         }
 
         const currentBalance = await User.getBalance(userId);
+        const currentBalanceNum = Number.isFinite(currentBalance) ? currentBalance : 0;
 
-        if (parseFloat(currentBalance) < amountValue) {
+        if (currentBalanceNum < amountValue) {
             return res.status(400).json({ msg: 'Insufficient balance' });
         }
+
+        const phoneNumber = (req.body.phoneNumber || req.user.phone || '').toString().trim();
 
         // Fraud detection before withdrawal
         try {
@@ -165,8 +179,8 @@ exports.withdraw = async (req, res) => {
                 type: 'withdrawal',
                 amount: amountValue,
                 description: description || `Withdrawal to ${phoneNumber}`,
-                balance_before: parseFloat(currentBalance),
-                balance_after: parseFloat(currentBalance),
+                balance_before: currentBalanceNum,
+                balance_after: currentBalanceNum,
                 status: 'pending'
             });
 
@@ -180,8 +194,8 @@ exports.withdraw = async (req, res) => {
                 status: 'pending',
                 description: description || `Withdrawal to ${phoneNumber}`,
                 transaction_reference: transaction.reference_number,
-                balance_before: parseFloat(currentBalance),
-                balance_after: parseFloat(currentBalance)
+                balance_before: currentBalanceNum,
+                balance_after: currentBalanceNum
             });
 
             let providerRef = null;
@@ -221,20 +235,20 @@ exports.withdraw = async (req, res) => {
             });
         }
 
-        // Internal withdrawal (instant)
-        const newBalance = parseFloat(currentBalance) - amountValue;
-
-        await User.updateBalance(userId, newBalance);
+        // Internal withdrawal (instant) - create record first, then debit
+        const newBalance = currentBalanceNum - amountValue;
 
         const transaction = await Transaction.create({
             user_id: userId,
             type: 'withdrawal',
             amount: amountValue,
             description: description || 'Withdrawal',
-            balance_before: parseFloat(currentBalance),
-            balance_after: parseFloat(newBalance),
+            balance_before: currentBalanceNum,
+            balance_after: newBalance,
             status: 'completed'
         });
+
+        await User.updateBalance(userId, newBalance);
 
         res.status(201).json({
             msg: 'Withdrawal successful',
@@ -247,7 +261,7 @@ exports.withdraw = async (req, res) => {
                 balance_after: transaction.balance_after,
                 created_at: transaction.created_at
             },
-            new_balance: parseFloat(newBalance)
+            new_balance: newBalance
         });
     } catch (err) {
         console.error('Withdrawal error:', err);

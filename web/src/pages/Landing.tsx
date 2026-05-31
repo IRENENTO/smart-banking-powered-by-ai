@@ -77,7 +77,10 @@ const Landing: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    background: 'linear-gradient(135deg, #0B1F3A 0%, #0B1F3A 50%, #0A9396 100%)',
+                    background: 'url(/banner.svg), linear-gradient(135deg, #0B1F3A 0%, #0B1F3A 50%, #0A9396 100%)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundBlendMode: 'overlay',
                     color: 'white',
                     padding: '80px 20px',
                     position: 'relative',
@@ -209,14 +212,14 @@ const Landing: React.FC = () => {
                                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 transition={{ duration: 0.6, ease: 'easeOut' }}
-                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(15, 23, 42, 0.15)' }}
-                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
+                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(10, 147, 150, 0.25)' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(10, 147, 150, 0.9), rgba(5, 150, 105, 0.85))', backdropFilter: 'blur(20px)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 18px 35px rgba(10, 147, 150, 0.15)', position: 'relative', overflow: 'hidden' }}
                             >
                                 <motion.div whileHover={{ scale: 1.1, rotate: 5 }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                                    <Shield size={48} style={{ color: '#0A9396' }} />
+                                    <Shield size={48} style={{ color: 'white' }} />
                                 </motion.div>
-                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>Smart Accounts</h3>
-                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Manage your checking and savings with guaranteed clarity and AI-powered insights.</p>
+                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: 'white', textAlign: 'center' }}>Smart Accounts</h3>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Manage your checking and savings with guaranteed clarity and AI-powered insights.</p>
                             </motion.div>
                         </Link>
                         <Link to={isAuthenticated ? "/payments" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
@@ -224,14 +227,14 @@ const Landing: React.FC = () => {
                                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 transition={{ duration: 0.6, ease: 'easeOut' }}
-                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(15, 23, 42, 0.15)' }}
-                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
+                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(244, 162, 97, 0.25)' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(244, 162, 97, 0.85), rgba(239, 130, 60, 0.9))', backdropFilter: 'blur(20px)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 18px 35px rgba(244, 162, 97, 0.15)', position: 'relative', overflow: 'hidden' }}
                             >
                                 <motion.div whileHover={{ scale: 1.1 }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-                                    <Zap size={48} style={{ color: '#F4A261' }} />
+                                    <Zap size={48} style={{ color: 'white' }} />
                                 </motion.div>
-                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>Instant Payments</h3>
-                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Fast transfers, mobile money, and scheduled payments from one beautiful dashboard.</p>
+                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: 'white', textAlign: 'center' }}>Instant Payments</h3>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Fast transfers, mobile money, and scheduled payments from one beautiful dashboard.</p>
                             </motion.div>
                         </Link>
                         <Link to={isAuthenticated ? "/ai-insights" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
@@ -239,14 +242,14 @@ const Landing: React.FC = () => {
                                 initial={{ opacity: 0, y: 30, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 transition={{ duration: 0.6, ease: 'easeOut' }}
-                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(15, 23, 42, 0.15)' }}
-                                style={{ background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.9))', backdropFilter: 'blur(20px)', border: '1px solid rgba(255, 255, 255, 0.5)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 18px 35px rgba(15, 23, 42, 0.08)', position: 'relative', overflow: 'hidden' }}
+                                whileHover={{ y: -8, scale: 1.02, boxShadow: '0 25px 50px rgba(11, 31, 58, 0.25)' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(11, 31, 58, 0.92), rgba(30, 41, 59, 0.88))', backdropFilter: 'blur(20px)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 18px 35px rgba(11, 31, 58, 0.15)', position: 'relative', overflow: 'hidden' }}
                             >
                                 <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 4, repeat: Infinity }} style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
                                     <Star size={48} style={{ color: '#0A9396' }} />
                                 </motion.div>
-                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textAlign: 'center' }}>AI Insights</h3>
-                                <p style={{ marginTop: 8, color: darkMode ? '#cfeff5' : '#475569', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Get intelligent spending guidance and personalised financial alerts that learn from you.</p>
+                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: '#0A9396', textAlign: 'center' }}>AI Insights</h3>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.7)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Get intelligent spending guidance and personalised financial alerts that learn from you.</p>
                             </motion.div>
                         </Link>
                     </div>
@@ -260,11 +263,15 @@ const Landing: React.FC = () => {
                         style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(250px,1fr))', gap: 'clamp(16px, 2vw, 20px)', marginBottom: 60 }}
                     >
                         <Link to={isAuthenticated ? "/dashboard" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                            <SectionCard 
-                                title="💎 Premium Features" 
-                                subtitle="Exclusive benefits for premium members including priority support and advanced analytics."
-                                style={{ background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)', height: '100%' }}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(11, 31, 58, 0.2)' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(11, 31, 58, 0.92), rgba(30, 41, 59, 0.88))', backdropFilter: 'blur(20px)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 12px 30px rgba(11, 31, 58, 0.1)', height: '100%' }}
                             >
+                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: '#0A9396' }}>💎 Premium Features</h3>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.7)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5 }}>Exclusive benefits for premium members including priority support and advanced analytics.</p>
                                 <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                                     {['Priority Support', 'Advanced Analytics', 'Custom Reports'].map((feature, index) => (
                                         <motion.div
@@ -275,26 +282,30 @@ const Landing: React.FC = () => {
                                             viewport={{ once: true }}
                                             style={{
                                                 padding: '6px 12px',
-                                                background: 'rgba(10, 147, 150, 0.1)',
-                                                border: '1px solid rgba(10, 147, 150, 0.2)',
+                                                background: 'rgba(10, 147, 150, 0.15)',
+                                                border: '1px solid rgba(10, 147, 150, 0.3)',
                                                 borderRadius: '20px',
                                                 fontSize: '12px',
-                                                color: '#0A9396'
+                                                color: '#5EEAD4'
                                             }}
                                         >
                                             {feature}
                                         </motion.div>
                                     ))}
                                 </div>
-                            </SectionCard>
+                            </motion.div>
                         </Link>
                         
                         <Link to={isAuthenticated ? "/dashboard" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                            <SectionCard 
-                                title="❤️ Trusted by Thousands" 
-                                subtitle="Join thousands of satisfied customers who trust us with their financial future."
-                                style={{ background: 'linear-gradient(135deg, #fef2f2, #fee2e2)', height: '100%' }}
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(10, 147, 150, 0.2)' }}
+                                style={{ background: 'linear-gradient(135deg, rgba(10, 147, 150, 0.9), rgba(5, 150, 105, 0.85))', backdropFilter: 'blur(20px)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 12px 30px rgba(10, 147, 150, 0.12)', height: '100%' }}
                             >
+                                <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: 'white' }}>❤️ Trusted by Thousands</h3>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5 }}>Join thousands of satisfied customers who trust us with their financial future.</p>
                                 <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, textAlign: 'center' }}>
                                     {[
                                         { number: '50K+', label: 'Users' },
@@ -308,30 +319,34 @@ const Landing: React.FC = () => {
                                             transition={{ delay: 0.1 * index }}
                                             viewport={{ once: true }}
                                         >
-                                            <div style={{ fontSize: '24px', fontWeight: 700, color: '#0A9396' }}>{stat.number}</div>
-                                            <div style={{ fontSize: '12px', color: '#64748b', marginTop: 4 }}>{stat.label}</div>
+                                            <div style={{ fontSize: '24px', fontWeight: 700, color: 'white' }}>{stat.number}</div>
+                                            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>{stat.label}</div>
                                         </motion.div>
                                     ))}
                                 </div>
-                            </SectionCard>
+                            </motion.div>
                         </Link>
                         
-                        <SectionCard 
-                            title="🚀 Quick Start" 
-                            subtitle="Get started in minutes with our simple onboarding process and intuitive interface."
-                            style={{ background: 'linear-gradient(135deg, #f0f9fa, #e0f7fa)' }}
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(244, 162, 97, 0.2)' }}
+                            style={{ background: 'linear-gradient(135deg, rgba(244, 162, 97, 0.85), rgba(239, 130, 60, 0.9))', backdropFilter: 'blur(20px)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 12px 30px rgba(244, 162, 97, 0.12)', height: '100%' }}
                         >
+                            <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: 'white' }}>🚀 Quick Start</h3>
+                            <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5 }}>Get started in minutes with our simple onboarding process and intuitive interface.</p>
                             <LoadingButton
                                 loading={loading === 'quickstart'}
                                 onClick={() => handleAction('quickstart', '/register')}
                                 variant="ghost"
                                 size="sm"
-                                style={{ marginTop: 16, width: '100%' }}
+                                style={{ marginTop: 16, width: '100%', color: 'white', border: '1px solid rgba(255,255,255,0.3)' }}
                             >
                                 Start Now
                                 <ArrowRight size={16} />
                             </LoadingButton>
-                        </SectionCard>
+                        </motion.div>
                     </motion.div>
 
                     <div className="ai-benefits-grid">
