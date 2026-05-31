@@ -124,6 +124,8 @@ export const BankingProvider: React.FC<BankingProviderProps> = ({ children }) =>
             if (balanceRes.status === 'fulfilled') {
                 setBalance(balanceRes.value.data?.balance ?? 0);
             } else {
+                const reason = balanceRes.reason;
+                console.error('Balance fetch failed:', reason?.response?.status, reason?.response?.data?.msg || reason?.message);
                 setBalance(0);
             }
 

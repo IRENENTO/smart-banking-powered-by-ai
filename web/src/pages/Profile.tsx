@@ -5,7 +5,7 @@ import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
 import { profileService, uploadService } from '../services/api';
 
-const API_BASE = 'http://localhost:5001';
+const API_BASE = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:4000';
 
 const parseJSON = (value: string | null) => {
     if (!value || value === 'undefined' || value === 'null') return null;
