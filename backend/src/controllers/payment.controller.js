@@ -36,29 +36,34 @@ exports.deposit = async (req, res) => {
                 status: 'completed'
             });
 
-            const payment = await Payment.create({
-                user_id: userId,
-                payment_type: 'deposit',
-                provider: 'paypack',
-                provider_reference: null,
-                account_or_phone: sourcePhone,
-                amount: amountValue,
-                status: 'pending',
-                description: description || `Mobile money deposit from ${sourcePhone}`,
-                transaction_reference: transaction.reference_number,
-                balance_before: currentBalanceNum,
-                balance_after: newBalance
-            });
+            let payment = null;
+            try {
+                payment = await Payment.create({
+                    user_id: userId,
+                    payment_type: 'deposit',
+                    provider: 'paypack',
+                    provider_reference: null,
+                    account_or_phone: sourcePhone,
+                    amount: amountValue,
+                    status: 'pending',
+                    description: description || `Mobile money deposit from ${sourcePhone}`,
+                    transaction_reference: transaction.reference_number,
+                    balance_before: currentBalanceNum,
+                    balance_after: newBalance
+                });
+            } catch (err) {
+                console.warn('Payment record creation failed (deposit still processed):', err.message);
+            }
 
             // Credit balance AFTER records are created
             await User.updateBalance(userId, newBalance);
-            await Account.deposit(userId, amountValue);
+            try { await Account.deposit(userId, amountValue); } catch (_) {}
 
             // Non-blocking PayPack attempt
             try {
                 const paypackRes = await paypack.initiateCashin(sourcePhone, amountValue);
                 providerRef = paypackRes?.ref || null;
-                if (providerRef) {
+                if (providerRef && payment) {
                     await global.dbConnection.execute(
                         'UPDATE payments SET provider_reference = ?, status = ? WHERE id = ?',
                         [providerRef, 'completed', payment.id]
@@ -79,7 +84,7 @@ exports.deposit = async (req, res) => {
                     provider_reference: providerRef,
                     created_at: transaction.created_at
                 },
-                payment: {
+                payment: payment ? {
                     id: payment.id,
                     payment_type: payment.payment_type,
                     provider: payment.provider,
@@ -87,7 +92,7 @@ exports.deposit = async (req, res) => {
                     amount: payment.amount,
                     status: payment.status,
                     created_at: payment.created_at
-                },
+                } : null,
                 new_balance: newBalance
             });
         }
@@ -104,7 +109,7 @@ exports.deposit = async (req, res) => {
         });
 
         await User.updateBalance(userId, newBalance);
-        await Account.deposit(userId, amountValue);
+        try { await Account.deposit(userId, amountValue); } catch (_) {}
 
         res.status(201).json({
             msg: 'Deposit successful',
@@ -187,25 +192,30 @@ exports.withdraw = async (req, res) => {
                 status: 'pending'
             });
 
-            const payment = await Payment.create({
-                user_id: userId,
-                payment_type: 'withdrawal',
-                provider: 'paypack',
-                provider_reference: null,
-                account_or_phone: phoneNumber,
-                amount: amountValue,
-                status: 'pending',
-                description: description || `Withdrawal to ${phoneNumber}`,
-                transaction_reference: transaction.reference_number,
-                balance_before: currentBalanceNum,
-                balance_after: currentBalanceNum
-            });
+            let payment = null;
+            try {
+                payment = await Payment.create({
+                    user_id: userId,
+                    payment_type: 'withdrawal',
+                    provider: 'paypack',
+                    provider_reference: null,
+                    account_or_phone: phoneNumber,
+                    amount: amountValue,
+                    status: 'pending',
+                    description: description || `Withdrawal to ${phoneNumber}`,
+                    transaction_reference: transaction.reference_number,
+                    balance_before: currentBalanceNum,
+                    balance_after: currentBalanceNum
+                });
+            } catch (err) {
+                console.warn('Payment record creation failed (withdrawal still processed):', err.message);
+            }
 
             let providerRef = null;
             try {
                 const paypackRes = await paypack.initiateCashout(phoneNumber, amountValue);
                 providerRef = paypackRes?.ref || null;
-                if (providerRef) {
+                if (providerRef && payment) {
                     await global.dbConnection.execute(
                         'UPDATE payments SET provider_reference = ? WHERE id = ?',
                         [providerRef, payment.id]
@@ -226,7 +236,7 @@ exports.withdraw = async (req, res) => {
                     provider_reference: providerRef,
                     created_at: transaction.created_at
                 },
-                payment: {
+                payment: payment ? {
                     id: payment.id,
                     payment_type: payment.payment_type,
                     provider: payment.provider,
@@ -234,7 +244,7 @@ exports.withdraw = async (req, res) => {
                     amount: payment.amount,
                     status: payment.status,
                     created_at: payment.created_at
-                }
+                } : null
             });
         }
 

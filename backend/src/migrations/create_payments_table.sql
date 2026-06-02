@@ -5,7 +5,7 @@
 CREATE TABLE IF NOT EXISTS payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    payment_type ENUM('bill', 'merchant', 'subscription', 'invoice', 'top_up', 'other') NOT NULL,
+    payment_type ENUM('bill', 'merchant', 'subscription', 'invoice', 'top_up', 'other', 'deposit', 'withdrawal') NOT NULL,
     provider VARCHAR(255) NOT NULL COMMENT 'e.g., MTN, Airtel, DSTV, Utility Company',
     provider_reference VARCHAR(100) COMMENT 'Reference from payment provider',
     account_or_phone VARCHAR(50) COMMENT 'Account number, phone number, or subscriber ID',

@@ -337,10 +337,14 @@ CREATE TABLE IF NOT EXISTS payment_schedules (
 -- ============================================================================
 -- TABLE: payments
 -- ============================================================================
+-- Fix: add 'deposit' and 'withdrawal' to existing tables if they were created before the migration
+ALTER TABLE payments
+MODIFY COLUMN payment_type ENUM('bill', 'merchant', 'subscription', 'invoice', 'top_up', 'other', 'deposit', 'withdrawal') NOT NULL;
+
 CREATE TABLE IF NOT EXISTS payments (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    payment_type ENUM('bill', 'merchant', 'subscription', 'invoice', 'top_up', 'other') NOT NULL,
+    payment_type ENUM('bill', 'merchant', 'subscription', 'invoice', 'top_up', 'other', 'deposit', 'withdrawal') NOT NULL,
     provider VARCHAR(255) NOT NULL,
     provider_reference VARCHAR(100),
     account_or_phone VARCHAR(50),
