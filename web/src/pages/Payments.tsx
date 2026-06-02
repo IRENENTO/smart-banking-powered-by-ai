@@ -86,7 +86,7 @@ const Payments: React.FC = () => {
         try {
             await deposit(amountValue, `Deposit via ${depositProvider.toUpperCase()}`, depositPhoneNumber || undefined);
             setMessage(depositPhoneNumber ? `Deposit initiated via ${depositProvider.toUpperCase()} on ${depositPhoneNumber}.` : `Deposited RWF ${amountValue.toLocaleString()}`);
-            setDepositAmount(''); setDepositPhoneNumber('');
+            setDepositAmount(''); setDepositPhoneNumber(''); setDepositProvider('mtn');
             addNotification({
                 title: 'Deposit Successful',
                 message: depositPhoneNumber
@@ -177,7 +177,7 @@ const Payments: React.FC = () => {
                                 </button>
                             </div>
 
-                            <input value={depositPhoneNumber} placeholder={`Phone number (${depositProvider === 'mtn' ? 'MTN' : 'Airtel'})`} type="tel" onChange={(e) => setDepositPhoneNumber(e.target.value)} {...{style: inputStyle}} required />
+                            <input value={depositPhoneNumber} placeholder={`Phone number (${depositProvider === 'mtn' ? 'MTN' : 'Airtel'}) — optional`} type="tel" onChange={(e) => setDepositPhoneNumber(e.target.value)} {...{style: inputStyle}} />
                             <button type="submit" style={{ padding: '12px 20px', background: '#059669', color: 'white', border: 'none', borderRadius: 14, fontWeight: 700 }}>Deposit</button>
                         </form>
                     </SectionCard>

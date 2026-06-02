@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Account = require('../models/Account');
 const Transaction = require('../models/Transaction');
 const Payment = require('../models/Payment');
 const paypack = require('../services/paypack.service');
@@ -51,6 +52,7 @@ exports.deposit = async (req, res) => {
 
             // Credit balance AFTER records are created
             await User.updateBalance(userId, newBalance);
+            await Account.deposit(userId, amountValue);
 
             // Non-blocking PayPack attempt
             try {
@@ -102,6 +104,7 @@ exports.deposit = async (req, res) => {
         });
 
         await User.updateBalance(userId, newBalance);
+        await Account.deposit(userId, amountValue);
 
         res.status(201).json({
             msg: 'Deposit successful',

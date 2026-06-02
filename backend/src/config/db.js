@@ -43,7 +43,7 @@ function convertParams(sql, params) {
 
 async function query(sql, params) {
     const { sql: convertedSql, params: convertedParams } = convertParams(sql, params);
-    const mysqlSql = convertedSql.replace(/\s+RETURNING\s+\S+/gi, '');
+    const mysqlSql = convertedSql.replace(/\s+RETURNING\s+.+/gi, '');
     
     try {
         const [rows] = await pool.query(mysqlSql, convertedParams);

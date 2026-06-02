@@ -31,12 +31,7 @@ async function checkPendingPayments() {
               [payment.transaction_reference]
             );
 
-            if (payment.payment_type === 'deposit') {
-              await connection.execute(
-                `UPDATE users SET balance = balance + ? WHERE id = ?`,
-                [payment.amount, payment.user_id]
-              );
-            } else if (payment.payment_type === 'withdrawal') {
+            if (payment.payment_type === 'withdrawal') {
               const [userRows] = await connection.execute(
                 `SELECT balance FROM users WHERE id = ?`,
                 [payment.user_id]
