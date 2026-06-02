@@ -53,7 +53,11 @@ const Settings: React.FC = () => {
     setPinLoading(true); setPinError(''); setPinMessage('');
     try {
       const res = await securityService.forgotPinSendOTP();
-      setPinMessage(res.data.msg || 'OTP sent to your email');
+      if (res.data.emailSent === false && res.data.otp) {
+        setPinMessage(`Email delivery failed. Your OTP is: ${res.data.otp}`);
+      } else {
+        setPinMessage('OTP sent to your email');
+      }
       setPinStep('new-pin');
     } catch (err: any) {
       setPinError(err.response?.data?.msg || 'Failed to send OTP');

@@ -2,7 +2,7 @@ services:
   - type: web
     name: ai-banking-api
     env: node
-    buildCommand: npm install
+    buildCommand: npm install && node scripts/migrate.js
     startCommand: npm start
     healthCheckPath: /
     envVars:
@@ -10,8 +10,16 @@ services:
         value: production
       - key: PORT
         value: 5001
-      - key: DATABASE_URL
+      - key: DB_HOST
         sync: false
+      - key: DB_PORT
+        value: 4000
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: TIDB_DB_NAME
+        value: smart_banking_powered_by_ai
       - key: JWT_SECRET
         sync: false
       - key: SUPABASE_URL
