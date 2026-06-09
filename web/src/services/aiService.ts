@@ -179,10 +179,16 @@ const getFallbackRecommendationsResponse = (data: RecommendationRequest): Recomm
 };
 
 const getFallbackSpendingResponse = (transactions: any[], monthlyIncome?: number): SpendingAnalysisResponse => {
-    const expenseTypes = new Set(['payment', 'withdraw', 'withdrawal', 'expense']);
-    const incomeTypes = new Set(['transfer', 'deposit', 'income']);
-    const expenses = (transactions || []).filter(t => expenseTypes.has(t.type));
-    const incomes = (transactions || []).filter(t => incomeTypes.has(t.type));
+    const isExpense = (t: any) => {
+        if (t.balance_before != null && t.balance_after != null) return Number(t.balance_after) < Number(t.balance_before);
+        return ['payment', 'withdrawal', 'withdraw', 'expense'].includes(t.type);
+    };
+    const isIncome = (t: any) => {
+        if (t.balance_before != null && t.balance_after != null) return Number(t.balance_after) > Number(t.balance_before);
+        return ['deposit', 'income'].includes(t.type);
+    };
+    const expenses = (transactions || []).filter(t => isExpense(t));
+    const incomes = (transactions || []).filter(t => isIncome(t));
     const totalSpent = expenses.reduce((s, t) => s + Number(t.amount || 0), 0);
     const totalIncome = incomes.reduce((s, t) => s + Number(t.amount || 0), 0);
     const income = monthlyIncome || totalIncome || 1;

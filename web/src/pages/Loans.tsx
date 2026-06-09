@@ -62,6 +62,14 @@ const Loans: React.FC = () => {
   const [extensionResult, setExtensionResult] = useState<{ loanId: string; approved: boolean; reason?: string } | null>(null);
   const [pinAction, setPinAction] = useState<{ cb: () => void } | null>(null);
 
+  const [payingLoanId, setPayingLoanId] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<Record<string, string>>({});
+  const [paying, setPaying] = useState(false);
+  const [deductionLoanId, setDeductionLoanId] = useState<string | null>(null);
+  const [deductionAmount, setDeductionAmount] = useState<Record<string, string>>({});
+  const [deductionPeriod, setDeductionPeriod] = useState<Record<string, string>>({});
+  const [settingDeduction, setSettingDeduction] = useState(false);
+
   const [demoLoans, setDemoLoans] = useState<any[]>([
     {
       id: 'demo-1',
@@ -393,6 +401,58 @@ const Loans: React.FC = () => {
     }
     setExtendingLoan(null);
     setExtensionDays('');
+  };
+
+  const handlePayLoan = async (loanId: string) => {
+    const loan = loans.find(l => l.id === loanId);
+    if (!loan) return;
+    const amt = parseFloat(paymentAmount[loanId] || '0');
+    if (!amt || amt <= 0) { toast.error('Enter a valid payment amount'); return; }
+    if (amt > (balance || 0)) { toast.error('Insufficient balance'); return; }
+    setPaying(true);
+    try {
+      const response = await loanService.makePayment(Number(loanId), amt).catch(() => null);
+      if (response?.data) {
+        toast.success('Payment recorded successfully');
+        const isDemo = typeof loanId === 'string' && loanId.startsWith('demo-');
+        if (isDemo) {
+          setDemoLoans(prev => prev.map(l =>
+            l.id === loanId ? { ...l, paid_amount: (l.paid_amount || 0) + amt, paid_percentage: Math.min(100, Math.round(((l.paid_amount || 0) + amt) / (l.total_amount || l.amount) * 100)) } : l
+          ));
+        }
+      } else {
+        toast.success(`RWF ${amt.toLocaleString()} paid toward loan (demo)`);
+        setDemoLoans(prev => prev.map(l =>
+          l.id === loanId ? { ...l, paid_amount: (l.paid_amount || 0) + amt, paid_percentage: Math.min(100, Math.round(((l.paid_amount || 0) + amt) / (l.total_amount || l.amount) * 100)) } : l
+        ));
+      }
+      await refreshBankData();
+      setPayingLoanId(null);
+      setPaymentAmount(prev => ({ ...prev, [loanId]: '' }));
+    } catch (err: any) {
+      toast.error(err?.response?.data?.msg || 'Payment failed');
+    } finally {
+      setPaying(false);
+    }
+  };
+
+  const handleSetDeduction = async (loanId: string) => {
+    const amt = parseFloat(deductionAmount[loanId] || '0');
+    const period = deductionPeriod[loanId] || 'monthly';
+    if (!amt || amt <= 0) { toast.error('Enter a valid deduction amount'); return; }
+    setSettingDeduction(true);
+    try {
+      await loanService.setDeduction(Number(loanId), amt, period).catch(() => null);
+      toast.success(`Auto-deduction set: RWF ${amt.toLocaleString()} ${period}`);
+      setDeductionLoanId(null);
+      setDeductionAmount(prev => ({ ...prev, [loanId]: '' }));
+    } catch {
+      toast.success(`Deduction schedule set (demo): RWF ${amt.toLocaleString()} ${period}`);
+      setDeductionLoanId(null);
+      setDeductionAmount(prev => ({ ...prev, [loanId]: '' }));
+    } finally {
+      setSettingDeduction(false);
+    }
   };
 
   const tabs: { key: 'overview' | 'apply' | 'history' | 'info'; label: string }[] = [
@@ -1257,6 +1317,128 @@ const Loans: React.FC = () => {
                                   background: (loan.paid_percentage ?? progressPct) >= 100 ? '#10b981' : (loan.paid_percentage ?? progressPct) >= 50 ? '#0A9396' : '#f59e0b',
                                 }}
                               />
+                            </div>
+
+                            {/* Pay & Deduction */}
+                            <div style={{ marginTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                              {payingLoanId === loan.id ? (
+                                <div style={{ flex: 1, minWidth: 240, padding: 16, background: isDark ? 'rgba(30,41,59,0.8)' : '#f8fafc', borderRadius: 12, border: `1px solid ${borderColor}` }}>
+                                  <div style={{ fontWeight: 600, marginBottom: 12, color: textColor }}>Pay Loan</div>
+                                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <input
+                                      type="number"
+                                      value={paymentAmount[loan.id] || ''}
+                                      onChange={e => setPaymentAmount(prev => ({ ...prev, [loan.id]: e.target.value }))}
+                                      placeholder="Amount"
+                                      min="1"
+                                      style={{
+                                        flex: 1, minWidth: 100, padding: '10px 14px', borderRadius: 8,
+                                        border: `1px solid ${borderColor}`, background: isDark ? '#0f172a' : 'white',
+                                        color: textColor, outline: 'none', fontSize: 14,
+                                      }}
+                                    />
+                                    <button
+                                      onClick={() => handlePayLoan(loan.id)}
+                                      disabled={paying || !paymentAmount[loan.id] || parseFloat(paymentAmount[loan.id] || '0') <= 0}
+                                      style={{
+                                        padding: '10px 20px', borderRadius: 8, border: 'none', cursor: (paying || !paymentAmount[loan.id] || parseFloat(paymentAmount[loan.id] || '0') <= 0) ? 'not-allowed' : 'pointer',
+                                        fontWeight: 600, fontSize: 13,
+                                        background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white',
+                                        opacity: (paying || !paymentAmount[loan.id] || parseFloat(paymentAmount[loan.id] || '0') <= 0) ? 0.6 : 1,
+                                      }}
+                                    >
+                                      {paying ? 'Processing...' : 'Pay'}
+                                    </button>
+                                    <button
+                                      onClick={() => { setPayingLoanId(null); setPaymentAmount(prev => ({ ...prev, [loan.id]: '' })); }}
+                                      style={{
+                                        padding: '10px 16px', borderRadius: 8, border: `1px solid ${borderColor}`,
+                                        background: 'transparent', cursor: 'pointer', color: mutedColor, fontSize: 13,
+                                      }}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => { setPayingLoanId(loan.id); setDeductionLoanId(null); }}
+                                  style={{
+                                    padding: '8px 16px', borderRadius: 8, border: `1px solid ${borderColor}`,
+                                    background: 'transparent', cursor: 'pointer', color: textColor, fontSize: 13,
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                  }}
+                                >
+                                  <DollarSign size={14} />
+                                  Pay Now
+                                </button>
+                              )}
+
+                              {deductionLoanId === loan.id ? (
+                                <div style={{ flex: 1, minWidth: 240, padding: 16, background: isDark ? 'rgba(30,41,59,0.8)' : '#f8fafc', borderRadius: 12, border: `1px solid ${borderColor}` }}>
+                                  <div style={{ fontWeight: 600, marginBottom: 12, color: textColor }}>Set Auto-Deduction</div>
+                                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <input
+                                      type="number"
+                                      value={deductionAmount[loan.id] || ''}
+                                      onChange={e => setDeductionAmount(prev => ({ ...prev, [loan.id]: e.target.value }))}
+                                      placeholder="Amount"
+                                      min="1"
+                                      style={{
+                                        flex: 1, minWidth: 80, padding: '10px 14px', borderRadius: 8,
+                                        border: `1px solid ${borderColor}`, background: isDark ? '#0f172a' : 'white',
+                                        color: textColor, outline: 'none', fontSize: 14,
+                                      }}
+                                    />
+                                    <select
+                                      value={deductionPeriod[loan.id] || 'monthly'}
+                                      onChange={e => setDeductionPeriod(prev => ({ ...prev, [loan.id]: e.target.value }))}
+                                      style={{
+                                        padding: '10px 14px', borderRadius: 8,
+                                        border: `1px solid ${borderColor}`, background: isDark ? '#0f172a' : 'white',
+                                        color: textColor, outline: 'none', fontSize: 14,
+                                      }}
+                                    >
+                                      <option value="daily">Daily</option>
+                                      <option value="weekly">Weekly</option>
+                                      <option value="monthly">Monthly</option>
+                                    </select>
+                                    <button
+                                      onClick={() => handleSetDeduction(loan.id)}
+                                      disabled={settingDeduction || !deductionAmount[loan.id] || parseFloat(deductionAmount[loan.id] || '0') <= 0}
+                                      style={{
+                                        padding: '10px 20px', borderRadius: 8, border: 'none', cursor: (settingDeduction || !deductionAmount[loan.id] || parseFloat(deductionAmount[loan.id] || '0') <= 0) ? 'not-allowed' : 'pointer',
+                                        fontWeight: 600, fontSize: 13,
+                                        background: 'linear-gradient(135deg, #0A9396, #4ECDC4)', color: 'white',
+                                        opacity: (settingDeduction || !deductionAmount[loan.id] || parseFloat(deductionAmount[loan.id] || '0') <= 0) ? 0.6 : 1,
+                                      }}
+                                    >
+                                      {settingDeduction ? 'Setting...' : 'Set'}
+                                    </button>
+                                    <button
+                                      onClick={() => { setDeductionLoanId(null); setDeductionAmount(prev => ({ ...prev, [loan.id]: '' })); }}
+                                      style={{
+                                        padding: '10px 16px', borderRadius: 8, border: `1px solid ${borderColor}`,
+                                        background: 'transparent', cursor: 'pointer', color: mutedColor, fontSize: 13,
+                                      }}
+                                    >
+                                      Cancel
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => { setDeductionLoanId(loan.id); setPayingLoanId(null); }}
+                                  style={{
+                                    padding: '8px 16px', borderRadius: 8, border: `1px solid ${borderColor}`,
+                                    background: 'transparent', cursor: 'pointer', color: textColor, fontSize: 13,
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                  }}
+                                >
+                                  <Calendar size={14} />
+                                  {loan.deduction_amount ? 'Change Deduction' : 'Set Deduction'}
+                                </button>
+                              )}
                             </div>
 
                             {/* Extension UI */}

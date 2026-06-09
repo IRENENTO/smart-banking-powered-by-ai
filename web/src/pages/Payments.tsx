@@ -25,7 +25,20 @@ const Payments: React.FC = () => {
 
     // Send state
     const [payType, setPayType] = useState<'phone' | 'account'>('account');
-    const [sendData, setSendData] = useState({ recipient: '', phone: '', account: '', amount: '', note: '' });
+    const [sendData, setSendData] = useState({ recipient: '', phone: '', account: '', amount: '', note: '', category: '' });
+
+    const CATEGORIES = [
+        { value: 'food', label: 'Food' },
+        { value: 'transport', label: 'Transport' },
+        { value: 'bills', label: 'Bills' },
+        { value: 'mobile_money', label: 'Mobile Money' },
+        { value: 'entertainment', label: 'Entertainment' },
+        { value: 'shopping', label: 'Shopping' },
+        { value: 'health', label: 'Health' },
+        { value: 'education', label: 'Education' },
+        { value: 'rent', label: 'Rent' },
+        { value: 'other', label: 'Other' },
+    ];
 
     // Deposit state
     const [depositAmount, setDepositAmount] = useState('');
@@ -61,12 +74,13 @@ const Payments: React.FC = () => {
         if (!sendData.recipient) { setError('Enter recipient name'); return; }
         const recipientId = payType === 'phone' ? sendData.phone : sendData.account;
         if (!recipientId) { setError(payType === 'phone' ? 'Enter phone number' : 'Enter account number'); return; }
+        if (!sendData.category) { setError('Select a spending category'); return; }
         setPinAction({
             cb: async () => {
                 try {
-                    await sendPayment(amountValue, recipientId, sendData.recipient, sendData.note);
+                    await sendPayment(amountValue, recipientId, sendData.recipient, sendData.note, sendData.category);
                     setMessage(`Sent RWF ${amountValue.toLocaleString()} to ${sendData.recipient}`);
-                    setSendData({ recipient: '', phone: '', account: '', amount: '', note: '' });
+                    setSendData({ recipient: '', phone: '', account: '', amount: '', note: '', category: '' });
                     addNotification({
                         title: 'Payment Sent',
                         message: `RWF ${amountValue.toLocaleString()} sent to ${sendData.recipient} successfully.`,
@@ -212,6 +226,10 @@ const Payments: React.FC = () => {
                             )}
                             <input value={sendData.amount} placeholder="Amount (RWF)" type="text" inputMode="decimal" onChange={(e) => setSendData({ ...sendData, amount: e.target.value })} {...{style: inputStyle}} required />
                             <input value={sendData.note} placeholder="Note (optional)" onChange={(e) => setSendData({ ...sendData, note: e.target.value })} {...{style: inputStyle}} />
+                            <select value={sendData.category} onChange={(e) => setSendData({ ...sendData, category: e.target.value })} required style={{ ...inputStyle, appearance: 'auto' as const }}>
+                                <option value="">-- Select spending category --</option>
+                                {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                            </select>
                             <button type="submit" style={{ padding: '12px 20px', background: '#0A9396', color: 'white', border: 'none', borderRadius: 14, fontWeight: 700 }}>Send Payment</button>
                         </form>
                     </SectionCard>

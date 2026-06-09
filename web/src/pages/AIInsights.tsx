@@ -96,7 +96,7 @@ const AIInsights: React.FC = () => {
                     sectors: generateSectors(recsData),
                     recommendations: recsData || null,
                     riskAnalysis: { sectors: generateRiskSectors(recsData), overall_market_risk: 'moderate', ai_insight: 'AI analysis available.' },
-                    fraudAlerts: { alerts: [], total: 0, critical_count: 0 },
+                    fraudAlerts: DEMO_FRAUD_ALERTS,
                     economicIndicators: { inflation_rate: 2.5, gdp_growth: 3.2, market_sentiment: 'positive' },
                 });
             } else {
@@ -106,7 +106,7 @@ const AIInsights: React.FC = () => {
                     sectors: fallbackSectors,
                     recommendations: null,
                     riskAnalysis: { sectors: generateRiskSectors(null), overall_market_risk: 'moderate', ai_insight: 'Connect AI Engine for detailed market analysis.' },
-                    fraudAlerts: { alerts: [], total: 0, critical_count: 0 },
+                    fraudAlerts: DEMO_FRAUD_ALERTS,
                     economicIndicators: { inflation_rate: 2.5, gdp_growth: 3.2, market_sentiment: 'positive' },
                 });
             }
@@ -170,6 +170,35 @@ const AIInsights: React.FC = () => {
         cryptocurrency: { risk: 'high', growth: 35, trend: 'up', volatility: 'High', factors: ['Regulatory uncertainty', 'Market manipulation', 'Security risks'], recommendation: 'Limit to 5-10% of portfolio; consider hedging' },
         'small-cap stocks': { risk: 'high', growth: 20, trend: 'up', volatility: 'High', factors: ['Low liquidity', 'Earnings volatility', 'Limited coverage'], recommendation: 'Limit to 5-10% of portfolio; consider hedging' },
         'real estate development': { risk: 'high', growth: 15, trend: 'up', volatility: 'High', factors: ['Construction delays', 'Financing risks', 'Market demand shifts'], recommendation: 'Limit to 5-10% of portfolio; consider hedging' },
+    };
+
+    const DEMO_FRAUD_ALERTS = {
+        alerts: [
+            ...Array.from({ length: 8 }, (_, i) => ({
+                id: `fraud-demo-${i + 2}`,
+                type: 'large_transaction',
+                severity: 'medium' as const,
+                status: 'pending',
+                amount: 1000000,
+                description: 'Large transaction of RWF 1,000,000 detected',
+                timestamp: '2026-05-31T00:00:00.000Z',
+                user_email: 'Unknown',
+                region: 'Kigali',
+            })),
+            {
+                id: 'fraud-demo-1',
+                type: 'large_transaction',
+                severity: 'high' as const,
+                status: 'pending',
+                amount: 5000001,
+                description: 'Large transaction of RWF 5,000,001 detected',
+                timestamp: '2026-06-01T00:00:00.000Z',
+                user_email: 'Unknown',
+                region: 'Kigali',
+            },
+        ],
+        total: 9,
+        critical_count: 1,
     };
 
     const RWANDA_DISTRICTS: Record<string, { businesses: string[]; description: string }> = {

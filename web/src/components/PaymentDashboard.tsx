@@ -43,6 +43,20 @@ const PaymentDashboard: React.FC = () => {
     const [depositProvider, setDepositProvider] = useState<'mtn' | 'airtel'>('mtn');
     const [recipientAccount, setRecipientAccount] = useState<string>('');
     const [recipientName, setRecipientName] = useState<string>('');
+    const [paymentCategory, setPaymentCategory] = useState<string>('');
+
+    const CATEGORIES = [
+        { value: 'food', label: 'Food' },
+        { value: 'transport', label: 'Transport' },
+        { value: 'bills', label: 'Bills' },
+        { value: 'mobile_money', label: 'Mobile Money' },
+        { value: 'entertainment', label: 'Entertainment' },
+        { value: 'shopping', label: 'Shopping' },
+        { value: 'health', label: 'Health' },
+        { value: 'education', label: 'Education' },
+        { value: 'rent', label: 'Rent' },
+        { value: 'other', label: 'Other' },
+    ];
 
     useEffect(() => {
         fetchPaymentData();
@@ -124,17 +138,23 @@ const PaymentDashboard: React.FC = () => {
             return;
         }
 
+        if (!paymentCategory) {
+            toastError('Please select a spending category');
+            return;
+        }
+
         if (parseFloat(amount) > balance) {
             toastError('Insufficient balance');
             return;
         }
 
         try {
-            await paymentService.transfer(parseFloat(amount), recipientAccount, description || 'Transfer');
+            await paymentService.transfer(parseFloat(amount), recipientAccount, description || 'Transfer', paymentCategory);
             setShowTransferModal(false);
             setAmount('');
             setDescription('');
             setRecipientAccount('');
+            setPaymentCategory('');
             fetchPaymentData();
             toastSuccess('Transfer successful!');
         } catch (error: any) {
@@ -153,18 +173,24 @@ const PaymentDashboard: React.FC = () => {
             return;
         }
 
+        if (!paymentCategory) {
+            toastError('Please select a spending category');
+            return;
+        }
+
         if (parseFloat(amount) > balance) {
             toastError('Insufficient balance');
             return;
         }
 
         try {
-            await paymentService.payment(parseFloat(amount), recipientAccount, recipientName, description || 'Payment');
+            await paymentService.payment(parseFloat(amount), recipientAccount, recipientName, description || 'Payment', paymentCategory);
             setShowPaymentModal(false);
             setAmount('');
             setDescription('');
             setRecipientAccount('');
             setRecipientName('');
+            setPaymentCategory('');
             fetchPaymentData();
             toastSuccess('Payment successful!');
         } catch (error: any) {
@@ -507,6 +533,18 @@ const PaymentDashboard: React.FC = () => {
                                     placeholder="Transfer description"
                                 />
                             </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Spending Category *</label>
+                                <select
+                                    value={paymentCategory}
+                                    onChange={(e) => setPaymentCategory(e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                >
+                                    <option value="">-- Select category --</option>
+                                    {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                </select>
+                            </div>
                         </div>
                         <div className="flex gap-4 mt-6">
                             <button
@@ -572,6 +610,18 @@ const PaymentDashboard: React.FC = () => {
                                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="Payment description"
                                 />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Spending Category *</label>
+                                <select
+                                    value={paymentCategory}
+                                    onChange={(e) => setPaymentCategory(e.target.value)}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    required
+                                >
+                                    <option value="">-- Select category --</option>
+                                    {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                </select>
                             </div>
                         </div>
                         <div className="flex gap-4 mt-6">

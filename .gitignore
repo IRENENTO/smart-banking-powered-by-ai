@@ -22,6 +22,9 @@ backend/dist/
 Thumbs.db
 *.log
 
+# Uploaded assets
+backend/uploads/
+
 # Testing
 coverage/
 

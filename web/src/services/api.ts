@@ -80,7 +80,9 @@ export const loanService = {
     checkEligibility: (loanData: any) => api.post('/loans/check-eligibility', loanData),
     requestExtension: (loanId: number, extraDays: number) => api.post(`/loans/${loanId}/extend`, { extraDays }),
     getLoanProgress: (loanId: number) => api.get(`/loans/${loanId}/progress`),
-    getPaymentHistory: (loanId: number) => api.get(`/loans/${loanId}/payments`)
+    getPaymentHistory: (loanId: number) => api.get(`/loans/${loanId}/payments`),
+    makePayment: (loanId: number, amount: number) => api.post(`/loans/${loanId}/pay`, { amount }),
+    setDeduction: (loanId: number, deductionAmount: number, deductionPeriod: string) => api.post(`/loans/${loanId}/set-deduction`, { deductionAmount, deductionPeriod })
 };
 
 export const bankService = {
@@ -166,10 +168,10 @@ export const paymentService = {
     },
     withdraw: (amount: number, description?: string) => 
         api.post('/payment/withdraw', { amount, description }),
-    payment: (amount: number, recipientAccountNumber: string, recipientName?: string, description?: string) => 
-        api.post('/payment/payment', { amount, recipient_account_number: recipientAccountNumber, recipient_name: recipientName, description }),
-    transfer: (amount: number, recipientAccountNumber: string, description?: string) => 
-        api.post('/payment/transfer', { amount, recipient_account_number: recipientAccountNumber, description }),
+    payment: (amount: number, recipientAccountNumber: string, recipientName?: string, description?: string, category?: string) => 
+        api.post('/payment/payment', { amount, recipient_account_number: recipientAccountNumber, recipient_name: recipientName, description, category }),
+    transfer: (amount: number, recipientAccountNumber: string, description?: string, category?: string) => 
+        api.post('/payment/transfer', { amount, recipient_account_number: recipientAccountNumber, description, category }),
     
     getBalance: () => api.get('/payment/balance'),
     getTransactionHistory: (filters?: { type?: string, status?: string, limit?: number, offset?: number }) => 

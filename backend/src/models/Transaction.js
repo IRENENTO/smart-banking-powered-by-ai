@@ -28,8 +28,8 @@ class Transaction {
         const referenceNumber = this.generateReferenceNumber();
 
         const result = await db.query(
-            `INSERT INTO transactions (user_id, type, amount, description, reference_number, recipient_account_number, recipient_name, status, balance_before, balance_after)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`,
+            `INSERT INTO transactions (user_id, type, amount, description, reference_number, recipient_account_number, recipient_name, category, status, balance_before, balance_after)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`,
             [
                 transactionData.user_id,
                 transactionData.type,
@@ -38,6 +38,7 @@ class Transaction {
                 referenceNumber,
                 transactionData.recipient_account_number || null,
                 transactionData.recipient_name || null,
+                transactionData.category || 'other',
                 transactionData.status || 'completed',
                 transactionData.balance_before || 0,
                 transactionData.balance_after || 0

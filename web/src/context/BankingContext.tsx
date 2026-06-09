@@ -56,8 +56,8 @@ interface BankingState {
     refresh: () => Promise<void>;
     deposit: (amount: number, description?: string, phoneNumber?: string) => Promise<void>;
     withdraw: (amount: number, description?: string) => Promise<void>;
-    sendPayment: (amount: number, recipientAccountNumber: string, recipientName?: string, description?: string) => Promise<void>;
-    transfer: (amount: number, recipientAccountNumber: string, description?: string) => Promise<void>;
+    sendPayment: (amount: number, recipientAccountNumber: string, recipientName?: string, description?: string, category?: string) => Promise<void>;
+    transfer: (amount: number, recipientAccountNumber: string, description?: string, category?: string) => Promise<void>;
     applyLoan: (loanData: any) => Promise<void>;
 }
 
@@ -193,10 +193,10 @@ export const BankingProvider: React.FC<BankingProviderProps> = ({ children }) =>
         }
     };
 
-    const sendPayment = async (amount: number, recipientAccountNumber: string, recipientName?: string, description?: string) => {
+    const sendPayment = async (amount: number, recipientAccountNumber: string, recipientName?: string, description?: string, category?: string) => {
         setLoading(true);
         try {
-            await paymentService.payment(amount, recipientAccountNumber, recipientName, description);
+            await paymentService.payment(amount, recipientAccountNumber, recipientName, description, category);
             await fetchData();
         } catch (err: any) {
             throw err;
@@ -205,10 +205,10 @@ export const BankingProvider: React.FC<BankingProviderProps> = ({ children }) =>
         }
     };
 
-    const transfer = async (amount: number, recipientAccountNumber: string, description?: string) => {
+    const transfer = async (amount: number, recipientAccountNumber: string, description?: string, category?: string) => {
         setLoading(true);
         try {
-            await paymentService.transfer(amount, recipientAccountNumber, description);
+            await paymentService.transfer(amount, recipientAccountNumber, description, category);
             await fetchData();
         } catch (err: any) {
             throw err;

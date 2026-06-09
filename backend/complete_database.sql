@@ -150,6 +150,7 @@ CREATE TABLE IF NOT EXISTS transactions (
     reference_number VARCHAR(100) UNIQUE,
     recipient_account_number VARCHAR(20),
     recipient_name VARCHAR(255),
+    category VARCHAR(50) DEFAULT 'other',
     status ENUM('pending', 'completed', 'failed', 'cancelled') DEFAULT 'completed',
     balance_before DECIMAL(15,2),
     balance_after DECIMAL(15,2),

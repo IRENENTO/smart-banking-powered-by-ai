@@ -12,6 +12,7 @@ exports.getTransactions = async (req, res) => {
                 type: t.type,
                 amount: parseFloat(t.amount),
                 description: t.description,
+                category: t.category,
                 recipient_account_number: t.recipient_account_number,
                 recipient_name: t.recipient_name,
                 status: t.status,

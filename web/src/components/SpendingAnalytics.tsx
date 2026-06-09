@@ -51,8 +51,9 @@ const SpendingAnalytics: React.FC<SpendingAnalyticsProps> = ({ isOpen, onClose }
         // Process category data for pie chart
         const categoryMap: { [key: string]: number } = {};
         transactions.forEach((tx: any) => {
-          if (tx.category && tx.amount > 0) { // Assuming positive amounts are expenses
-            categoryMap[tx.category] = (categoryMap[tx.category] || 0) + tx.amount;
+          const cat = tx.category || tx.type || 'other';
+          if (tx.amount > 0) { // Positive amounts are expenses
+            categoryMap[cat] = (categoryMap[cat] || 0) + tx.amount;
           }
         });
 

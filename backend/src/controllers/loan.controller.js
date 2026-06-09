@@ -260,6 +260,92 @@ exports.getLoanProgress = async (req, res) => {
     }
 };
 
+exports.makePayment = async (req, res) => {
+    try {
+        const { loanId } = req.params;
+        const { amount } = req.body;
+
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ msg: 'Invalid payment amount' });
+        }
+
+        const loan = await Loan.findById(loanId);
+        if (!loan || loan.user_id !== req.user.id) {
+            return res.status(404).json({ msg: 'Loan not found' });
+        }
+
+        if (loan.status !== 'approved' && loan.status !== 'active' && loan.status !== 'disbursed') {
+            return res.status(400).json({ msg: 'Can only pay active loans' });
+        }
+
+        const User = require('../models/User');
+        const currentBalance = await User.getBalance(req.user.id);
+        const amountNum = parseFloat(amount);
+
+        if (currentBalance < amountNum) {
+            return res.status(400).json({ msg: 'Insufficient balance' });
+        }
+
+        const newBalance = currentBalance - amountNum;
+        await User.updateBalance(req.user.id, newBalance);
+
+        const result = await Loan.recordPayment(loanId, amountNum);
+
+        const connection = global.dbConnection;
+        const refNumber = 'LP' + Date.now() + Math.random().toString(36).substr(2, 4).toUpperCase();
+        await connection.execute(
+            `INSERT INTO transactions (user_id, type, amount, description, status, reference_number, balance_before, balance_after, created_at)
+             VALUES (?, 'loan_repayment', ?, ?, 'completed', ?, ?, ?, NOW())`,
+            [req.user.id, amountNum, `Loan repayment for Loan #${loanId}`, refNumber, currentBalance, newBalance]
+        );
+
+        await connection.execute(
+            `INSERT INTO loan_repayments (loan_id, user_id, amount, method, status)
+             VALUES (?, ?, ?, 'bank_transfer', 'completed')`,
+            [loanId, req.user.id, amountNum]
+        );
+
+        res.json({
+            msg: result.isCompleted ? 'Loan fully paid!' : 'Payment recorded successfully',
+            data: result
+        });
+    } catch (err) {
+        console.error('Loan payment error:', err);
+        res.status(500).json({ msg: `Server Error: ${err.message}` });
+    }
+};
+
+exports.setDeduction = async (req, res) => {
+    try {
+        const { loanId } = req.params;
+        const { deductionAmount, deductionPeriod } = req.body;
+
+        if (!deductionAmount || deductionAmount <= 0) {
+            return res.status(400).json({ msg: 'Invalid deduction amount' });
+        }
+
+        if (!['daily', 'weekly', 'monthly'].includes(deductionPeriod)) {
+            return res.status(400).json({ msg: 'Invalid deduction period. Use daily, weekly, or monthly' });
+        }
+
+        const loan = await Loan.findById(loanId);
+        if (!loan || loan.user_id !== req.user.id) {
+            return res.status(404).json({ msg: 'Loan not found' });
+        }
+
+        if (loan.status !== 'approved' && loan.status !== 'active' && loan.status !== 'disbursed') {
+            return res.status(400).json({ msg: 'Can only set deduction for active loans' });
+        }
+
+        await Loan.setDeductionSchedule(loanId, deductionAmount, deductionPeriod);
+
+        res.json({ msg: 'Deduction schedule set successfully' });
+    } catch (err) {
+        console.error('Set deduction error:', err);
+        res.status(500).json({ msg: `Server Error: ${err.message}` });
+    }
+};
+
 exports.getPaymentHistory = async (req, res) => {
     try {
         const { loanId } = req.params;

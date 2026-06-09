@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
-import FraudAlertCard from '../components/FraudAlertCard';
+
 import { paymentService } from '../services/api';
 import * as aiEngine from '../services/aiService';
 import { useTheme } from '../context/ThemeContext';
@@ -74,9 +74,17 @@ const Transactions: React.FC = () => {
     const { balance } = useBanking();
     const navigate = useNavigate();
 
+    const isInflow = (t: any) => {
+        if (t.balance_before != null && t.balance_after != null) return Number(t.balance_after) > Number(t.balance_before);
+        return ['deposit', 'credit'].includes(t.type);
+    };
+    const isOutflow = (t: any) => {
+        if (t.balance_before != null && t.balance_after != null) return Number(t.balance_after) < Number(t.balance_before);
+        return ['withdrawal', 'debit', 'transfer', 'payment', 'send'].includes(t.type);
+    };
     const computedAnalysis = useMemo(() => {
-        const totalIn = transactions.filter(t => ['deposit', 'credit'].includes(t.type)).reduce((s, t) => s + Number(t.amount || 0), 0);
-        const totalOut = transactions.filter(t => ['withdrawal', 'debit', 'transfer', 'payment', 'send'].includes(t.type)).reduce((s, t) => s + Number(t.amount || 0), 0);
+        const totalIn = transactions.filter(t => isInflow(t)).reduce((s, t) => s + Number(t.amount || 0), 0);
+        const totalOut = transactions.filter(t => isOutflow(t)).reduce((s, t) => s + Number(t.amount || 0), 0);
         const riskDist: Record<string, number> = { low: 0, medium: 0, high: 0, critical: 0 };
         transactions.forEach(tx => {
             const { level } = computeRiskScore(tx);
@@ -103,6 +111,7 @@ const Transactions: React.FC = () => {
         type: String(tx.type || ''),
         description: String(typeof tx.description === 'string' ? tx.description : tx.description || ''),
         status: String(tx.status || ''),
+        category: String(tx.category || '') || 'other',
         recipient_name: typeof tx.recipient_name === 'string' ? tx.recipient_name : '',
         sender_name: typeof tx.sender_name === 'string' ? tx.sender_name : '',
         recipient_account_number: typeof tx.recipient_account_number === 'string' ? tx.recipient_account_number : '',
@@ -137,8 +146,8 @@ const Transactions: React.FC = () => {
     };
 
     const analyzeWithAI = async (txData: any[]) => {
-        const totalIn = txData.filter(t => ['deposit', 'credit'].includes(t.type)).reduce((s, t) => s + Number(t.amount || 0), 0);
-        const totalOut = txData.filter(t => ['withdrawal', 'debit', 'transfer', 'payment', 'send'].includes(t.type)).reduce((s, t) => s + Number(t.amount || 0), 0);
+        const totalIn = txData.filter(t => isInflow(t)).reduce((s, t) => s + Number(t.amount || 0), 0);
+        const totalOut = txData.filter(t => isOutflow(t)).reduce((s, t) => s + Number(t.amount || 0), 0);
 
         const riskDistribution: Record<string, number> = { low: 0, medium: 0, high: 0, critical: 0 };
         let aiAlerts: any[] = [];
@@ -257,12 +266,6 @@ const Transactions: React.FC = () => {
                         </button>
                     </div>
                 </div>
-
-                {fraudAlerts.length > 0 && (
-                    <div style={{ marginBottom: 24 }}>
-                        <FraudAlertCard alerts={fraudAlerts} total={fraudAlerts.length} criticalCount={fraudAlerts.filter(a => a.severity === 'high' || a.severity === 'critical').length} />
-                    </div>
-                )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16, marginBottom: 24 }}>
                     <SectionCard title="AI Transaction Analysis" subtitle="Real-time risk assessment">

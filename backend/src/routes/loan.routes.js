@@ -281,4 +281,89 @@ router.get('/:loanId/progress', auth, loanController.getLoanProgress);
  */
 router.get('/:loanId/payments', auth, loanController.getPaymentHistory);
 
+/**
+ * @swagger
+ * /api/loans/{loanId}/pay:
+ *   post:
+ *     summary: Make a payment toward a loan
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: loanId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - amount
+ *             properties:
+ *               amount:
+ *                 type: number
+ *                 example: 50000
+ *     responses:
+ *       200:
+ *         description: Payment recorded
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Loan not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/:loanId/pay', auth, loanController.makePayment);
+
+/**
+ * @swagger
+ * /api/loans/{loanId}/set-deduction:
+ *   post:
+ *     summary: Set up auto-deduction schedule for a loan
+ *     tags: [Loans]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: loanId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - deductionAmount
+ *               - deductionPeriod
+ *             properties:
+ *               deductionAmount:
+ *                 type: number
+ *                 example: 50000
+ *               deductionPeriod:
+ *                 type: string
+ *                 enum: [daily, weekly, monthly]
+ *                 example: monthly
+ *     responses:
+ *       200:
+ *         description: Deduction schedule set
+ *       400:
+ *         description: Invalid input
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Loan not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/:loanId/set-deduction', auth, loanController.setDeduction);
+
 module.exports = router;

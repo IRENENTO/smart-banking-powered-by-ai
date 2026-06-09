@@ -285,7 +285,7 @@ exports.withdraw = async (req, res) => {
 // Make payment
 exports.payment = async (req, res) => {
     try {
-        const { amount, description, recipient_account_number, recipient_name } = req.body;
+        const { amount, description, recipient_account_number, recipient_name, category } = req.body;
         const userId = req.user.id;
         const amountValue = parseFloat(amount);
 
@@ -364,6 +364,7 @@ exports.payment = async (req, res) => {
             description: description || 'Payment',
             recipient_account_number: recipient.account_number,
             recipient_name: recipient_name || recipient.name,
+            category: category || 'other',
             balance_before: parseFloat(currentBalance),
             balance_after: parseFloat(newBalance),
             status: 'completed'
@@ -377,6 +378,7 @@ exports.payment = async (req, res) => {
             description: `Payment received from ${req.user.name}`,
             recipient_account_number: req.user.account_number,
             recipient_name: req.user.name,
+            category: category || 'other',
             balance_before: parseFloat(recipient.balance),
             balance_after: parseFloat(recipientNewBalance),
             status: 'completed'
@@ -406,7 +408,7 @@ exports.payment = async (req, res) => {
 // Transfer money
 exports.transfer = async (req, res) => {
     try {
-        const { amount, description, recipient_account_number } = req.body;
+        const { amount, description, recipient_account_number, category } = req.body;
         const userId = req.user.id;
         const amountValue = parseFloat(amount);
 
@@ -483,6 +485,7 @@ exports.transfer = async (req, res) => {
             description: description || `Transfer to ${recipient.name}`,
             recipient_account_number,
             recipient_name: recipient.name,
+            category: category || 'other',
             balance_before: parseFloat(currentBalance),
             balance_after: parseFloat(newBalance),
             status: 'completed'
@@ -496,6 +499,7 @@ exports.transfer = async (req, res) => {
             description: `Transfer from ${req.user.name}`,
             recipient_account_number: req.user.account_number,
             recipient_name: req.user.name,
+            category: category || 'other',
             balance_before: parseFloat(recipient.balance),
             balance_after: parseFloat(recipientNewBalance),
             status: 'completed'
@@ -579,6 +583,7 @@ exports.getTransactionHistory = async (req, res) => {
                 type: t.type,
                 amount: t.amount,
                 description: t.description,
+                category: t.category,
                 recipient_account_number: t.recipient_account_number,
                 recipient_name: t.recipient_name,
                 status: t.status,
@@ -629,8 +634,11 @@ exports.getRecentTransactions = async (req, res) => {
                 type: t.type,
                 amount: t.amount,
                 description: t.description,
+                category: t.category,
                 recipient_account_number: t.recipient_account_number,
                 recipient_name: t.recipient_name,
+                balance_before: t.balance_before,
+                balance_after: t.balance_after,
                 created_at: t.created_at
             }))
         });

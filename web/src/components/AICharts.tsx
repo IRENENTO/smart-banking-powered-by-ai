@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { analyzeSpending, getModelStatus } from '../services/aiService';
 import { useBanking } from '../context/BankingContext';
+import { useTheme } from '../context/ThemeContext';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#FF6B6B'];
 
 const AICharts: React.FC = () => {
     const { transactions } = useBanking();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
     const [spendingData, setSpendingData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [modelStatus, setModelStatus] = useState<any>(null);
@@ -45,22 +48,28 @@ const AICharts: React.FC = () => {
         return `${name ?? ''}: ${(percent * 100).toFixed(0)}%`;
     };
 
+    const cardBg = isDark ? '#0f172a' : 'white';
+    const cardText = isDark ? '#e2e8f0' : '#1e293b';
+    const mutedBg = isDark ? '#1e293b' : '#f8f9fa';
+    const mutedText = isDark ? '#94a3b8' : '#475569';
+
     return (
         <div className="ai-charts-container" style={{ padding: '20px' }}>
-            <h2 style={{ marginBottom: '20px', fontSize: '24px', fontWeight: 'bold' }}>
-                🤖 AI-Powered Financial Intelligence
+            <h2 style={{ marginBottom: '20px', fontSize: '24px', fontWeight: 'bold', color: cardText }}>
+                AI-Powered Financial Intelligence
             </h2>
             
             {/* Model Status */}
             {modelStatus && (
                 <div style={{ 
-                    background: modelStatus.ai_powered ? '#e6f7e6' : '#fff3e0',
+                    background: modelStatus.ai_powered ? (isDark ? '#064e3b' : '#e6f7e6') : (isDark ? '#78350f' : '#fff3e0'),
                     padding: '12px 20px',
                     borderRadius: '12px',
                     marginBottom: '24px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '10px'
+                    gap: '10px',
+                    color: modelStatus.ai_powered ? (isDark ? '#a7f3d0' : '#000') : (isDark ? '#fde68a' : '#000'),
                 }}>
                     <span>{modelStatus.ai_powered ? '✅' : '⚠️'}</span>
                     <span>{modelStatus.ai_powered ? 'AI Engine Active' : 'AI Engine Offline - Using Fallback'}</span>
@@ -70,13 +79,13 @@ const AICharts: React.FC = () => {
             {/* Spending by Category Chart */}
             {spendingData?.category_breakdown && spendingData.category_breakdown.length > 0 && (
                 <div style={{ 
-                    background: 'white',
+                    background: cardBg,
                     borderRadius: '16px',
                     padding: '20px',
                     marginBottom: '24px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}>
-                    <h3 style={{ marginBottom: '16px' }}>Spending by Category</h3>
+                    <h3 style={{ marginBottom: '16px', color: cardText }}>Spending by Category</h3>
                     <ResponsiveContainer width="100%" height={400}>
                         <PieChart>
                             <Pie
@@ -99,15 +108,15 @@ const AICharts: React.FC = () => {
                         </PieChart>
                     </ResponsiveContainer>
                     
-                    <div style={{ marginTop: '20px', padding: '16px', background: '#f8f9fa', borderRadius: '12px' }}>
-                        <h4>Insights</h4>
-                        <ul style={{ marginTop: '8px', paddingLeft: '20px' }}>
-                            {spendingData.spending_insights?.map((insight: string, i: number) => (
-                                <li key={i}>💡 {insight}</li>
+                    <div style={{ marginTop: '20px', padding: '16px', background: mutedBg, borderRadius: '12px' }}>
+                        <h4 style={{ color: cardText, margin: 0 }}>Insights</h4>
+                        <ul style={{ marginTop: '8px', paddingLeft: '20px', color: mutedText }}>
+                            {(Array.isArray(spendingData.spending_insights) ? spendingData.spending_insights : []).map((insight: string, i: number) => (
+                                <li key={i}>{insight}</li>
                             ))}
-                            <li>💰 Total Spent: RWF {spendingData.total_spent?.toLocaleString()}</li>
-                            <li>📈 Savings Rate: {spendingData.savings_rate}%</li>
-                            <li>🏆 Top Category: {spendingData.top_spending_category}</li>
+                            <li>Total Spent: RWF {spendingData.total_spent?.toLocaleString()}</li>
+                            <li>Savings Rate: {spendingData.savings_rate}%</li>
+                            <li>Top Category: {spendingData.top_spending_category}</li>
                         </ul>
                     </div>
                 </div>
@@ -116,21 +125,21 @@ const AICharts: React.FC = () => {
             {/* Spending Trend Chart */}
             {transactions && transactions.length > 0 && (
                 <div style={{ 
-                    background: 'white',
+                    background: cardBg,
                     borderRadius: '16px',
                     padding: '20px',
                     marginBottom: '24px',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
                 }}>
-                    <h3 style={{ marginBottom: '16px' }}>Spending Trend</h3>
+                    <h3 style={{ marginBottom: '16px', color: cardText }}>Spending Trend</h3>
                     <ResponsiveContainer width="100%" height={300}>
                         <LineChart data={transactions.slice(0, 30).map((t: any) => ({
                             date: new Date(t.created_at).toLocaleDateString(),
-                            amount: t.amount
+                            amount: Number(t.amount) || 0
                         }))}>
-                            <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" />
-                            <YAxis />
+                            <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#334155' : '#e2e8f0'} />
+                            <XAxis dataKey="date" tick={{ fill: mutedText, fontSize: 12 }} />
+                            <YAxis tick={{ fill: mutedText, fontSize: 12 }} />
                             <Tooltip formatter={(value: any) => `RWF ${value?.toLocaleString()}`} />
                             <Line type="monotone" dataKey="amount" stroke="#0A9396" name="Spending" />
                         </LineChart>
@@ -143,8 +152,9 @@ const AICharts: React.FC = () => {
                 <div style={{ 
                     textAlign: 'center', 
                     padding: '40px',
-                    background: '#f8f9fa',
-                    borderRadius: '12px'
+                    background: mutedBg,
+                    borderRadius: '12px',
+                    color: mutedText,
                 }}>
                     <p>No transaction data available for AI analysis.</p>
                     <p>Make some transactions to see AI-powered insights!</p>

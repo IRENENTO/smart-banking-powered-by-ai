@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, PieChart as PieIcon, ArrowLeft, Sparkles, Send, Bot, User, MessageSquare } from 'lucide-react';
+import { TrendingUp, PieChart as PieIcon, ArrowLeft, Sparkles, Send, Bot, User, MessageSquare, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
@@ -79,6 +79,29 @@ const SpendingAnalysisPage: React.FC = () => {
   const [chatLoading, setChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  const isExpense = (tx: any) => {
+    if (tx.balance_before != null && tx.balance_after != null) return Number(tx.balance_after) < Number(tx.balance_before);
+    return ['payment', 'withdrawal', 'withdraw'].includes(tx.type);
+  };
+  const isIncome = (tx: any) => {
+    if (tx.balance_before != null && tx.balance_after != null) return Number(tx.balance_after) > Number(tx.balance_before);
+    return ['deposit'].includes(tx.type);
+  };
+  const activeCategories = new Set(categoryData.map(c => c.name.toLowerCase()));
+  const renderMessageText = (text: string) => {
+    const parts = text.split(/(\b\w+\b)/g);
+    return parts.map((part, i) => {
+      const lower = part.toLowerCase();
+      const color = COLORS_MAP[lower];
+      if (color && activeCategories.has(lower)) {
+        return (
+          <span key={i} style={{ color, fontWeight: 600 }}>{part}</span>
+        );
+      }
+      return part;
+    });
+  };
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
@@ -119,20 +142,17 @@ const SpendingAnalysisPage: React.FC = () => {
         return;
       }
 
-      const expenseTypes = new Set(['payment', 'withdraw', 'withdrawal']);
-      const incomeTypes = new Set(['transfer', 'deposit']);
-
       // Build category breakdown from expense transactions
       const catMap: Record<string, number> = {};
       let spent = 0;
       let income = 0;
       transactions.forEach((tx: any) => {
         const amt = Number(tx.amount || 0);
-        const cat = tx.type || 'other';
-        if (expenseTypes.has(cat)) {
+        const cat = tx.category || tx.type || 'other';
+        if (isExpense(tx)) {
           catMap[cat] = (catMap[cat] || 0) + amt;
           spent += amt;
-        } else if (incomeTypes.has(cat)) {
+        } else if (isIncome(tx)) {
           income += amt;
         }
       });
@@ -152,13 +172,21 @@ const SpendingAnalysisPage: React.FC = () => {
         const date = tx.created_at ? new Date(tx.created_at) : new Date();
         const key = date.toLocaleString('en-US', { month: 'short' });
         if (!monthMap[key]) monthMap[key] = { spending: 0, income: 0 };
-        const cat = tx.type || '';
-        if (expenseTypes.has(cat)) monthMap[key].spending += amt;
-        else if (incomeTypes.has(cat)) monthMap[key].income += amt;
+        if (isExpense(tx)) monthMap[key].spending += amt;
+        else if (isIncome(tx)) monthMap[key].income += amt;
       });
 
       const months = Object.entries(monthMap).map(([month, data]) => ({ month, ...data }));
       setMonthlyData(months.length ? months : DEFAULT_MONTHLY);
+
+      // Generate personalized advice from actual category breakdown
+      if (cats.length > 0) {
+        const topCat = cats[0];
+        const total = spent;
+        const advice = generateCategoryAdvice(cats, total);
+        if (advice.length > 0) setMarketInsights(advice);
+        if (!marketGuide) setMarketGuide(`Your top spending category is ${topCat.name} (RWF ${topCat.value.toLocaleString()}). ${advice[0] || ''}`);
+      }
     } catch {
       setCategoryData(DEFAULT_CATEGORIES);
       setMonthlyData(DEFAULT_MONTHLY);
@@ -166,6 +194,38 @@ const SpendingAnalysisPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateCategoryAdvice = (cats: { name: string; value: number }[], total: number): string[] => {
+    const advice: string[] = [];
+    const pct = (v: number) => total > 0 ? Math.round((v / total) * 100) : 0;
+    cats.forEach(cat => {
+      const percent = pct(cat.value);
+      const key = cat.name.toLowerCase();
+      if (key === 'food' || key === 'groceries') {
+        advice.push(`Food takes ${percent}% of your spending — buy seasonal local produce and meal prep to cut costs by up to 18%.`);
+      } else if (key === 'transport') {
+        advice.push(`Transport is ${percent}% of your spending — consider shared rides or public transport to save.`);
+      } else if (key === 'bills' || key === 'utilities') {
+        advice.push(`Bills account for ${percent}% — prepay annual subscriptions for 5-15% discounts.`);
+      } else if (key === 'mobile_money' || key === 'airtime') {
+        advice.push(`Mobile Money is ${percent}% of spending — bundle purchases to reduce transaction fees.`);
+      } else if (key === 'entertainment') {
+        advice.push(`Entertainment at ${percent}% — look for package deals and loyalty programs.`);
+      } else if (key === 'shopping') {
+        advice.push(`Shopping is ${percent}% of your spending — compare prices and avoid impulse buys.`);
+      } else if (key === 'health') {
+        advice.push(`Health spending at ${percent}% — consider a health insurance plan to manage costs.`);
+      } else if (key === 'education') {
+        advice.push(`Education is ${percent}% of your spending — explore scholarships and online resources.`);
+      } else if (key === 'rent') {
+        advice.push(`Rent takes ${percent}% of your budget — aim to keep housing under 30% of income.`);
+      }
+    });
+    if (advice.length === 0) {
+      advice.push('Track your daily expenses to identify saving opportunities and set a monthly budget.');
+    }
+    return advice;
   };
 
   const handleChatSend = async () => {
@@ -196,14 +256,12 @@ const SpendingAnalysisPage: React.FC = () => {
       if (!transactions.length) transactions = DEMO_TRANSACTIONS;
 
       // Map transactions to the format the AI engine expects
-      const expenseTypes = new Set(['payment', 'withdraw', 'withdrawal']);
-      const incomeTypes = new Set(['transfer', 'deposit']);
       const mappedTx = transactions.map((tx: any) => ({
         amount: tx.amount,
-        category: tx.type || 'other',
+        category: tx.category || tx.type || 'other',
         description: tx.description || '',
         date: tx.created_at ? new Date(tx.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        type: expenseTypes.has(tx.type) ? 'expense' : incomeTypes.has(tx.type) ? 'income' : 'expense'
+        type: isExpense(tx) ? 'expense' : isIncome(tx) ? 'income' : 'expense'
       }));
 
       let totalIncomeVal = totalIncome || 0;
@@ -455,9 +513,9 @@ const SpendingAnalysisPage: React.FC = () => {
       {/* AI Chat Button */}
       <button
         onClick={() => setChatOpen(!chatOpen)}
-        className="fixed bottom-6 right-6 z-50 p-3.5 rounded-full bg-[#0A9396] text-white shadow-xl shadow-teal-500/30 hover:bg-[#04786c] transition-all hover:scale-110"
+        className="fixed bottom-6 right-6 z-[1001] p-3.5 rounded-full bg-[#0A9396] text-white shadow-xl shadow-teal-500/30 hover:bg-[#04786c] transition-all hover:scale-110"
       >
-        {chatOpen ? <MessageSquare size={22} /> : <Bot size={22} />}
+        {chatOpen ? <X size={22} /> : <MessageSquare size={22} />}
       </button>
 
       {/* AI Chat Window */}
@@ -465,13 +523,30 @@ const SpendingAnalysisPage: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 20, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="fixed bottom-24 right-6 z-50 w-80 sm:w-96 bg-white dark:bg-[#0B1F3A] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col"
+          className="fixed bottom-24 right-6 z-[1001] w-80 sm:w-96 bg-white dark:bg-[#0B1F3A] rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col"
           style={{ maxHeight: '500px' }}
         >
           <div className="px-4 py-3 bg-[#0A9396] text-white flex items-center gap-2">
             <Bot size={18} />
             <span className="font-semibold text-sm">AI Spending Assistant</span>
           </div>
+          {categoryData.length > 0 && (
+            <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/50">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 mb-1.5">Spending by Category</p>
+              <div className="flex flex-wrap gap-1">
+                {categoryData.map(cat => (
+                  <span
+                    key={cat.name}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium"
+                    style={{ backgroundColor: cat.color + '18', color: cat.color, border: `1px solid ${cat.color}30` }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cat.color }} />
+                    {cat.name}: RWF {cat.value.toLocaleString()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ minHeight: '300px', maxHeight: '350px' }}>
             {chatMessages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -484,7 +559,7 @@ const SpendingAnalysisPage: React.FC = () => {
                       ? 'bg-[#0A9396] text-white rounded-tr-sm'
                       : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm'
                   }`}>
-                    {msg.text}
+                    {msg.role === 'assistant' ? renderMessageText(msg.text) : msg.text}
                   </div>
                 </div>
               </div>
