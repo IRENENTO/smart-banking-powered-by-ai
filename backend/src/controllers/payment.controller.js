@@ -21,19 +21,16 @@ exports.deposit = async (req, res) => {
         const newBalance = currentBalanceNum + amountValue;
         const sourcePhone = (req.body.phoneNumber || req.user.phone || '').toString().trim();
 
-        // Try PayPack cashin if phone provided (non-blocking)
+        // Try PayPack cashin if phone provided
         if (sourcePhone) {
-            let providerRef = null;
-
-            // Create records BEFORE crediting balance
             const transaction = await Transaction.create({
                 user_id: userId,
                 type: 'deposit',
                 amount: amountValue,
                 description: description || `Mobile money deposit from ${sourcePhone}`,
                 balance_before: currentBalanceNum,
-                balance_after: newBalance,
-                status: 'completed'
+                balance_after: currentBalanceNum,
+                status: 'pending'
             });
 
             let payment = null;
@@ -49,31 +46,35 @@ exports.deposit = async (req, res) => {
                     description: description || `Mobile money deposit from ${sourcePhone}`,
                     transaction_reference: transaction.reference_number,
                     balance_before: currentBalanceNum,
-                    balance_after: newBalance
+                    balance_after: currentBalanceNum
                 });
             } catch (err) {
-                console.warn('Payment record creation failed (deposit still processed):', err.message);
+                console.warn('Payment record creation failed:', err.message);
             }
 
-            // Credit balance AFTER records are created
-            await User.updateBalance(userId, newBalance);
-            try { await Account.deposit(userId, amountValue); } catch (_) {}
+            let providerRef = null;
+            try {
+                const paypackRes = await paypack.initiateCashin(sourcePhone, amountValue);
+                providerRef = paypackRes?.ref || null;
+            } catch (err) {
+                console.warn('PayPack cashin initiation failed:', err.message);
+            }
 
-            // Truly non-blocking PayPack attempt (fire-and-forget)
-            paypack.initiateCashin(sourcePhone, amountValue).then(paypackRes => {
-                const ref = paypackRes?.ref || null;
-                if (ref && payment) {
-                    global.dbConnection.execute(
-                        'UPDATE payments SET provider_reference = ?, status = ? WHERE id = ?',
-                        [ref, 'completed', payment.id]
-                    ).catch(e => console.warn('PayPack payment update failed:', e.message));
+            if (providerRef && payment) {
+                try {
+                    await global.dbConnection.execute(
+                        'UPDATE payments SET provider_reference = ? WHERE id = ?',
+                        [providerRef, payment.id]
+                    );
+                } catch (e) {
+                    console.warn('PayPack payment update failed:', e.message);
                 }
-            }).catch(err => {
-                console.warn('PayPack cashin initiation failed (balance already credited):', err.message);
-            });
+            }
 
             return res.status(201).json({
-                msg: 'Deposit successful. Your balance has been updated.',
+                msg: providerRef
+                    ? 'Deposit initiated. Check your phone to complete the payment.'
+                    : 'Deposit recorded. Will process shortly.',
                 transaction: {
                     id: transaction.id,
                     reference_number: transaction.reference_number,
@@ -90,7 +91,7 @@ exports.deposit = async (req, res) => {
                     status: payment.status,
                     created_at: payment.created_at
                 } : null,
-                new_balance: newBalance
+                new_balance: currentBalanceNum
             });
         }
 

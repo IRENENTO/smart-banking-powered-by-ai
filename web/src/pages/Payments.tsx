@@ -102,10 +102,11 @@ const Payments: React.FC = () => {
         try {
             await deposit(amountValue, `Deposit via ${depositProvider.toUpperCase()}`, depositPhoneNumber || undefined);
             setDepositAmount(''); setDepositPhoneNumber(''); setDepositProvider('mtn');
-            const successMsg = depositPhoneNumber
-                ? `RWF ${amountValue.toLocaleString()} deposited via ${depositProvider.toUpperCase()} on ${depositPhoneNumber}.`
-                : `RWF ${amountValue.toLocaleString()} deposited to your account.`;
-            toast.success(successMsg, { title: 'Deposit Successful' });
+            if (depositPhoneNumber) {
+                toast.info(`Check your phone to complete payment of RWF ${amountValue.toLocaleString()} via ${depositProvider.toUpperCase()} on ${depositPhoneNumber}.`, { title: 'Deposit Pending', duration: 6000 });
+            } else {
+                toast.success(`RWF ${amountValue.toLocaleString()} deposited to your account.`, { title: 'Deposit Successful' });
+            }
             addNotification({
                 title: 'Deposit Successful',
                 message: successMsg,

@@ -31,7 +31,18 @@ async function checkPendingPayments() {
               [payment.transaction_reference]
             );
 
-            if (payment.payment_type === 'withdrawal') {
+            if (payment.payment_type === 'deposit') {
+              await connection.execute(
+                `UPDATE users SET balance = balance + ? WHERE id = ?`,
+                [payment.amount, payment.user_id]
+              );
+              try {
+                await connection.execute(
+                  `UPDATE accounts SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?`,
+                  [payment.amount, payment.user_id]
+                );
+              } catch (_) {}
+            } else if (payment.payment_type === 'withdrawal') {
               const [userRows] = await connection.execute(
                 `SELECT balance FROM users WHERE id = ?`,
                 [payment.user_id]
@@ -44,6 +55,19 @@ async function checkPendingPayments() {
               }
             }
           }
+            }
+
+            if (payment.payment_type === 'deposit') {
+              await connection.execute(
+                `UPDATE users SET balance = balance + ? WHERE id = ?`,
+                [payment.amount, payment.user_id]
+              );
+              await connection.execute(
+                `UPDATE transactions SET balance_after = balance_before + ? WHERE reference_number = ?`,
+                [payment.amount, payment.transaction_reference]
+              );
+            }
+          }
         } else if (result.status === 'failed') {
           await connection.execute(
             `UPDATE payments SET status = 'failed', updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
@@ -54,6 +78,19 @@ async function checkPendingPayments() {
               `UPDATE transactions SET status = 'failed', updated_at = CURRENT_TIMESTAMP WHERE reference_number = ?`,
               [payment.transaction_reference]
             );
+
+            if (payment.payment_type === 'deposit') {
+              const [userRows] = await connection.execute(
+                `SELECT balance FROM users WHERE id = ?`,
+                [payment.user_id]
+              );
+              if (userRows[0] && parseFloat(userRows[0].balance) >= parseFloat(payment.amount)) {
+                await connection.execute(
+                  `UPDATE users SET balance = balance - ? WHERE id = ?`,
+                  [payment.amount, payment.user_id]
+                );
+              }
+            }
           }
         }
       } catch (err) {
