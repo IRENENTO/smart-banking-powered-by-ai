@@ -104,16 +104,6 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                         Banking Reimagined
                     </motion.div>
                 </div>
-
-                {/* Hamburger Menu Button (mobile) */}
-                <button
-                    className="navbar-hamburger"
-                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    title="Toggle menu"
-                    style={{ marginLeft: 8 }}
-                >
-                    {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
-                </button>
             </motion.div>
 
             {/* Desktop Nav Links */}
@@ -177,6 +167,14 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
 
             {/* Right-side Actions (always visible) */}
             <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {/* Hamburger Menu Button (mobile) */}
+                <button
+                    className="navbar-hamburger"
+                    onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                    title="Toggle menu"
+                >
+                    {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+                </button>
                 {/* Dark Mode Toggle - hidden on mobile */}
                 <motion.button
                     whileHover={{ scale: 1.1, rotate: 180 }}

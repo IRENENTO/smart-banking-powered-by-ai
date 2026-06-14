@@ -53,6 +53,15 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     }
   }, []);
 
+  // Clear notifications when auth state changes (logout / new login)
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setNotifications([]);
+    };
+    window.addEventListener('auth-change', handleAuthChange);
+    return () => window.removeEventListener('auth-change', handleAuthChange);
+  }, []);
+
   // Save notifications to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('notifications', JSON.stringify(notifications));
