@@ -59,19 +59,18 @@ exports.deposit = async (req, res) => {
             await User.updateBalance(userId, newBalance);
             try { await Account.deposit(userId, amountValue); } catch (_) {}
 
-            // Non-blocking PayPack attempt
-            try {
-                const paypackRes = await paypack.initiateCashin(sourcePhone, amountValue);
-                providerRef = paypackRes?.ref || null;
-                if (providerRef && payment) {
-                    await global.dbConnection.execute(
+            // Truly non-blocking PayPack attempt (fire-and-forget)
+            paypack.initiateCashin(sourcePhone, amountValue).then(paypackRes => {
+                const ref = paypackRes?.ref || null;
+                if (ref && payment) {
+                    global.dbConnection.execute(
                         'UPDATE payments SET provider_reference = ?, status = ? WHERE id = ?',
-                        [providerRef, 'completed', payment.id]
-                    );
+                        [ref, 'completed', payment.id]
+                    ).catch(e => console.warn('PayPack payment update failed:', e.message));
                 }
-            } catch (err) {
+            }).catch(err => {
                 console.warn('PayPack cashin initiation failed (balance already credited):', err.message);
-            }
+            });
 
             return res.status(201).json({
                 msg: 'Deposit successful. Your balance has been updated.',
@@ -81,14 +80,12 @@ exports.deposit = async (req, res) => {
                     amount: transaction.amount,
                     description: transaction.description,
                     status: transaction.status,
-                    provider_reference: providerRef,
                     created_at: transaction.created_at
                 },
                 payment: payment ? {
                     id: payment.id,
                     payment_type: payment.payment_type,
                     provider: payment.provider,
-                    provider_reference: providerRef,
                     amount: payment.amount,
                     status: payment.status,
                     created_at: payment.created_at

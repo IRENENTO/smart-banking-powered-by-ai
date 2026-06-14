@@ -22,6 +22,7 @@ const Payments: React.FC = () => {
     const [activeTab, setActiveTab] = useState<Tab>('send');
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
+    const [depositing, setDepositing] = useState(false);
 
     // Send state
     const [payType, setPayType] = useState<'phone' | 'account'>('account');
@@ -97,19 +98,26 @@ const Payments: React.FC = () => {
         setMessage(''); setError('');
         const amountValue = parseFloat(depositAmount);
         if (!Number.isFinite(amountValue) || amountValue <= 0) { setError('Enter a valid amount'); return; }
+        setDepositing(true);
         try {
             await deposit(amountValue, `Deposit via ${depositProvider.toUpperCase()}`, depositPhoneNumber || undefined);
-            setMessage(depositPhoneNumber ? `Deposit initiated via ${depositProvider.toUpperCase()} on ${depositPhoneNumber}.` : `Deposited RWF ${amountValue.toLocaleString()}`);
             setDepositAmount(''); setDepositPhoneNumber(''); setDepositProvider('mtn');
+            const successMsg = depositPhoneNumber
+                ? `RWF ${amountValue.toLocaleString()} deposited via ${depositProvider.toUpperCase()} on ${depositPhoneNumber}.`
+                : `RWF ${amountValue.toLocaleString()} deposited to your account.`;
+            toast.success(successMsg, { title: 'Deposit Successful' });
             addNotification({
                 title: 'Deposit Successful',
-                message: depositPhoneNumber
-                    ? `RWF ${amountValue.toLocaleString()} deposited via ${depositProvider.toUpperCase()} on ${depositPhoneNumber}.`
-                    : `RWF ${amountValue.toLocaleString()} deposited to your account.`,
+                message: successMsg,
                 type: 'success',
                 link: '/transactions',
             });
-        } catch (err: any) { setError(err.response?.data?.msg || 'Deposit failed'); }
+        } catch (err: any) {
+            toast.error(err.response?.data?.msg || 'Deposit failed');
+            setError(err.response?.data?.msg || 'Deposit failed');
+        } finally {
+            setDepositing(false);
+        }
     };
 
     const handleCreateSchedule = async (e: React.FormEvent) => {
@@ -192,7 +200,7 @@ const Payments: React.FC = () => {
                             </div>
 
                             <input value={depositPhoneNumber} placeholder={`Phone number (${depositProvider === 'mtn' ? 'MTN' : 'Airtel'}) — optional`} type="tel" onChange={(e) => setDepositPhoneNumber(e.target.value)} {...{style: inputStyle}} />
-                            <button type="submit" style={{ padding: '12px 20px', background: '#059669', color: 'white', border: 'none', borderRadius: 14, fontWeight: 700 }}>Deposit</button>
+                            <button type="submit" disabled={depositing} style={{ padding: '12px 20px', background: depositing ? '#6b7280' : '#059669', color: 'white', border: 'none', borderRadius: 14, fontWeight: 700, cursor: depositing ? 'not-allowed' : 'pointer' }}>{depositing ? 'Processing...' : 'Deposit'}</button>
                         </form>
                     </SectionCard>
                 )}
