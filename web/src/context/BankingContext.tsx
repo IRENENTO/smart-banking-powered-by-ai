@@ -54,7 +54,7 @@ interface BankingState {
     loading: boolean;
     error: string | null;
     refresh: () => Promise<void>;
-    deposit: (amount: number, description?: string, phoneNumber?: string) => Promise<void>;
+    deposit: (amount: number, description?: string, phoneNumber?: string) => Promise<any>;
     withdraw: (amount: number, description?: string) => Promise<void>;
     sendPayment: (amount: number, recipientAccountNumber: string, recipientName?: string, description?: string, category?: string) => Promise<void>;
     transfer: (amount: number, recipientAccountNumber: string, description?: string, category?: string) => Promise<void>;
