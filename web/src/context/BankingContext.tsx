@@ -172,8 +172,9 @@ export const BankingProvider: React.FC<BankingProviderProps> = ({ children }) =>
     const deposit = async (amount: number, description?: string, phoneNumber?: string) => {
         setLoading(true);
         try {
-            await paymentService.deposit(amount, description, phoneNumber);
+            const res = await paymentService.deposit(amount, description, phoneNumber);
             await fetchData();
+            return res;
         } catch (err: any) {
             throw err;
         } finally {
