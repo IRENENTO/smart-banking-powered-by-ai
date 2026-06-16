@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, TrendingUp, PieChart as PieIcon } from 'lucide-react';
+import { X, TrendingUp, PieChart as PieIcon, Database, Clock } from 'lucide-react';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   LineChart, Line, XAxis, YAxis, CartesianGrid, Area, AreaChart,
 } from 'recharts';
 import { bankService, aiService } from '../services/api';
+import { pendingCategoryBreakdown, pendingMonthlyTrend } from '../data/mockData';
 
 interface SpendingAnalyticsProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const COLORS = ['#0A9396', '#005F73', '#94D2BD', '#E9C46A', '#F4A261', '#E76F51'];
+const COLORS = ['#0A9396', '#005F73', '#94D2BD', '#E9C46A', '#F4A261', '#E76F51', '#CA6702', '#9B2226', '#6A4C93', '#1982C4', '#8AC926', '#6C757D'];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -95,24 +96,10 @@ const SpendingAnalytics: React.FC<SpendingAnalyticsProps> = ({ isOpen, onClose }
         setMonthlyData(monthly);
       } catch (error) {
         console.error('Error fetching transaction data:', error);
-        // Fallback to static data
-        setCategoryData([
-          { name: 'Food', value: 38500, color: '#0A9396' },
-          { name: 'Transport', value: 18700, color: '#005F73' },
-          { name: 'Bills', value: 24300, color: '#94D2BD' },
-          { name: 'Mobile Money', value: 23500, color: '#E9C46A' },
-          { name: 'Entertainment', value: 8200, color: '#F4A261' },
-          { name: 'Other', value: 11400, color: '#E76F51' },
-        ]);
-        setMonthlyData([
-          { month: 'Nov', spending: 95000, income: 210000 },
-          { month: 'Dec', spending: 128000, income: 215000 },
-          { month: 'Jan', spending: 102000, income: 220000 },
-          { month: 'Feb', spending: 88000, income: 220000 },
-          { month: 'Mar', spending: 115000, income: 225000 },
-          { month: 'Apr', spending: 124600, income: 228000 },
-        ]);
-        setTotalSpent(124600);
+        // Rich fallback dataset from mockData
+        setCategoryData(pendingCategoryBreakdown);
+        setMonthlyData(pendingMonthlyTrend);
+        setTotalSpent(pendingCategoryBreakdown.reduce((s, c) => s + c.value, 0));
       } finally {
         setLoading(false);
       }
@@ -188,8 +175,14 @@ const SpendingAnalytics: React.FC<SpendingAnalyticsProps> = ({ isOpen, onClose }
                     <PieIcon size={20} />
                   </div>
                   <div>
-                    <h2 className="text-lg font-bold text-gray-900 dark:text-white">Spending Analysis</h2>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">AI-powered breakdown of your finances</p>
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-white">Spending Analysis</h2>
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
+                        <Clock size={10} />
+                        Dataset
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">AI-powered breakdown · 12 categories loaded</p>
                   </div>
                 </div>
                 <button

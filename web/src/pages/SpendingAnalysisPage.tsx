@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, PieChart as PieIcon, ArrowLeft, Sparkles, Send, Bot, User, MessageSquare, X } from 'lucide-react';
+import { TrendingUp, PieChart as PieIcon, ArrowLeft, Sparkles, Send, Bot, User, MessageSquare, X, Clock, Database } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { bankService, aiService } from '../services/api';
+import { pendingCategoryBreakdown, pendingMonthlyTrend, SPENDING_CATEGORIES } from '../data/mockData';
 import Navbar from '../components/Navbar';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -26,36 +27,50 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 const DEMO_TRANSACTIONS = [
-  { id: 1, type: 'food', amount: 12500, description: 'Groceries at Nakumatt', created_at: '2026-04-15T10:30:00Z' },
-  { id: 2, type: 'transport', amount: 5000, description: 'Bus pass monthly', created_at: '2026-04-14T08:00:00Z' },
-  { id: 3, type: 'bills', amount: 25000, description: 'Electricity bill', created_at: '2026-04-12T14:00:00Z' },
-  { id: 4, type: 'food', amount: 8500, description: 'Restaurant dinner', created_at: '2026-04-10T19:30:00Z' },
-  { id: 5, type: 'entertainment', amount: 15000, description: 'Concert tickets', created_at: '2026-04-08T20:00:00Z' },
-  { id: 6, type: 'transport', amount: 3000, description: 'Taxi fare', created_at: '2026-04-06T09:15:00Z' },
-  { id: 7, type: 'food', amount: 18000, description: 'Monthly meal prep service', created_at: '2026-04-05T11:00:00Z' },
-  { id: 8, type: 'bills', amount: 15000, description: 'Water bill', created_at: '2026-04-03T13:00:00Z' },
-  { id: 9, type: 'mobile_money', amount: 10000, description: 'Airtime & data bundle', created_at: '2026-04-01T07:00:00Z' },
+  // Food & Dining
+  { id: 1, type: 'food_dining', amount: 12500, description: 'Groceries at Nakumatt', created_at: '2026-04-15T10:30:00Z' },
+  { id: 2, type: 'food_dining', amount: 8500, description: 'Restaurant dinner', created_at: '2026-04-10T19:30:00Z' },
+  { id: 13, type: 'food_dining', amount: 18000, description: 'Monthly meal prep service', created_at: '2026-04-05T11:00:00Z' },
+  { id: 14, type: 'food_dining', amount: 9500, description: 'Weekly groceries', created_at: '2026-03-25T10:00:00Z' },
+  // Transport & Fuel
+  { id: 3, type: 'transport_fuel', amount: 5000, description: 'Bus pass monthly', created_at: '2026-04-14T08:00:00Z' },
+  { id: 4, type: 'transport_fuel', amount: 3000, description: 'Taxi fare', created_at: '2026-04-06T09:15:00Z' },
+  { id: 15, type: 'transport_fuel', amount: 25000, description: 'Fuel at Shell Station', created_at: '2026-04-02T14:00:00Z' },
+  // Housing & Rent
+  { id: 16, type: 'housing_rent', amount: 150000, description: 'Monthly rent payment', created_at: '2026-04-01T08:00:00Z' },
+  { id: 17, type: 'housing_rent', amount: 150000, description: 'Monthly rent payment', created_at: '2026-03-01T08:00:00Z' },
+  // Utilities & Bills
+  { id: 5, type: 'utilities_bills', amount: 25000, description: 'Electricity bill', created_at: '2026-04-12T14:00:00Z' },
+  { id: 8, type: 'utilities_bills', amount: 15000, description: 'Water bill', created_at: '2026-04-03T13:00:00Z' },
+  { id: 18, type: 'utilities_bills', amount: 25000, description: 'Internet subscription', created_at: '2026-03-22T12:00:00Z' },
+  // Healthcare
+  { id: 19, type: 'healthcare', amount: 12000, description: 'Pharmacy - prescription', created_at: '2026-04-11T11:00:00Z' },
+  { id: 20, type: 'healthcare', amount: 35000, description: 'Clinic consultation', created_at: '2026-03-15T09:00:00Z' },
+  // Education
+  { id: 21, type: 'education', amount: 45000, description: 'Online course fee', created_at: '2026-04-07T10:00:00Z' },
+  { id: 22, type: 'education', amount: 80000, description: 'Tuition payment', created_at: '2026-03-20T14:00:00Z' },
+  // Entertainment & Leisure
+  { id: 6, type: 'entertainment_leisure', amount: 15000, description: 'Concert tickets', created_at: '2026-04-08T20:00:00Z' },
+  { id: 23, type: 'entertainment_leisure', amount: 8000, description: 'Cinema outing', created_at: '2026-03-27T18:00:00Z' },
+  // Shopping & Retail
+  { id: 24, type: 'shopping_retail', amount: 35000, description: 'Clothing store', created_at: '2026-04-09T15:00:00Z' },
+  { id: 25, type: 'shopping_retail', amount: 22000, description: 'Electronics accessory', created_at: '2026-03-18T12:00:00Z' },
+  // Mobile & Communication
+  { id: 9, type: 'mobile_communication', amount: 10000, description: 'Airtime & data bundle', created_at: '2026-04-01T07:00:00Z' },
+  { id: 26, type: 'mobile_communication', amount: 5000, description: 'Mobile money fees', created_at: '2026-03-10T08:00:00Z' },
+  // Insurance
+  { id: 27, type: 'insurance', amount: 25000, description: 'Health insurance premium', created_at: '2026-04-04T09:00:00Z' },
+  // Savings & Investments
+  { id: 28, type: 'savings_investments', amount: 50000, description: 'Savings deposit', created_at: '2026-04-05T08:00:00Z' },
+  { id: 29, type: 'savings_investments', amount: 30000, description: 'Stock purchase', created_at: '2026-03-12T10:00:00Z' },
+  // Other
   { id: 10, type: 'other', amount: 7000, description: 'Miscellaneous', created_at: '2026-03-28T16:00:00Z' },
-  { id: 11, type: 'food', amount: 9500, description: 'Weekly groceries', created_at: '2026-03-25T10:00:00Z' },
-  { id: 12, type: 'bills', amount: 25000, description: 'Internet subscription', created_at: '2026-03-22T12:00:00Z' },
+  { id: 30, type: 'other', amount: 2500, description: 'ATM service fee', created_at: '2026-03-05T11:00:00Z' },
 ];
 
-const DEFAULT_CATEGORIES = [
-  { name: 'Food', value: 38500, color: '#0A9396' },
-  { name: 'Transport', value: 18700, color: '#005F73' },
-  { name: 'Bills', value: 24300, color: '#94D2BD' },
-  { name: 'Mobile Money', value: 23500, color: '#E9C46A' },
-  { name: 'Entertainment', value: 8200, color: '#F4A261' },
-  { name: 'Other', value: 11400, color: '#E76F51' },
-];
-const DEFAULT_MONTHLY = [
-  { month: 'Nov', spending: 95000, income: 210000 },
-  { month: 'Dec', spending: 128000, income: 215000 },
-  { month: 'Jan', spending: 102000, income: 220000 },
-  { month: 'Feb', spending: 88000, income: 220000 },
-  { month: 'Mar', spending: 115000, income: 225000 },
-  { month: 'Apr', spending: 124600, income: 228000 },
-];
+// Rich category data for dissertation-quality charts
+const DEFAULT_CATEGORIES = pendingCategoryBreakdown;
+const DEFAULT_MONTHLY = pendingMonthlyTrend;
 
 const SpendingAnalysisPage: React.FC = () => {
   const navigate = useNavigate();
@@ -121,11 +136,22 @@ const SpendingAnalysisPage: React.FC = () => {
     transfer: '#0A9396',
     deposit: '#005F73',
     food: '#0A9396',
+    food_dining: '#0A9396',
     transport: '#005F73',
+    transport_fuel: '#005F73',
     bills: '#94D2BD',
-    mobile_money: '#E9C46A',
+    utilities_bills: '#E9C46A',
+    housing_rent: '#94D2BD',
+    healthcare: '#F4A261',
+    education: '#E76F51',
     entertainment: '#F4A261',
-    other: '#E76F51',
+    entertainment_leisure: '#CA6702',
+    shopping_retail: '#9B2226',
+    mobile_money: '#E9C46A',
+    mobile_communication: '#6A4C93',
+    insurance: '#1982C4',
+    savings_investments: '#8AC926',
+    other: '#6C757D',
   };
 
   const loadSpendingData = async () => {
@@ -135,9 +161,11 @@ const SpendingAnalysisPage: React.FC = () => {
       let transactions = txResponse.data?.transactions || [];
 
       if (!transactions.length) {
+        const total = DEFAULT_CATEGORIES.reduce((s, c) => s + c.value, 0);
         setCategoryData(DEFAULT_CATEGORIES);
         setMonthlyData(DEFAULT_MONTHLY);
-        setTotalSpent(124600);
+        setTotalSpent(total);
+        setTotalIncome(2800000);
         setLoading(false);
         return;
       }
@@ -188,9 +216,11 @@ const SpendingAnalysisPage: React.FC = () => {
         if (!marketGuide) setMarketGuide(`Your top spending category is ${topCat.name} (RWF ${topCat.value.toLocaleString()}). ${advice[0] || ''}`);
       }
     } catch {
+      const total = DEFAULT_CATEGORIES.reduce((s, c) => s + c.value, 0);
       setCategoryData(DEFAULT_CATEGORIES);
       setMonthlyData(DEFAULT_MONTHLY);
-      setTotalSpent(124600);
+      setTotalSpent(total);
+      setTotalIncome(2800000);
     } finally {
       setLoading(false);
     }
@@ -202,24 +232,28 @@ const SpendingAnalysisPage: React.FC = () => {
     cats.forEach(cat => {
       const percent = pct(cat.value);
       const key = cat.name.toLowerCase();
-      if (key === 'food' || key === 'groceries') {
-        advice.push(`Food takes ${percent}% of your spending — buy seasonal local produce and meal prep to cut costs by up to 18%.`);
-      } else if (key === 'transport') {
-        advice.push(`Transport is ${percent}% of your spending — consider shared rides or public transport to save.`);
-      } else if (key === 'bills' || key === 'utilities') {
-        advice.push(`Bills account for ${percent}% — prepay annual subscriptions for 5-15% discounts.`);
-      } else if (key === 'mobile_money' || key === 'airtime') {
-        advice.push(`Mobile Money is ${percent}% of spending — bundle purchases to reduce transaction fees.`);
-      } else if (key === 'entertainment') {
-        advice.push(`Entertainment at ${percent}% — look for package deals and loyalty programs.`);
-      } else if (key === 'shopping') {
-        advice.push(`Shopping is ${percent}% of your spending — compare prices and avoid impulse buys.`);
-      } else if (key === 'health') {
-        advice.push(`Health spending at ${percent}% — consider a health insurance plan to manage costs.`);
-      } else if (key === 'education') {
+      if (key.includes('food') || key === 'groceries') {
+        advice.push(`Food & Dining takes ${percent}% of your spending — buy seasonal local produce and meal prep to cut costs by up to 18%.`);
+      } else if (key.includes('transport') || key.includes('fuel')) {
+        advice.push(`Transport & Fuel is ${percent}% of your spending — consider shared rides or public transport to save.`);
+      } else if (key.includes('bills') || key.includes('utilities')) {
+        advice.push(`Utilities & Bills account for ${percent}% — prepay annual subscriptions for 5-15% discounts.`);
+      } else if (key.includes('housing') || key.includes('rent')) {
+        advice.push(`Housing & Rent takes ${percent}% of your budget — aim to keep housing under 30% of income.`);
+      } else if (key.includes('mobile') || key.includes('communication')) {
+        advice.push(`Mobile & Communication is ${percent}% of spending — bundle purchases to reduce fees.`);
+      } else if (key.includes('entertainment') || key.includes('leisure')) {
+        advice.push(`Entertainment & Leisure at ${percent}% — look for package deals and loyalty programs.`);
+      } else if (key.includes('shopping') || key.includes('retail')) {
+        advice.push(`Shopping & Retail is ${percent}% of your spending — compare prices and avoid impulse buys.`);
+      } else if (key.includes('health')) {
+        advice.push(`Healthcare spending at ${percent}% — consider a health insurance plan to manage costs.`);
+      } else if (key.includes('education')) {
         advice.push(`Education is ${percent}% of your spending — explore scholarships and online resources.`);
-      } else if (key === 'rent') {
-        advice.push(`Rent takes ${percent}% of your budget — aim to keep housing under 30% of income.`);
+      } else if (key.includes('insurance')) {
+        advice.push(`Insurance at ${percent}% — review your coverage for potential savings.`);
+      } else if (key.includes('savings') || key.includes('investment')) {
+        advice.push(`Savings & Investments at ${percent}% — great habit! Consider diversifying your portfolio.`);
       }
     });
     if (advice.length === 0) {
@@ -332,9 +366,15 @@ const SpendingAnalysisPage: React.FC = () => {
           >
             <ArrowLeft size={20} />
           </motion.button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Spending Analysis</h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">AI-powered breakdown of your finances</p>
+          <div className="flex-1">
+            <div className="flex items-center gap-3 flex-wrap">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Spending Analysis</h1>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
+                <Clock size={12} />
+                Dataset Pending Analysis
+              </span>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">AI-powered breakdown of your finances · 12 categories loaded</p>
           </div>
         </div>
 
@@ -451,6 +491,27 @@ const SpendingAnalysisPage: React.FC = () => {
                 )}
               </motion.div>
             )}
+          </div>
+        </div>
+
+        {/* Dataset Pending Analysis Info */}
+        <div className="mt-6 p-4 rounded-2xl border border-dashed border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/10 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
+              <Database size={18} />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                Dataset Pending AI Analysis
+              </h4>
+              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                <strong>12 categories</strong> · <strong>30 demo transactions</strong> · 
+                <strong>12-month trend</strong> · RWF {DEFAULT_CATEGORIES.reduce((s, c) => s + c.value, 0).toLocaleString()} total spending
+              </p>
+              <p className="text-xs text-amber-500 dark:text-amber-500 mt-1">
+                This categorized dataset is ready for ML-powered analysis. Categories clearly defined for research and dissertation presentation.
+              </p>
+            </div>
           </div>
         </div>
 

@@ -158,10 +158,114 @@ def generate_savings_dataset():
     print("[OK] savings_dataset.csv saved -- {} rows, avg health score: {:.1f}".format(len(df), df['financial_health_score'].mean()))
 
 
+# ─── SPENDING ANALYSIS DATASET ────────────────────────────────────────────────
+def generate_spending_dataset():
+    """
+    Generates a synthetic spending transaction dataset with clearly defined
+    categories suitable for dissertation-level spending analysis and charts.
+    Categories: Food & Dining, Transport & Fuel, Housing & Rent, Utilities & Bills,
+    Healthcare, Education, Entertainment & Leisure, Shopping & Retail,
+    Mobile & Communication, Insurance, Savings & Investments, Other.
+    """
+    n = 10000
+    categories = [
+        'food_dining', 'transport_fuel', 'housing_rent', 'utilities_bills',
+        'healthcare', 'education', 'entertainment_leisure', 'shopping_retail',
+        'mobile_communication', 'insurance', 'savings_investments', 'other'
+    ]
+    cat_weights = [0.18, 0.12, 0.20, 0.10, 0.06, 0.05, 0.07, 0.09, 0.04, 0.03, 0.03, 0.03]
+    cat_labels = np.random.choice(categories, n, p=cat_weights)
+
+    # Map each category to a realistic amount range (RWF)
+    amount_ranges = {
+        'food_dining': (2000, 80000),
+        'transport_fuel': (1000, 60000),
+        'housing_rent': (50000, 350000),
+        'utilities_bills': (5000, 120000),
+        'healthcare': (5000, 200000),
+        'education': (10000, 300000),
+        'entertainment_leisure': (3000, 100000),
+        'shopping_retail': (2000, 150000),
+        'mobile_communication': (1000, 40000),
+        'insurance': (10000, 80000),
+        'savings_investments': (5000, 200000),
+        'other': (500, 50000)
+    }
+
+    amounts = np.array([
+        np.random.randint(low, high+1)
+        for low, high in [amount_ranges[c] for c in cat_labels]
+    ])
+
+    months = np.random.choice(range(1, 13), n)
+    days = np.random.choice(range(1, 29), n)
+    years = np.random.choice([2025, 2026], n, p=[0.3, 0.7])
+    dates = [f"{y}-{m:02d}-{d:02d}" for y, m, d in zip(years, months, days)]
+
+    # Income per user (for savings rate calculation)
+    monthly_income = np.random.randint(150000, 1500000, n)
+
+    # Payment methods
+    payment_methods = np.random.choice(
+        ['mobile_money', 'card', 'cash', 'bank_transfer'],
+        n, p=[0.35, 0.25, 0.25, 0.15]
+    )
+
+    # Merchant / description hints per category
+    merchants_map = {
+        'food_dining': ['Nakumatt', 'Shoprite', 'Local Market', 'Restaurant', 'Cafe', 'Food Delivery'],
+        'transport_fuel': ['Shell Station', 'TotalEnergies', 'Bus Terminal', 'Taxi', 'Ride Share', 'Fuel Depot'],
+        'housing_rent': ['Landlord Payment', 'Rent Monthly', 'Property Manager', 'Lease Payment'],
+        'utilities_bills': ['RECO Rwanda', 'EWSA Water', 'Internet Provider', 'Electricity Board', 'Waste Management'],
+        'healthcare': ['Pharmacy', 'Clinic Visit', 'Hospital Payment', 'Health Insurance', 'Lab Test'],
+        'education': ['School Fees', 'Tuition Payment', 'Bookstore', 'Online Course', 'Training Center'],
+        'entertainment_leisure': ['Cinema', 'Concert', 'Sports Club', 'Streaming Service', 'Weekend Getaway'],
+        'shopping_retail': ['Clothing Store', 'Electronics Shop', 'Department Store', 'Online Shopping', 'Supermarket'],
+        'mobile_communication': ['Airtime Top-Up', 'Data Bundle', 'Mobile Money Fee', 'Phone Bill'],
+        'insurance': ['Life Insurance Premium', 'Auto Insurance', 'Health Insurance', 'Property Insurance'],
+        'savings_investments': ['Savings Deposit', 'Stock Purchase', 'Mutual Fund', 'Treasury Bond', 'Retirement Fund'],
+        'other': ['ATM Fee', 'Service Charge', 'Donation', 'Gift', 'Miscellaneous']
+    }
+
+    descriptions = []
+    for cat in cat_labels:
+        merchants = merchants_map[cat]
+        descriptions.append(np.random.choice(merchants))
+
+    # Spend category (daily/sporadic)
+    spend_category = np.where(
+        np.isin(cat_labels, ['housing_rent', 'utilities_bills', 'insurance']),
+        'recurring', 'variable'
+    )
+
+    df = pd.DataFrame({
+        'transaction_id': [f'TX{i:06d}' for i in range(1, n+1)],
+        'date': dates,
+        'year': years,
+        'month': months,
+        'day': days,
+        'category': cat_labels,
+        'category_label': [c.replace('_', ' ').title() for c in cat_labels],
+        'amount_rwf': amounts,
+        'description': descriptions,
+        'payment_method': payment_methods,
+        'monthly_income': monthly_income,
+        'spend_type': spend_category,
+        'is_expense': 1,
+    })
+
+    path = os.path.join(DATASETS_DIR, 'spending_dataset.csv')
+    df.to_csv(path, index=False)
+    print("[OK] spending_dataset.csv saved -- {} rows, {} categories".format(
+        len(df), df['category_label'].nunique()))
+    print("    Categories: {}".format(', '.join(sorted(df['category_label'].unique()))))
+
+
 if __name__ == '__main__':
     print("[*] Generating synthetic datasets...")
     generate_loan_dataset()
     generate_fraud_dataset()
     generate_savings_dataset()
+    generate_spending_dataset()
     print("\n[DONE] All datasets generated successfully!")
 
