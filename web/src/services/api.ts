@@ -93,7 +93,7 @@ export const bankService = {
 export const aiService = {
     getInsights: () => api.get('/insights'),
     generateInsights: () => api.post('/insights/generate'),
-    chat: (message: string) => api.post('/chat', { message }),
+    chat: (message: string, history?: { role: string; text: string }[]) => api.post('/chat', { message, history }),
 
     // AI Engine endpoints (updated with proper response handling)
     predictLoan: async (data: any) => {

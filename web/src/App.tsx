@@ -53,14 +53,9 @@ const SpendingAnalysisPage = lazy(() => import('./pages/SpendingAnalysisPage'));
 
 // Loading component
 const LoadingFallback = () => (
-    <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        minHeight: '100vh', 
-        color: '#64748b' 
-    }}>
-        Loading...
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-[#0A1628]">
+        <div className="w-10 h-10 border-4 border-[#0A9396] border-t-transparent rounded-full animate-spin" />
+        <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">Loading AI Smart Banking...</p>
     </div>
 );
 

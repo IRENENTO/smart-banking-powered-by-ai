@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, PieChart as PieIcon, ArrowLeft, Sparkles, Send, Bot, User, MessageSquare, X, Clock, Database } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -7,8 +7,75 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
 } from 'recharts';
 import { bankService, aiService } from '../services/api';
-import { pendingCategoryBreakdown, pendingMonthlyTrend, SPENDING_CATEGORIES } from '../data/mockData';
 import Navbar from '../components/Navbar';
+
+const CATEGORY_BASES = [
+  { name: 'Food & Dining', color: '#0A9396' },
+  { name: 'Transport & Fuel', color: '#005F73' },
+  { name: 'Housing & Rent', color: '#94D2BD' },
+  { name: 'Utilities & Bills', color: '#E9C46A' },
+  { name: 'Healthcare', color: '#F4A261' },
+  { name: 'Education', color: '#E76F51' },
+  { name: 'Entertainment & Leisure', color: '#CA6702' },
+  { name: 'Shopping & Retail', color: '#9B2226' },
+  { name: 'Mobile & Communication', color: '#6A4C93' },
+  { name: 'Insurance', color: '#1982C4' },
+  { name: 'Savings & Investments', color: '#8AC926' },
+  { name: 'Other', color: '#6C757D' },
+];
+
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 9301 + 49297) % 233280;
+    return s / 233280;
+  };
+}
+
+function getUserSeed(): number {
+  try {
+    const raw = localStorage.getItem('user');
+    if (raw) {
+      const user = JSON.parse(raw);
+      const id = user.id || user.email || user.account_number || user.name || 'default';
+      let hash = 0;
+      for (let i = 0; i < String(id).length; i++) {
+        hash = ((hash << 5) - hash) + String(id).charCodeAt(i);
+        hash |= 0;
+      }
+      return Math.abs(hash) || Date.now();
+    }
+  } catch {}
+  return Date.now();
+}
+
+function generateUserCategories(userSeed: number) {
+  const rng = seededRandom(userSeed);
+  const categories = CATEGORY_BASES.map((base, i) => {
+    const baseValue = [385000, 245000, 450000, 198000, 120000, 165000, 95000, 210000, 78000, 85000, 52000, 32000][i] || 100000;
+    const variance = 0.6 + rng() * 0.8;
+    const value = Math.round(baseValue * variance);
+    return { name: base.name, value, color: base.color, percentage: 0 };
+  });
+  const total = categories.reduce((s, c) => s + c.value, 0);
+  categories.forEach(c => { c.percentage = Math.round((c.value / total) * 1000) / 10; });
+  return categories;
+}
+
+function generateUserTrends(userSeed: number) {
+  const rng = seededRandom(userSeed + 999);
+  return MONTH_LABELS.map((month, i) => {
+    const baseSpending = [1680000, 1720000, 1950000, 1830000, 1740000, 2110000, 1890000, 2450000, 1620000, 1580000, 1860000, 2115000][i] || 1800000;
+    const baseIncome = [2100000, 2100000, 2200000, 2200000, 2200000, 2300000, 2300000, 2500000, 2300000, 2300000, 2300000, 2400000][i] || 2200000;
+    return {
+      month,
+      spending: Math.round(baseSpending * (0.75 + rng() * 0.5)),
+      income: Math.round(baseIncome * (0.85 + rng() * 0.3)),
+    };
+  });
+}
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -26,57 +93,43 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const DEMO_TRANSACTIONS = [
-  // Food & Dining
-  { id: 1, type: 'food_dining', amount: 12500, description: 'Groceries at Nakumatt', created_at: '2026-04-15T10:30:00Z' },
-  { id: 2, type: 'food_dining', amount: 8500, description: 'Restaurant dinner', created_at: '2026-04-10T19:30:00Z' },
-  { id: 13, type: 'food_dining', amount: 18000, description: 'Monthly meal prep service', created_at: '2026-04-05T11:00:00Z' },
-  { id: 14, type: 'food_dining', amount: 9500, description: 'Weekly groceries', created_at: '2026-03-25T10:00:00Z' },
-  // Transport & Fuel
-  { id: 3, type: 'transport_fuel', amount: 5000, description: 'Bus pass monthly', created_at: '2026-04-14T08:00:00Z' },
-  { id: 4, type: 'transport_fuel', amount: 3000, description: 'Taxi fare', created_at: '2026-04-06T09:15:00Z' },
-  { id: 15, type: 'transport_fuel', amount: 25000, description: 'Fuel at Shell Station', created_at: '2026-04-02T14:00:00Z' },
-  // Housing & Rent
-  { id: 16, type: 'housing_rent', amount: 150000, description: 'Monthly rent payment', created_at: '2026-04-01T08:00:00Z' },
-  { id: 17, type: 'housing_rent', amount: 150000, description: 'Monthly rent payment', created_at: '2026-03-01T08:00:00Z' },
-  // Utilities & Bills
-  { id: 5, type: 'utilities_bills', amount: 25000, description: 'Electricity bill', created_at: '2026-04-12T14:00:00Z' },
-  { id: 8, type: 'utilities_bills', amount: 15000, description: 'Water bill', created_at: '2026-04-03T13:00:00Z' },
-  { id: 18, type: 'utilities_bills', amount: 25000, description: 'Internet subscription', created_at: '2026-03-22T12:00:00Z' },
-  // Healthcare
-  { id: 19, type: 'healthcare', amount: 12000, description: 'Pharmacy - prescription', created_at: '2026-04-11T11:00:00Z' },
-  { id: 20, type: 'healthcare', amount: 35000, description: 'Clinic consultation', created_at: '2026-03-15T09:00:00Z' },
-  // Education
-  { id: 21, type: 'education', amount: 45000, description: 'Online course fee', created_at: '2026-04-07T10:00:00Z' },
-  { id: 22, type: 'education', amount: 80000, description: 'Tuition payment', created_at: '2026-03-20T14:00:00Z' },
-  // Entertainment & Leisure
-  { id: 6, type: 'entertainment_leisure', amount: 15000, description: 'Concert tickets', created_at: '2026-04-08T20:00:00Z' },
-  { id: 23, type: 'entertainment_leisure', amount: 8000, description: 'Cinema outing', created_at: '2026-03-27T18:00:00Z' },
-  // Shopping & Retail
-  { id: 24, type: 'shopping_retail', amount: 35000, description: 'Clothing store', created_at: '2026-04-09T15:00:00Z' },
-  { id: 25, type: 'shopping_retail', amount: 22000, description: 'Electronics accessory', created_at: '2026-03-18T12:00:00Z' },
-  // Mobile & Communication
-  { id: 9, type: 'mobile_communication', amount: 10000, description: 'Airtime & data bundle', created_at: '2026-04-01T07:00:00Z' },
-  { id: 26, type: 'mobile_communication', amount: 5000, description: 'Mobile money fees', created_at: '2026-03-10T08:00:00Z' },
-  // Insurance
-  { id: 27, type: 'insurance', amount: 25000, description: 'Health insurance premium', created_at: '2026-04-04T09:00:00Z' },
-  // Savings & Investments
-  { id: 28, type: 'savings_investments', amount: 50000, description: 'Savings deposit', created_at: '2026-04-05T08:00:00Z' },
-  { id: 29, type: 'savings_investments', amount: 30000, description: 'Stock purchase', created_at: '2026-03-12T10:00:00Z' },
-  // Other
-  { id: 10, type: 'other', amount: 7000, description: 'Miscellaneous', created_at: '2026-03-28T16:00:00Z' },
-  { id: 30, type: 'other', amount: 2500, description: 'ATM service fee', created_at: '2026-03-05T11:00:00Z' },
-];
-
-// Rich category data for dissertation-quality charts
-const DEFAULT_CATEGORIES = pendingCategoryBreakdown;
-const DEFAULT_MONTHLY = pendingMonthlyTrend;
+function generateDemoTransactions(userSeed: number) {
+  const rng = seededRandom(userSeed + 111);
+  const types = ['food_dining', 'transport_fuel', 'housing_rent', 'utilities_bills', 'healthcare', 'education', 'entertainment_leisure', 'shopping_retail', 'mobile_communication', 'insurance', 'savings_investments', 'other'];
+  const entries: Record<string, { desc: string[]; amt: number[] }> = {
+    food_dining: { desc: ['Groceries at Nakumatt', 'Restaurant dinner', 'Monthly meal prep service', 'Weekly groceries'], amt: [12500, 8500, 18000, 9500] },
+    transport_fuel: { desc: ['Bus pass monthly', 'Taxi fare', 'Fuel at Shell Station'], amt: [5000, 3000, 25000] },
+    housing_rent: { desc: ['Monthly rent payment'], amt: [150000] },
+    utilities_bills: { desc: ['Electricity bill', 'Water bill', 'Internet subscription'], amt: [25000, 15000, 25000] },
+    healthcare: { desc: ['Pharmacy - prescription', 'Clinic consultation'], amt: [12000, 35000] },
+    education: { desc: ['Online course fee', 'Tuition payment'], amt: [45000, 80000] },
+    entertainment_leisure: { desc: ['Concert tickets', 'Cinema outing'], amt: [15000, 8000] },
+    shopping_retail: { desc: ['Clothing store', 'Electronics accessory'], amt: [35000, 22000] },
+    mobile_communication: { desc: ['Airtime & data bundle', 'Mobile money fees'], amt: [10000, 5000] },
+    insurance: { desc: ['Health insurance premium'], amt: [25000] },
+    savings_investments: { desc: ['Savings deposit', 'Stock purchase'], amt: [50000, 30000] },
+    other: { desc: ['Miscellaneous', 'ATM service fee'], amt: [7000, 2500] },
+  };
+  let id = 1;
+  const txns: any[] = [];
+  const baseDate = new Date('2026-04-15');
+  types.forEach(type => {
+    const e = entries[type];
+    e.desc.forEach((desc, i) => {
+      const d = new Date(baseDate);
+      d.setDate(d.getDate() - Math.floor(rng() * 30));
+      txns.push({ id: id++, type, amount: e.amt[i % e.amt.length], description: desc, created_at: d.toISOString() });
+    });
+  });
+  return txns;
+}
 
 const SpendingAnalysisPage: React.FC = () => {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<'pie' | 'trend'>('pie');
-  const [categoryData, setCategoryData] = useState<any[]>([]);
-  const [monthlyData, setMonthlyData] = useState<any[]>([]);
+  type Tab = 'overview' | 'category' | 'trend';
+  const [tab, setTab] = useState<Tab>('overview');
+  const [categoryData, setCategoryData] = useState<any[]>(() => generateUserCategories(getUserSeed()));
+  const [monthlyData, setMonthlyData] = useState<any[]>(() => generateUserTrends(getUserSeed()));
   const [loading, setLoading] = useState(true);
   const [totalSpent, setTotalSpent] = useState(0);
   const [totalIncome, setTotalIncome] = useState(0);
@@ -84,6 +137,8 @@ const SpendingAnalysisPage: React.FC = () => {
   const [marketGuide, setMarketGuide] = useState('');
   const [marketInsights, setMarketInsights] = useState<string[]>([]);
   const [fetchedGuidance, setFetchedGuidance] = useState(false);
+
+  const userSeed = useMemo(() => getUserSeed(), []);
 
   // Chat state
   const [chatOpen, setChatOpen] = useState(false);
@@ -93,6 +148,34 @@ const SpendingAnalysisPage: React.FC = () => {
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  const userCategories = useMemo(() => generateUserCategories(userSeed), [userSeed]);
+  const userTrends = useMemo(() => generateUserTrends(userSeed), [userSeed]);
+  const userDemoTransactions = useMemo(() => generateDemoTransactions(userSeed), [userSeed]);
+
+  const userName = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        return u.name || u.email || 'User';
+      }
+    } catch {}
+    return 'User';
+  }, []);
+
+  const chartCategories = useMemo(() => {
+    const sorted = [...categoryData].sort((a, b) => b.value - a.value);
+    const top6 = sorted.slice(0, 6).filter(c => c.value > 0);
+    const rest = sorted.slice(6).filter(c => c.value > 0);
+    if (rest.length > 0) {
+      const otherValue = rest.reduce((s, c) => s + c.value, 0);
+      top6.push({ name: 'Others', value: otherValue, color: '#6C757D', percentage: 0 });
+    }
+    const total = top6.reduce((s, c) => s + c.value, 0);
+    top6.forEach(c => { c.percentage = total > 0 ? Math.round((c.value / total) * 1000) / 10 : 0; });
+    return top6;
+  }, [categoryData]);
 
   const isExpense = (tx: any) => {
     if (tx.balance_before != null && tx.balance_after != null) return Number(tx.balance_after) < Number(tx.balance_before);
@@ -127,8 +210,6 @@ const SpendingAnalysisPage: React.FC = () => {
     loadSpendingData();
   }, []);
 
-  const COLORS_PALETTE = ['#0A9396', '#005F73', '#94D2BD', '#E9C46A', '#F4A261', '#E76F51', '#CA6702', '#9B2226'];
-
   const COLORS_MAP: Record<string, string> = {
     payment: '#E76F51',
     withdraw: '#CA6702',
@@ -154,71 +235,97 @@ const SpendingAnalysisPage: React.FC = () => {
     other: '#6C757D',
   };
 
+  const TYPE_TO_CAT: Record<string, string> = {
+    food_dining: 'Food & Dining', food: 'Food & Dining', groceries: 'Food & Dining', restaurant: 'Food & Dining', dining: 'Food & Dining',
+    transport_fuel: 'Transport & Fuel', transport: 'Transport & Fuel', fuel: 'Transport & Fuel',
+    housing_rent: 'Housing & Rent', housing: 'Housing & Rent', rent: 'Housing & Rent',
+    utilities_bills: 'Utilities & Bills', utilities: 'Utilities & Bills', bills: 'Utilities & Bills', electricity: 'Utilities & Bills', water: 'Utilities & Bills',
+    healthcare: 'Healthcare', health: 'Healthcare', medical: 'Healthcare', pharmacy: 'Healthcare',
+    education: 'Education', tuition: 'Education', course: 'Education', school: 'Education',
+    entertainment_leisure: 'Entertainment & Leisure', entertainment: 'Entertainment & Leisure', leisure: 'Entertainment & Leisure',
+    shopping_retail: 'Shopping & Retail', shopping: 'Shopping & Retail', retail: 'Shopping & Retail',
+    mobile_communication: 'Mobile & Communication', mobile: 'Mobile & Communication', communication: 'Mobile & Communication', airtime: 'Mobile & Communication',
+    insurance: 'Insurance',
+    savings_investments: 'Savings & Investments', savings: 'Savings & Investments', investments: 'Savings & Investments', investment: 'Savings & Investments',
+    payment: 'Other', withdraw: 'Other', withdrawal: 'Other', transfer: 'Other', deposit: 'Other', other: 'Other',
+  };
+
   const loadSpendingData = async () => {
     setLoading(true);
     try {
       const txResponse = await bankService.getTransactions();
       let transactions = txResponse.data?.transactions || [];
 
-      if (!transactions.length) {
-        const total = DEFAULT_CATEGORIES.reduce((s, c) => s + c.value, 0);
-        setCategoryData(DEFAULT_CATEGORIES);
-        setMonthlyData(DEFAULT_MONTHLY);
-        setTotalSpent(total);
-        setTotalIncome(2800000);
-        setLoading(false);
-        return;
-      }
-
-      // Build category breakdown from expense transactions
-      const catMap: Record<string, number> = {};
+      // Always start with all 12 demo categories as the base
+      const merged = userCategories.map(c => ({ ...c }));
       let spent = 0;
       let income = 0;
-      transactions.forEach((tx: any) => {
-        const amt = Number(tx.amount || 0);
-        const cat = tx.category || tx.type || 'other';
-        if (isExpense(tx)) {
-          catMap[cat] = (catMap[cat] || 0) + amt;
-          spent += amt;
-        } else if (isIncome(tx)) {
-          income += amt;
-        }
-      });
 
-      const cats = Object.entries(catMap)
-        .map(([name, value]) => ({ name: name.charAt(0).toUpperCase() + name.slice(1), value, color: COLORS_MAP[name] || '#94D2BD' }))
-        .sort((a, b) => b.value - a.value);
+      if (transactions.length > 0) {
+        const rawMap: Record<string, number> = {};
+        transactions.forEach((tx: any) => {
+          const amt = Number(tx.amount || 0);
+          const raw = (tx.category || tx.type || 'other').toLowerCase();
+          if (isExpense(tx)) {
+            rawMap[raw] = (rawMap[raw] || 0) + amt;
+            spent += amt;
+          } else if (isIncome(tx)) {
+            income += amt;
+          }
+        });
 
-      setCategoryData(cats.length ? cats : DEFAULT_CATEGORIES);
-      setTotalSpent(spent);
-      setTotalIncome(income);
+        // Overlay real transaction amounts onto matching demo categories
+        Object.entries(rawMap).forEach(([rawType, totalAmt]) => {
+          const catName = TYPE_TO_CAT[rawType];
+          const match = merged.find(c => c.name === catName);
+          if (match) {
+            match.value = totalAmt;
+          } else {
+            // Unknown type -> add into "Other"
+            const other = merged.find(c => c.name === 'Other');
+            if (other) other.value += totalAmt;
+          }
+        });
 
-      // Build monthly trend data
-      const monthMap: Record<string, { spending: number; income: number }> = {};
-      transactions.forEach((tx: any) => {
-        const amt = Number(tx.amount || 0);
-        const date = tx.created_at ? new Date(tx.created_at) : new Date();
-        const key = date.toLocaleString('en-US', { month: 'short' });
-        if (!monthMap[key]) monthMap[key] = { spending: 0, income: 0 };
-        if (isExpense(tx)) monthMap[key].spending += amt;
-        else if (isIncome(tx)) monthMap[key].income += amt;
-      });
+        // Recalculate percentages
+        const grandTotal = merged.reduce((s, c) => s + c.value, 0);
+        merged.forEach(c => { c.percentage = grandTotal > 0 ? Math.round((c.value / grandTotal) * 1000) / 10 : 0; });
+        merged.sort((a, b) => b.value - a.value);
+      }
 
-      const months = Object.entries(monthMap).map(([month, data]) => ({ month, ...data }));
-      setMonthlyData(months.length ? months : DEFAULT_MONTHLY);
+      setCategoryData(merged);
+      setTotalSpent(spent || merged.reduce((s, c) => s + c.value, 0));
+      setTotalIncome(income || 2800000);
 
-      // Generate personalized advice from actual category breakdown
-      if (cats.length > 0) {
-        const topCat = cats[0];
-        const total = spent;
-        const advice = generateCategoryAdvice(cats, total);
+      // Build monthly trend data (real if available, else demo)
+      if (transactions.length > 0) {
+        const monthMap: Record<string, { spending: number; income: number }> = {};
+        transactions.forEach((tx: any) => {
+          const amt = Number(tx.amount || 0);
+          const date = tx.created_at ? new Date(tx.created_at) : new Date();
+          const key = date.toLocaleString('en-US', { month: 'short' });
+          if (!monthMap[key]) monthMap[key] = { spending: 0, income: 0 };
+          if (isExpense(tx)) monthMap[key].spending += amt;
+          else if (isIncome(tx)) monthMap[key].income += amt;
+        });
+        const months = Object.entries(monthMap).map(([month, data]) => ({ month, ...data }));
+        setMonthlyData(months.length ? months : userTrends);
+      } else {
+        setMonthlyData(userTrends);
+      }
+
+      // Generate personalized advice
+      if (merged.length > 0) {
+        const topCat = merged[0];
+        const total = spent || merged.reduce((s, c) => s + c.value, 0);
+        const advice = generateCategoryAdvice(merged, total);
         if (advice.length > 0) setMarketInsights(advice);
         if (!marketGuide) setMarketGuide(`Your top spending category is ${topCat.name} (RWF ${topCat.value.toLocaleString()}). ${advice[0] || ''}`);
       }
     } catch {
-      const total = DEFAULT_CATEGORIES.reduce((s, c) => s + c.value, 0);
-      setCategoryData(DEFAULT_CATEGORIES);
-      setMonthlyData(DEFAULT_MONTHLY);
+      const total = userCategories.reduce((s, c) => s + c.value, 0);
+      setCategoryData(userCategories);
+      setMonthlyData(userTrends);
       setTotalSpent(total);
       setTotalIncome(2800000);
     } finally {
@@ -269,7 +376,8 @@ const SpendingAnalysisPage: React.FC = () => {
     setChatMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setChatLoading(true);
     try {
-      const response = await aiService.chat(userMsg);
+      const history = chatMessages.slice(-10).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', text: m.text }));
+      const response = await aiService.chat(userMsg, history);
       const reply = response.data?.reply || response.data?.message || "I'm analyzing your spending patterns. Based on your transactions, I recommend tracking your daily expenses to identify saving opportunities.";
       setChatMessages(prev => [...prev, { role: 'assistant', text: reply }]);
     } catch {
@@ -287,7 +395,7 @@ const SpendingAnalysisPage: React.FC = () => {
       // First try ML-powered spending analysis with real transactions
       const txResponse = await bankService.getTransactions();
       let transactions = txResponse.data?.transactions || [];
-      if (!transactions.length) transactions = DEMO_TRANSACTIONS;
+      if (!transactions.length) transactions = userDemoTransactions;
 
       // Map transactions to the format the AI engine expects
       const mappedTx = transactions.map((tx: any) => ({
@@ -374,20 +482,21 @@ const SpendingAnalysisPage: React.FC = () => {
                 Dataset Pending Analysis
               </span>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">AI-powered breakdown of your finances · 12 categories loaded</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">AI-powered breakdown of <strong>{userName}'s</strong> finances · {categoryData.length} categories loaded</p>
           </div>
         </div>
 
         <div className="bg-white dark:bg-[#0B1F3A] rounded-3xl shadow-xl shadow-black/10 dark:shadow-black/30 overflow-hidden">
           <div className="flex gap-2 px-6 pt-5 pb-0 border-b border-gray-100 dark:border-gray-800">
             {[
-              { key: 'pie', label: 'Category Breakdown', icon: <PieIcon size={14} /> },
-              { key: 'trend', label: 'Monthly Trends', icon: <TrendingUp size={14} /> },
+              { key: 'overview', label: 'AI-Powered Financial Intelligence', icon: <Sparkles size={14} /> },
+              { key: 'category', label: 'Spending by Category', icon: <PieIcon size={14} /> },
+              { key: 'trend', label: 'Spending Trend', icon: <TrendingUp size={14} /> },
             ].map((t) => (
               <button
                 key={t.key}
-                onClick={() => setTab(t.key as 'pie' | 'trend')}
-                className={`flex items-center gap-1.5 px-4 py-2.5 rounded-t-xl text-sm font-medium transition-all ${
+                onClick={() => setTab(t.key as Tab)}
+                className={`flex items-center gap-1.5 px-3 py-2.5 rounded-t-xl text-xs sm:text-sm font-medium transition-all ${
                   tab === t.key
                     ? 'bg-[#0A9396] text-white shadow-md shadow-teal-500/30'
                     : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
@@ -399,9 +508,61 @@ const SpendingAnalysisPage: React.FC = () => {
           </div>
 
           <div className="px-6 py-6">
-            {tab === 'pie' ? (
+            {tab === 'overview' ? (
               <motion.div
-                key="pie"
+                key="overview"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-teal-50 dark:bg-[#0A9396]/10 rounded-xl p-4 border border-teal-100 dark:border-[#0A9396]/20">
+                    <p className="text-xs text-teal-600 dark:text-teal-400 font-medium">Total Spending</p>
+                    <p className="text-2xl font-bold text-teal-700 dark:text-teal-300 mt-1">RWF {totalSpent.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-blue-50 dark:bg-[#005F73]/10 rounded-xl p-4 border border-blue-100 dark:border-[#005F73]/20">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">Categories Tracked</p>
+                    <p className="text-2xl font-bold text-blue-700 dark:text-blue-300 mt-1">{categoryData.length}</p>
+                  </div>
+                  <div className="bg-amber-50 dark:bg-[#E9C46A]/10 rounded-xl p-4 border border-amber-100 dark:border-[#E9C46A]/20">
+                    <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">Data Period</p>
+                    <p className="text-2xl font-bold text-amber-700 dark:text-amber-300 mt-1">{monthlyData.length} mo</p>
+                  </div>
+                </div>
+
+                {categoryData.length > 0 && (
+                  <div className="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-100 dark:border-gray-800">
+                    <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Spending Summary</h4>
+                    {marketInsights.length > 0 ? (
+                      <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                        {marketInsights.slice(0, 4).map((insight, i) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-teal-500 mt-0.5">◆</span>
+                            {insight}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Tracked <strong>{categoryData.length} categories</strong> with total spending of{' '}
+                        <strong>RWF {totalSpent.toLocaleString()}</strong>.{' '}
+                        {categoryData[0] && (
+                          <>Top category: <strong>{categoryData[0].name}</strong> (RWF {categoryData[0].value.toLocaleString()}).</>
+                        )}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {marketGuide && (
+                  <div className="mt-4 p-3 bg-teal-50 dark:bg-[#0A9396]/10 rounded-xl border border-teal-100 dark:border-[#0A9396]/20">
+                    <p className="text-sm text-teal-700 dark:text-teal-300">{marketGuide}</p>
+                  </div>
+                )}
+              </motion.div>
+            ) : tab === 'category' ? (
+              <motion.div
+                key="category"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.25 }}
@@ -417,31 +578,51 @@ const SpendingAnalysisPage: React.FC = () => {
                     <div className="text-gray-500 dark:text-gray-400">Loading chart data...</div>
                   </div>
                 ) : (
-                  <div style={{ width: '100%', height: 350, minWidth: 300, minHeight: 350, position: 'relative' }}>
-                    <ResponsiveContainer width="100%" height={350} minWidth={300} minHeight={350}>
-                      <PieChart>
-                        <Pie
-                          data={categoryData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={80}
-                          outerRadius={130}
-                          paddingAngle={4}
-                          dataKey="value"
-                          isAnimationActive={false}
-                        >
-                          {categoryData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
-                          ))}
-                        </Pie>
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend
-                          formatter={(value) => (
-                            <span className="text-sm text-gray-600 dark:text-gray-300">{value}</span>
-                          )}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+                  <div>
+                    <div style={{ width: '100%', height: 350, minWidth: 300, minHeight: 350, position: 'relative' }}>
+                      <ResponsiveContainer width="100%" height={350} minWidth={300} minHeight={350}>
+                        <PieChart>
+                          <Pie
+                            data={chartCategories}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={80}
+                            outerRadius={130}
+                            paddingAngle={4}
+                            dataKey="value"
+                            isAnimationActive={false}
+                          >
+                            {chartCategories.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                            ))}
+                          </Pie>
+                          <Tooltip content={<CustomTooltip />} />
+                          <Legend
+                            formatter={(value) => (
+                              <span className="text-sm text-gray-600 dark:text-gray-300">{value}</span>
+                            )}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    {categoryData.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mt-4">
+                        {categoryData.map((cat) => {
+                          const pct = totalSpent > 0 ? ((cat.value / totalSpent) * 100).toFixed(1) : '0';
+                          return (
+                            <div key={cat.name} className="flex items-center gap-2.5 p-2.5 rounded-lg bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800">
+                              <span style={{ width: 14, height: 14, borderRadius: 4, background: cat.color, flexShrink: 0 }} />
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-semibold text-gray-800 dark:text-gray-200 truncate">{cat.name}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  RWF {cat.value.toLocaleString()} ({pct}%)
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>
@@ -453,7 +634,7 @@ const SpendingAnalysisPage: React.FC = () => {
                 transition={{ duration: 0.25 }}
               >
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                  6-month income vs spending comparison
+                  {monthlyData.length}-month income vs spending comparison
                 </p>
                 {loading ? (
                   <div className="flex items-center justify-center h-[350px]">
@@ -505,8 +686,8 @@ const SpendingAnalysisPage: React.FC = () => {
                 Dataset Pending AI Analysis
               </h4>
               <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                <strong>12 categories</strong> · <strong>30 demo transactions</strong> · 
-                <strong>12-month trend</strong> · RWF {DEFAULT_CATEGORIES.reduce((s, c) => s + c.value, 0).toLocaleString()} total spending
+                <strong>12 categories</strong> · <strong>{userDemoTransactions.length} demo transactions</strong> · 
+                <strong>12-month trend</strong> · RWF {userCategories.reduce((s, c) => s + c.value, 0).toLocaleString()} total spending · <strong>{userName}</strong>
               </p>
               <p className="text-xs text-amber-500 dark:text-amber-500 mt-1">
                 This categorized dataset is ready for ML-powered analysis. Categories clearly defined for research and dissertation presentation.

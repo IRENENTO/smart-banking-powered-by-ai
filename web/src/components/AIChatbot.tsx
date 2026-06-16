@@ -501,7 +501,8 @@ const AIChatbot: React.FC = () => {
         // If API call is needed
         if (response.useAPI) {
           try {
-            const apiResponse = await aiService.chat(trimmed);
+            const history = messages.slice(-10).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', text: m.text }));
+            const apiResponse = await aiService.chat(trimmed, history);
             botMsg.text = apiResponse.data.reply || apiResponse.data.response || apiResponse.data.message || "I received your message, but I'm not sure how to respond. Can you try rephrasing?";
             botMsg.quickReplies = apiResponse.data.quickReplies || ['Go back to start'];
           } catch (apiError) {

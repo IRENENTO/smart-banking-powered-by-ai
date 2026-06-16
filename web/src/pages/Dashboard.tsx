@@ -7,10 +7,8 @@ import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
 import SmartAlertBanner from '../components/SmartAlertBanner';
-import SpendingAnalytics from '../components/SpendingAnalytics';
 import LoanEligibility from '../components/LoanEligibility';
 import QuickActions from '../components/QuickActions';
-import AICharts from '../components/AICharts';
 import AIFinancialAdvisor from '../components/AIFinancialAdvisor';
 import MarketInsights from '../components/MarketInsights';
 import IncomePattern from '../components/IncomePattern';
@@ -26,7 +24,6 @@ import { accountService, aiService, marketService } from '../services/api';
 import * as aiEngine from '../services/aiService';
 
 const Dashboard: React.FC = () => {
-  const [analyticsOpen, setAnalyticsOpen] = useState(false);
   const [loanEligibilityOpen, setLoanEligibilityOpen] = useState(false);
   const [loading, setLoading] = useState<string | null>(null);
   const [accountDetails, setAccountDetails] = useState<{
@@ -80,7 +77,7 @@ const Dashboard: React.FC = () => {
 
     switch (action) {
       case 'analytics':
-        setAnalyticsOpen(true);
+        navigate('/spending-analysis');
         break;
       case 'send-money':
         navigate('/payments');
@@ -620,15 +617,6 @@ const Dashboard: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.3 }}
-          style={{ marginBottom: 32, position: 'relative', zIndex: 1 }}
-        >
-          <AICharts />
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.45 }}
           style={{ marginBottom: 32, position: 'relative', zIndex: 1 }}
         >
@@ -795,7 +783,6 @@ const Dashboard: React.FC = () => {
       </motion.div>
 
       <>
-        <SpendingAnalytics isOpen={analyticsOpen} onClose={() => setAnalyticsOpen(false)} />
         <LoanEligibility isOpen={loanEligibilityOpen} onClose={() => setLoanEligibilityOpen(false)} />
         <QuickActions onAction={handleQuickAction} anchor="bottom-left" />
       </>

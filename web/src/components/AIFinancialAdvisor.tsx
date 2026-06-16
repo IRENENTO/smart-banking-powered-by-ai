@@ -2,6 +2,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, User, TrendingUp, Shield, Lightbulb, PiggyBank, Sparkles } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
+import { aiService } from '../services/api';
 import LoadingButton from './LoadingButton';
 import SectionCard from './SectionCard';
 
@@ -24,6 +25,69 @@ type AIResponse = {
   text: string;
   type: Message['type'];
   suggestion?: string;
+};
+
+const getAIResponse = async (userInput: string): Promise<AIResponse> => {
+  try {
+    const response = await aiService.chat(userInput);
+    const reply = response.data?.reply || response.data?.message || response.data?.text || '';
+    if (reply) {
+      return { text: reply, type: 'text' };
+    }
+  } catch {
+    // Fall through to local fallback
+  }
+  return localFallback(userInput);
+};
+
+const localFallback = (userInput: string): AIResponse => {
+  const input = userInput.toLowerCase();
+  if (input.includes('business') || input.includes('growth') || input.includes('startup') || input.includes('shop')) {
+    return {
+      text: "For business growth in Rwanda: \n1. **Digital Presence**: Use Mobile Money for all payments to build a digital credit trail.\n2. **Inventory Management**: Track stock levels daily to avoid overstocking.\n3. **Marketing**: Leverage social media for low-cost local reach.\n4. **Loan Readiness**: Keep your Debt-to-Income ratio below 40% to qualify for business expansion loans.",
+      type: 'success',
+      suggestion: "\u{1F680} Growth Tip: Reinvest 30% of your profits back into the business for sustainable scaling."
+    };
+  }
+  if (input.includes('market') || input.includes('trend')) {
+    return {
+      text: "Current market trends show high growth in: \n\u2022 **Agri-tech**: 15% increase in efficiency.\n\u2022 **E-commerce**: 25% growth in mobile transactions.\n\u2022 **Clean Energy**: Government incentives for solar startups.",
+      type: 'text',
+      suggestion: "\u{1F4C8} Check the 'Market Insights' tab for detailed sector performance."
+    };
+  }
+  if (input.includes('spend') || input.includes('budget')) {
+    return {
+      text: "You spend 32% on transport which is above average. You can save 18,000 RWF monthly by reducing trips. Your dining expenses are 28% higher than recommended for your income level.",
+      type: 'warning',
+      suggestion: "\u{1F4A1} Pro tip: Use the 50/30/20 rule - 50% for needs, 30% for wants, and 20% for savings."
+    };
+  }
+  if (input.includes('invest') || input.includes('investment')) {
+    return {
+      text: "Based on Rwanda's market trends, I recommend: 35% in poultry farming (high returns), 25% in mobile money services (stable income), 20% in food supply chain, and 20% in emergency fund. This portfolio could yield 22% annual returns.",
+      type: 'success',
+      suggestion: "\u{1F4CA} Start small with 50,000 RWF in poultry farming and scale up based on results."
+    };
+  }
+  if (input.includes('save') || input.includes('savings')) {
+    return {
+      text: "You're currently saving 8% of your income. Increasing to 20% could help you build 1.2M RWF emergency fund in 18 months. Consider automated transfers of 85,000 RWF monthly.",
+      type: 'success',
+      suggestion: "\u{1F3AF} Target: Save 150,000 RWF monthly by reducing entertainment expenses by 15%."
+    };
+  }
+  if (input.includes('debt') || input.includes('loan')) {
+    return {
+      text: "Your debt-to-income ratio is 42%, which is manageable. Prioritize high-interest loans first. By paying 45,000 RWF extra monthly, you could be debt-free in 14 months instead of 24 months.",
+      type: 'warning',
+      suggestion: "\u{1F4B0} This strategy saves you 180,000 RWF in interest payments."
+    };
+  }
+  return {
+    text: "I can analyze your spending patterns (32% on transport, 28% on dining), suggest investments (poultry farming yields 22% returns), and help optimize your savings from 8% to 20%. What's your financial priority?",
+    type: 'text'
+  };
 };
 
 const quickSuggestions: Suggestion[] = [
@@ -164,8 +228,7 @@ const AIFinancialAdvisor: React.FC = () => {
     setInput('');
     setIsTyping(true);
 
-    window.setTimeout(() => {
-      const aiResponse = generateAIResponse(messageText);
+    getAIResponse(messageText).then((aiResponse) => {
       const advisorMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: aiResponse.text,
@@ -191,7 +254,7 @@ const AIFinancialAdvisor: React.FC = () => {
           setMessages((prev) => [...prev, suggestionMessage]);
         }, 700);
       }
-    }, 900);
+    });
   };
 
   return (

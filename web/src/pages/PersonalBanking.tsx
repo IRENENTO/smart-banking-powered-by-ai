@@ -1,7 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import PageLayout from '../components/PageLayout';
 import { motion } from 'framer-motion';
-import { Wallet, Send, TrendingUp, Zap } from 'lucide-react';
+import { Wallet, Send, TrendingUp, Zap, PieChart } from 'lucide-react';
 
 const PersonalBanking: React.FC = () => {
   const services = [

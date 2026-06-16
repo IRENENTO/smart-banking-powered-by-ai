@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Shield, TrendingUp, Zap, Heart, Star, Rocket, Smartphone, BarChart3 } from 'lucide-react';
+import { ArrowRight, Shield, TrendingUp, Zap, Heart, Star, Rocket, Smartphone, BarChart3, PieChart } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
@@ -57,12 +57,10 @@ const Landing: React.FC = () => {
 
     const handleAction = async (action: string, path?: string) => {
         setLoading(action);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setLoading(null);
         if (path) {
             navigate(path);
         }
+        setLoading(null);
     };
 
     return (
@@ -731,6 +729,32 @@ const Landing: React.FC = () => {
                                 </p>
                                 <div style={{ display: 'grid', gap: 10 }}>
                                     {['AI Portfolio Management', 'Risk Assessment', 'Market Insights', 'Diversified Options'].map((f, i) => (
+                                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
+                                            <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
+                                        </div>
+                                    ))}
+                                </div>
+                            </motion.div>
+                        </Link>
+
+                        {/* Spending Analysis */}
+                        <Link to={isAuthenticated ? "/spending-analysis" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                                transition={{ delay: 0.22 }}
+                                whileHover={{ y: -8, scale: 1.02 }}
+                                style={{ background: darkMode ? 'rgba(255,255,255,0.08)' : 'white', borderRadius: 20, padding: 32, boxShadow: darkMode ? '0 10px 30px rgba(0,0,0,0.3)' : '0 10px 30px rgba(10,147,150,0.08)', border: darkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(10,147,150,0.1)', height: '100%' }}
+                            >
+                                <motion.div whileHover={{ scale: 1.1 }} style={{ marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                                    <PieChart size={40} style={{ color: '#E76F51' }} />
+                                </motion.div>
+                                <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Spending Analysis</h3>
+                                <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
+                                    AI-powered breakdown of your spending with clear categories, trend analysis, and smart saving recommendations.
+                                </p>
+                                <div style={{ display: 'grid', gap: 10 }}>
+                                    {['Spending by Category', 'Monthly Trends', 'AI Financial Intelligence', 'Smart Saving Tips'].map((f, i) => (
                                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
                                             <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
                                         </div>
