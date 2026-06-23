@@ -418,14 +418,13 @@ const SpendingAnalysisPage: React.FC = () => {
       let mlInsights: string[] = [];
       try {
         const mlResult = await aiService.analyzeSpending(mappedTx, estimatedMonthlyIncome);
-        const mlData = mlResult?.data;
-        if (mlData?.recommendations) {
-          mlInsights = mlData.recommendations;
+        if (mlResult?.recommendations) {
+          mlInsights = mlResult.recommendations;
         }
-        if (mlData?.spending_insights) {
-          setMarketGuide(mlData.spending_insights);
+        if (mlResult?.spending_insights) {
+          setMarketGuide(mlResult.spending_insights);
         }
-        if (mlData?.ai_powered) {
+        if (mlResult?.ai_powered) {
           setAnalysisCompleted(true);
         }
       } catch {

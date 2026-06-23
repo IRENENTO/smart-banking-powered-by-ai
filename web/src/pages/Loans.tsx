@@ -235,9 +235,8 @@ const Loans: React.FC = () => {
   const checkAIStatus = async () => {
     try {
       const result = await aiEngine.getModelStatus();
-      const data = result?.data;
-      if (data && typeof data === 'object') {
-        setAiEngineOnline(data.status !== 'offline' && data.success !== false);
+      if (result && typeof result === 'object') {
+        setAiEngineOnline(result.status !== 'offline' && result.success !== false);
       } else {
         setAiEngineOnline(false);
       }
@@ -268,9 +267,8 @@ const Loans: React.FC = () => {
 
   const extractPredictionData = (response: any, fallback: () => any) => {
     try {
-      const data = response?.data;
-      if (data && typeof data === 'object' && ('approved' in data || 'risk_score' in data)) {
-        return data;
+      if (response && typeof response === 'object' && ('approved' in response || 'risk_score' in response)) {
+        return response;
       }
     } catch {}
     return fallback();
