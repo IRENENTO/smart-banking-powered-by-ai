@@ -238,6 +238,34 @@ const SpendingAnalysisPage: React.FC = () => {
     other: '#6C757D',
   };
 
+  const DESC_TO_CAT: { keywords: string[]; cat: string }[] = [
+    { keywords: ['grocery', 'groceries', 'restaurant', 'dinner', 'lunch', 'breakfast', 'meal', 'food', 'cafe', 'pizza', 'supermarket', 'shoprite', 'nakumatt'], cat: 'food_dining' },
+    { keywords: ['bus', 'taxi', 'fuel', 'gas', 'petrol', 'transport', 'fare', 'shell', 'uber', 'ride'], cat: 'transport_fuel' },
+    { keywords: ['rent', 'housing', 'apartment', 'mortgage', 'lease', 'maintenance'], cat: 'housing_rent' },
+    { keywords: ['electricity', 'water', 'internet', 'utility', 'bill', 'power'], cat: 'utilities_bills' },
+    { keywords: ['pharmacy', 'clinic', 'hospital', 'doctor', 'medical', 'prescription', 'medicine', 'health'], cat: 'healthcare' },
+    { keywords: ['tuition', 'school', 'course', 'class', 'training', 'education', 'books', 'university'], cat: 'education' },
+    { keywords: ['cinema', 'concert', 'movie', 'ticket', 'entertainment', 'game', 'sport', 'show', 'theatre'], cat: 'entertainment_leisure' },
+    { keywords: ['clothing', 'electronics', 'store', 'shop', 'retail', 'mall', 'fashion', 'shoe'], cat: 'shopping_retail' },
+    { keywords: ['airtime', 'data', 'mobile', 'phone', 'recharge', 'mtn', 'airtel'], cat: 'mobile_communication' },
+    { keywords: ['insurance', 'premium', 'policy', 'coverage'], cat: 'insurance' },
+    { keywords: ['savings', 'deposit', 'investment', 'stock', 'bond', 'contribution', 'pension'], cat: 'savings_investments' },
+  ];
+
+  function inferCategory(tx: any): string {
+    const raw = (tx.category || tx.type || 'other').toLowerCase();
+    if (raw !== 'other' && raw !== 'payment' && raw !== 'withdrawal' && raw !== 'transfer' && raw !== 'withdraw') {
+      return raw;
+    }
+    const desc = (tx.description || '').toLowerCase();
+    for (const entry of DESC_TO_CAT) {
+      if (entry.keywords.some(kw => desc.includes(kw))) {
+        return entry.cat;
+      }
+    }
+    return 'other';
+  }
+
   const TYPE_TO_CAT: Record<string, string> = {
     food_dining: 'Food & Dining', food: 'Food & Dining', groceries: 'Food & Dining', restaurant: 'Food & Dining', dining: 'Food & Dining',
     transport_fuel: 'Transport & Fuel', transport: 'Transport & Fuel', fuel: 'Transport & Fuel',
@@ -268,7 +296,7 @@ const SpendingAnalysisPage: React.FC = () => {
         const rawMap: Record<string, number> = {};
         transactions.forEach((tx: any) => {
           const amt = Number(tx.amount || 0);
-          const raw = (tx.category || tx.type || 'other').toLowerCase();
+          const raw = inferCategory(tx);
           if (isExpense(tx)) {
             rawMap[raw] = (rawMap[raw] || 0) + amt;
             spent += amt;

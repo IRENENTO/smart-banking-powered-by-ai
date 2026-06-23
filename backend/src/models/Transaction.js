@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { categorizeByDescription } = require('../utils/categorizer');
 
 class Transaction {
     constructor() {
@@ -27,6 +28,12 @@ class Transaction {
     async create(transactionData) {
         const referenceNumber = this.generateReferenceNumber();
 
+        const description = transactionData.description || null;
+        const rawCategory = transactionData.category || 'other';
+        const category = rawCategory === 'other' && description
+            ? categorizeByDescription(description)
+            : rawCategory;
+
         try {
             const result = await db.query(
                 `INSERT INTO transactions (user_id, type, amount, description, reference_number, recipient_account_number, recipient_name, category, status, balance_before, balance_after)
@@ -35,11 +42,11 @@ class Transaction {
                     transactionData.user_id,
                     transactionData.type,
                     transactionData.amount,
-                    transactionData.description || null,
+                    description,
                     referenceNumber,
                     transactionData.recipient_account_number || null,
                     transactionData.recipient_name || null,
-                    transactionData.category || 'other',
+                    category,
                     transactionData.status || 'completed',
                     transactionData.balance_before || 0,
                     transactionData.balance_after || 0
