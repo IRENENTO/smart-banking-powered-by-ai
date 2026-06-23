@@ -137,6 +137,7 @@ const SpendingAnalysisPage: React.FC = () => {
   const [marketGuide, setMarketGuide] = useState('');
   const [marketInsights, setMarketInsights] = useState<string[]>([]);
   const [fetchedGuidance, setFetchedGuidance] = useState(false);
+  const [analysisCompleted, setAnalysisCompleted] = useState(false);
 
   const userSeed = useMemo(() => getUserSeed(), []);
 
@@ -207,7 +208,9 @@ const SpendingAnalysisPage: React.FC = () => {
   // Data initializes with DEFAULT_CATEGORIES / DEFAULT_MONTHLY — no blocking API call needed
 
   useEffect(() => {
-    loadSpendingData();
+    loadSpendingData().then(() => {
+      setTimeout(() => fetchMarketGuidance(), 500);
+    });
   }, []);
 
   const COLORS_MAP: Record<string, string> = {
@@ -422,6 +425,9 @@ const SpendingAnalysisPage: React.FC = () => {
         if (mlData?.spending_insights) {
           setMarketGuide(mlData.spending_insights);
         }
+        if (mlData?.ai_powered) {
+          setAnalysisCompleted(true);
+        }
       } catch {
         // ML endpoint unavailable, fall through to insights service
       }
@@ -477,10 +483,17 @@ const SpendingAnalysisPage: React.FC = () => {
           <div className="flex-1">
             <div className="flex items-center gap-3 flex-wrap">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Spending Analysis</h1>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
-                <Clock size={12} />
-                Dataset Pending Analysis
-              </span>
+              {analysisCompleted ? (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-700">
+                  <Sparkles size={12} />
+                  AI Analysis Active
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700">
+                  <Clock size={12} />
+                  Dataset Pending Analysis
+                </span>
+              )}
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400">AI-powered breakdown of <strong>{userName}'s</strong> finances · {categoryData.length} categories loaded</p>
           </div>
@@ -676,6 +689,7 @@ const SpendingAnalysisPage: React.FC = () => {
         </div>
 
         {/* Dataset Pending Analysis Info */}
+        {!analysisCompleted && (
         <div className="mt-6 p-4 rounded-2xl border border-dashed border-amber-200 dark:border-amber-800 bg-amber-50/60 dark:bg-amber-900/10 shadow-sm">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400">
@@ -695,6 +709,7 @@ const SpendingAnalysisPage: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
 
         <div className="mt-6 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B1F3A] shadow-xl shadow-black/10 dark:shadow-black/30">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
