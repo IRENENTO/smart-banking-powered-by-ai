@@ -167,7 +167,7 @@ const SpendingAnalysisPage: React.FC = () => {
 
   const chartCategories = useMemo(() => {
     const sorted = [...categoryData].sort((a, b) => b.value - a.value);
-    const top6 = sorted.slice(0, 6).filter(c => c.value > 0);
+    const top6 = sorted.slice(0, 6).filter(c => c.value > 0).map(c => ({ ...c }));
     const rest = sorted.slice(6).filter(c => c.value > 0);
     if (rest.length > 0) {
       const otherValue = rest.reduce((s, c) => s + c.value, 0);
