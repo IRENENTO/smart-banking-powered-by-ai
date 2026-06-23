@@ -293,6 +293,9 @@ const SpendingAnalysisPage: React.FC = () => {
       let income = 0;
 
       if (transactions.length > 0) {
+        // Zero out demo values — only show real transaction amounts
+        merged.forEach(c => { c.value = 0; });
+
         const rawMap: Record<string, number> = {};
         transactions.forEach((tx: any) => {
           const amt = Number(tx.amount || 0);
