@@ -9,7 +9,6 @@ import LoadingButton from '../components/LoadingButton';
 import SmartAlertBanner from '../components/SmartAlertBanner';
 import LoanEligibility from '../components/LoanEligibility';
 import QuickActions from '../components/QuickActions';
-import AIFinancialAdvisor from '../components/AIFinancialAdvisor';
 import MarketInsights from '../components/MarketInsights';
 import IncomePattern from '../components/IncomePattern';
 import InvestmentIdeas from '../components/InvestmentIdeas';
@@ -612,17 +611,6 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
           </SectionCard>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.45 }}
-          style={{ marginBottom: 32, position: 'relative', zIndex: 1 }}
-        >
-          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-            <AIFinancialAdvisor />
-          </div>
         </motion.div>
 
         <motion.div

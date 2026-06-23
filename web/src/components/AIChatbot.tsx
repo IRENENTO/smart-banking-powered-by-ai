@@ -33,8 +33,8 @@ const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?
   {
     keywords: ['hello', 'hi', 'hey', 'start', 'help', 'bonjour', 'muraho', 'marhaba', 'ahlan'],
     answer:
-      "👋 Hello! I'm **Lend-AI**, your personal banking assistant for AI Smart Banking.\n\nI can help you:\n• 📊 Understand your Dashboard\n• 💸 Send & receive Money\n• 🏦 Manage Accounts\n• 💳 Apply for Loans\n• 💰 Track Savings\n• 📈 Check AI Insights\n\nWhat would you like to know?",
-    quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'],
+      "👋 Hello! I'm **Lend-AI**, your smart banking guide and financial advisor.\n\nI can help you with:\n📊 **Banking** – Dashboard, payments, transfers, loans\n💰 **Finance** – Budget optimization, savings, investments\n🚀 **Business** – Growth advice, market trends, debt management\n\nWhat would you like to know?",
+    quickReplies: ['How to send money?', 'Analyze spending patterns', 'Apply for a loan', 'Investment recommendations'],
   },
   {
     keywords: ['dashboard', 'home', 'overview', 'main page', 'summary'],
@@ -67,7 +67,7 @@ const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?
     quickReplies: ['View my transactions', 'How to send money?', 'Savings help'],
   },
   {
-    keywords: ['transaction', 'transactions', 'history', 'activity', 'spending'],
+    keywords: ['transaction', 'transactions', 'history', 'activity'],
     answer:
       "📋 **Transactions Guide**\n\nThe **Transactions** page shows your full activity history.\n\nYou can:\n• See all **deposits** and **withdrawals**\n• Filter by **date** or **type**\n• View the **amount** and **description** for each\n\n➡️ Click **Transactions** in the top menu.",
     quickReplies: ['Check my balance', 'Send money', 'View AI Insights'],
@@ -151,112 +151,40 @@ const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?
     useAPI: true,
   },
   {
-    keywords: ['dashboard', 'home', 'overview', 'main page', 'summary'],
+    keywords: ['budget', 'budgeting', 'spend', 'spending analysis', 'optimize budget', '50/30/20'],
     answer:
-      "📊 **Dashboard Guide**\n\nYour Dashboard is your financial command center!\n\n1. **Portfolio Value** – Your total account balance in RWF.\n2. **AI Risk Score** – A score out of 100 measuring your financial health.\n3. **Recent Transactions** – Your latest account activity at a glance.\n\n➡️ Click **Dashboard** in the top menu to go there.",
-    quickReplies: ['What is AI Risk Score?', 'How to send money?', 'Check my transactions'],
+      "📊 **Budget Optimization**\n\nTo improve your budget:\n\n• **Try the 50/30/20 rule:** 50% for needs, 30% for wants, 20% for savings.\n• **Track every expense** for a month to identify where your money goes.\n• **Cut unnecessary subscriptions** and reduce dining out.\n• **Use auto-transfers** to move savings on payday before you can spend it.\n\n➡️ Go to **Transactions** to review your spending or **AI Insights** for a detailed breakdown.",
+    quickReplies: ['Analyze spending patterns', 'Investment recommendations', 'Go back to start'],
   },
   {
-    keywords: ['send', 'payment', 'transfer', 'pay', 'money', 'send money', 'recipient'],
+    keywords: ['invest', 'investment', 'portfolio', 'returns', 'poultry', 'stock'],
     answer:
-      "💸 **How to Send Money**\n\nIt's quick and easy!\n\n**Step 1:** Click **Payments** in the top menu.\n**Step 2:** Fill in:\n   • Recipient Name\n   • Account or Mobile Number\n   • Amount (in RWF)\n   • Note (optional)\n**Step 3:** Click the **Send Payment** button.\n\nYou'll see a green confirmation message when it's done! ✅",
-    quickReplies: ['What is Mobile Money?', 'View scheduled payments', 'Go back to start'],
+      "📈 **Investment Recommendations for Rwanda**\n\nBased on current market trends:\n• **Poultry farming** – High returns, low barrier to entry\n• **Mobile money services** – Stable income from digital transactions\n• **Food supply chain** – Growing demand in urban areas\n• **Emergency fund** – Keep 20% in accessible savings\n\n💡 Start small with 50,000 RWF in one sector and scale up.",
+    quickReplies: ['Business growth advice', 'Market trends', 'Optimize your budget'],
   },
   {
-    keywords: ['mobile money', 'mtn', 'momo', 'airtel', 'mobile'],
+    keywords: ['business', 'growth', 'startup', 'entrepreneur', 'shop', 'enterprise'],
     answer:
-      "📱 **Mobile Money**\n\nWe support two mobile wallets:\n\n• **MTN MoMo** – Balance shown on the Payments page.\n• **Airtel Money** – Also listed on the Payments page.\n\nYou can use your mobile number as the recipient account when sending payments.\n\n➡️ Go to **Payments → Mobile Money** section to check your balance.",
-    quickReplies: ['How to send money?', 'Schedule a payment', 'Go back to start'],
+      "🚀 **Business Growth Advice for Rwanda**\n\n1. **Build a digital credit trail** – Use Mobile Money for all transactions.\n2. **Inventory management** – Track stock daily to avoid overstocking.\n3. **Social media marketing** – Low-cost reach to local customers.\n4. **Keep DTI below 40%** – To qualify for business expansion loans.\n\n💡 Reinvest 30% of profits back into the business for sustainable scaling.",
+    quickReplies: ['Investment recommendations', 'Market trends', 'Apply for a loan'],
   },
   {
-    keywords: ['schedule', 'scheduled', 'recurring', 'automatic', 'repeat'],
+    keywords: ['debt', 'debt management', 'debt-to-income', 'overdraft', 'owing'],
     answer:
-      "🗓️ **Scheduled Payments**\n\nScheduled payments are automatic recurring transfers (e.g., weekly, monthly).\n\nYou can view them on the **Payments** page in the **Scheduled Payments** panel on the right.\n\nEach entry shows:\n• Who you pay\n• How often (weekly/monthly)\n• The next due date\n• Amount in RWF",
-    quickReplies: ['How to send money?', 'What is Mobile Money?', 'Go back to start'],
+      "💰 **Debt Management**\n\n• **Prioritize high-interest loans** first to minimize total interest.\n• **Pay extra monthly** – Even 45,000 RWF extra can shorten repayment by months.\n• **Keep DTI below 40%** for healthy loan eligibility.\n• **Consolidate debts** if you have multiple high-interest loans.\n\nThis strategy can save you hundreds of thousands in interest payments.",
+    quickReplies: ['Apply for a loan', 'Optimize your budget', 'Go back to start'],
   },
   {
-    keywords: ['account', 'accounts', 'balance', 'bank account', 'my account'],
+    keywords: ['market', 'market trend', 'sector', 'economic', 'agri-tech', 'e-commerce', 'clean energy'],
     answer:
-      "🏦 **Accounts Guide**\n\nYour **Accounts** page shows all your bank accounts.\n\nYou'll see:\n• **Account number** and type\n• **Current balance** in RWF\n• **Account status** (Active/Inactive)\n\n➡️ Click **Accounts** in the top navigation to view them.",
-    quickReplies: ['View my transactions', 'How to send money?', 'Savings help'],
+      "📊 **Current Market Trends in Rwanda**\n\nHigh-growth sectors:\n• **Agri-tech** – 15% efficiency increase with smart farming\n• **E-commerce** – 25% growth in mobile transactions\n• **Clean Energy** – Government incentives for solar startups\n\n➡️ Check the **Market Insights** page for detailed sector performance.",
+    quickReplies: ['Investment recommendations', 'Business growth advice', 'Go back to start'],
   },
   {
-    keywords: ['transaction', 'transactions', 'history', 'activity', 'spending'],
+    keywords: ['savings strategy', 'save more', 'emergency fund', 'savings rate', 'saving money'],
     answer:
-      "📋 **Transactions Guide**\n\nThe **Transactions** page shows your full activity history.\n\nYou can:\n• See all **deposits** and **withdrawals**\n• Filter by **date** or **type**\n• View the **amount** and **description** for each\n\n➡️ Click **Transactions** in the top menu.",
-    quickReplies: ['Check my balance', 'Send money', 'View AI Insights'],
-  },
-  {
-    keywords: ['loan', 'loans', 'apply', 'loan application', 'borrow', 'credit', 'lending'],
-    answer:
-      "💳 **How to Apply for a Loan**\n\nApplying is simple:\n\n**Step 1:** Click **Loans** in the top menu.\n**Step 2:** Click **Apply for Loan**.\n**Step 3:** Fill in:\n   • Loan amount\n   • Purpose\n   • Repayment period\n**Step 4:** Submit. Our AI reviews your risk profile instantly!\n\n🤖 Your **AI Risk Score** determines your eligibility.",
-    quickReplies: ['What is AI Risk Score?', 'Check loan status', 'Go back to start'],
-  },
-  {
-    keywords: ['loan status', 'application status', 'my loan', 'pending loan'],
-    answer:
-      "🔍 **Loan Status**\n\nTo check your loan application:\n\n➡️ Click **Loans** in the top menu.\n\nYou'll see the current status:\n• **Pending** – Under review\n• **Approved** ✅ – Congratulations!\n• **Rejected** ❌ – Try improving your AI Risk Score first.",
-    quickReplies: ['Apply for a loan', 'What is AI Risk Score?', 'Go back to start'],
-  },
-  {
-    keywords: ['savings', 'save', 'saving', 'goal', 'saving goal'],
-    answer:
-      "💰 **Savings Guide**\n\nThe **Savings** page helps you build healthy saving habits!\n\nYou can:\n• **Create saving goals** (e.g., new phone, vacation)\n• Track **progress** toward each goal\n• See your **total saved amount**\n\n➡️ Click **Savings** in the top menu to get started.",
-    quickReplies: ['Create a saving goal', 'Check my balance', 'View AI Insights'],
-  },
-  {
-    keywords: ['ai', 'insight', 'insights', 'ai insights', 'artificial intelligence', 'analysis', 'smart'],
-    answer:
-      "🤖 **AI Insights**\n\nThis is the brain of AI Smart Banking!\n\nThe AI analyzes your financial behavior and gives you:\n• **Spending patterns** – Where your money goes\n• **Saving recommendations** – How to save more\n• **Risk analysis** – Your financial health score\n• **Loan predictions** – Likelihood of approval\n\n➡️ Click **AI Insights** in the top menu.",
-    quickReplies: ['What is AI Risk Score?', 'Apply for a loan', 'Go back to start'],
-  },
-  {
-    keywords: ['risk', 'risk score', 'score', 'health', 'financial health', 'credit score'],
-    answer:
-      "🛡️ **AI Risk Score Explained**\n\nYour Risk Score (out of 100) measures your financial health.\n\n• **80–100** 🟢 Excellent – High approval chances\n• **60–79** 🟡 Good – Decent approval odds\n• **40–59** 🟠 Fair – Work on saving more\n• **0–39** 🔴 Poor – Focus on reducing debt\n\n**To improve it:** Save regularly, make payments on time, and reduce outstanding loans.",
-    quickReplies: ['Apply for a loan', 'View AI Insights', 'Go back to start'],
-  },
-  {
-    keywords: ['language', 'kinyarwanda', 'french', 'english', 'langue', 'translate', 'change language'],
-    answer:
-      "🌍 **Changing Language**\n\nAI Smart Banking supports 3 languages:\n• 🇬🇧 English\n• 🇷🇼 Kinyarwanda\n• 🇫🇷 Français\n\n**How to switch:**\n1. Look for the 🌐 globe icon in the top-right of the navigation bar.\n2. Click it and choose your language.\n\nThe entire interface will update instantly!",
-    quickReplies: ['Go back to start', 'Dashboard help', 'Send money'],
-  },
-  {
-    keywords: ['dark', 'light', 'theme', 'mode', 'night', 'dark mode'],
-    answer:
-      "🌙 **Dark / Light Mode**\n\nYou can switch between dark and light themes!\n\n**How to toggle:**\n➡️ Click the **☀️ / 🌙 icon** (sun or moon) in the top-right navigation bar.\n\nThe app will switch instantly for a more comfortable viewing experience.",
-    quickReplies: ['Language settings', 'Go back to start', 'Dashboard help'],
-  },
-  {
-    keywords: ['login', 'sign in', 'signin', 'log in', 'password', 'forgot password'],
-    answer:
-      "🔐 **Login Help**\n\nTo log in to AI Smart Banking:\n\n1. Go to the **Login** page.\n2. Enter your **email address** and **password**.\n3. Click **Sign In**.\n\n**Forgot your password?**\nClick the **'Forgot Password'** link on the login page to reset it via your email.",
-    quickReplies: ['Register a new account', 'Go back to start'],
-  },
-  {
-    keywords: ['register', 'sign up', 'signup', 'create account', 'new account', 'join'],
-    answer:
-      "✍️ **Creating a New Account**\n\nGetting started is free!\n\n1. Click **Register** on the login page.\n2. Fill in your:\n   • Full name\n   • Email address\n   • Password\n3. Click **Create Account**.\n\nOnce registered, you'll be taken to your Dashboard automatically! 🎉",
-    quickReplies: ['Login help', 'How to send money?', 'Go back to start'],
-  },
-  {
-    keywords: ['admin', 'administrator', 'manage users', 'admin panel'],
-    answer:
-      "⚙️ **Admin Panel**\n\nThe Admin Panel is for system administrators only.\n\nAdmins can:\n• View all users and accounts\n• Manage loan applications\n• Generate reports\n• Monitor system health\n\n➡️ Access via **Admin** in the navigation (requires admin privileges).",
-    quickReplies: ['View Reports', 'Go back to start'],
-  },
-  {
-    keywords: ['report', 'reports', 'export', 'download', 'statement'],
-    answer:
-      "📑 **Reports**\n\nThe **Reports** page lets you generate financial summaries.\n\nYou can:\n• View transaction reports\n• Filter by date range\n• Export data for your records\n\n➡️ Click **Reports** from the admin menu.",
-    quickReplies: ['Go back to start', 'View Transactions'],
-  },
-  {
-    keywords: ['thank', 'thanks', 'merci', 'murakoze', 'bye', 'goodbye', 'great', 'awesome'],
-    answer:
-      "😊 You're welcome! I'm always here to help.\n\nIf you have more questions, just type them anytime. Happy banking with **AI Smart Banking**! 🏦✨",
-    quickReplies: ['Go back to start', 'Send money', 'Apply for a loan'],
+      "🎯 **Savings Optimization**\n\n• Aim to save **20% of your income** monthly.\n• Build a **3-6 month emergency fund** for unexpected expenses.\n• **Automate transfers** right after payday so you save before spending.\n• Reduce **entertainment and dining expenses** by 15% to boost savings.\n\nTarget: Build 1.2M RWF emergency fund in 18 months by saving 85,000 RWF monthly.",
+    quickReplies: ['Optimize your budget', 'Investment recommendations', 'Go back to start'],
   },
 ];
 
@@ -265,15 +193,15 @@ const FALLBACK: Message = {
   role: 'bot',
   text: "🤔 I'm not sure about that. Here are some things I can help with:",
   timestamp: new Date(),
-  quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help', 'Change language'],
+  quickReplies: ['How to send money?', 'Analyze spending patterns', 'Apply for a loan', 'Investment recommendations', 'Go back to start'],
 };
 
 const WELCOME_MSG: Message = {
   id: 'welcome',
   role: 'bot',
-  text: "👋 Hi! I'm **Lend-AI**, your smart banking guide.\n\nWhat can I help you with today?",
+  text: "👋 Hi! I'm **Lend-AI**, your smart banking guide and financial advisor.\n\nI can help you with:\n🏦 **Banking** – Send money, apply for loans, check balances\n📊 **Finance** – Budget optimization, savings, investments\n🚀 **Business** – Growth advice, market trends, debt management\n\nWhat would you like help with today?",
   timestamp: new Date(),
-  quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'],
+  quickReplies: ['How to send money?', 'Analyze spending patterns', 'Applying for a loan', 'Investment recommendations'],
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

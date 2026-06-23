@@ -77,7 +77,7 @@ exports.updateGoal = async (req, res) => {
 
         values.push(goalId, req.user.id);
         await connection.execute(
-            `UPDATE savings_goals SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND user_id = ?`,
+            `UPDATE savings_goals SET ${fields.join(', ')} WHERE id = ? AND user_id = ?`,
             values
         );
 

@@ -93,7 +93,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                         style={{ fontWeight: 700, fontSize: '20px', background: 'linear-gradient(135deg, #ffffff, #e0f2fe)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}
                         whileHover={{ scale: 1.05 }}
                     >
-                        AI Smart Banking
+                        Smart Bank
                     </motion.div>
                     <motion.div 
                         style={{ fontSize: '12px', color: 'rgba(255, 255, 255, 0.7)', marginTop: 2 }}
@@ -101,7 +101,7 @@ const Navbar: React.FC<{ authenticated?: boolean }> = ({ authenticated }) => {
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.5 }}
                     >
-                        Banking Reimagined
+                        powered by AI
                     </motion.div>
                 </div>
             </motion.div>

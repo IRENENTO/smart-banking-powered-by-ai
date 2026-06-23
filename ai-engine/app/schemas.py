@@ -185,6 +185,61 @@ class SpendingAnalysisResponse(BaseModel):
     recommendations: List[str]
 
 
+# ─── MARKET FORECAST ───────────────────────────────────────────────────────────
+class MarketForecastRequest(BaseModel):
+    year: int = Field(default=2026, ge=2020, le=2030)
+    month: int = Field(default=6, ge=1, le=12)
+    interest_rate: float = Field(default=6.5, ge=0, description="Central bank interest rate (%)")
+    rwf_usd_exchange: float = Field(default=1150, ge=500, description="RWF per 1 USD")
+    consumer_price_index: float = Field(default=130, ge=50)
+    unemployment_rate: float = Field(default=16.0, ge=0, le=50)
+    money_supply_bn_rwf: float = Field(default=2000, ge=0)
+    trade_balance_mn_rwf: float = Field(default=-150, description="Negative = deficit")
+    market_volatility: float = Field(default=25, ge=0, le=100)
+    sector_agriculture: float = Field(default=110, ge=0)
+    sector_manufacturing: float = Field(default=115, ge=0)
+    sector_services: float = Field(default=125, ge=0)
+    sector_technology: float = Field(default=140, ge=0)
+    sector_energy: float = Field(default=108, ge=0)
+    sector_financial: float = Field(default=120, ge=0)
+    sector_real_estate: float = Field(default=112, ge=0)
+    sector_healthcare: float = Field(default=118, ge=0)
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "year": 2026, "month": 6,
+                "interest_rate": 6.5, "rwf_usd_exchange": 1145,
+                "consumer_price_index": 132.5, "unemployment_rate": 15.8,
+                "money_supply_bn_rwf": 2100, "trade_balance_mn_rwf": -180,
+                "market_volatility": 28,
+                "sector_agriculture": 112, "sector_manufacturing": 118,
+                "sector_services": 128, "sector_technology": 145,
+                "sector_energy": 110, "sector_financial": 122,
+                "sector_real_estate": 114, "sector_healthcare": 120
+            }
+        }
+
+
+class MarketForecastResponse(BaseModel):
+    success: bool
+    inflation_rate: float
+    gdp_growth: float
+    market_sentiment: str
+    sentiment_score: int
+    recommendations: List[str]
+    model_metrics: dict = {}
+
+
+# ─── SPENDING ANALYTICS (ML-enhanced) ──────────────────────────────────────────
+class MLSpendingAnalysisResponse(SpendingAnalysisResponse):
+    ai_powered: bool = True
+    predicted_spending: float = 0
+    is_anomaly: bool = False
+    anomaly_score: float = 0
+    model_metrics: dict = {}
+
+
 # ─── RECOMMENDATIONS ──────────────────────────────────────────────────────────
 class RecommendationRequest(BaseModel):
     age: int = Field(default=30, ge=18, le=80)

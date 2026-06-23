@@ -42,17 +42,20 @@ from .routes.loan_routes import router as loan_router
 from .routes.fraud_routes import router as fraud_router
 from .routes.spending_routes import router as spending_router
 from .routes.recommendation_routes import router as recommendation_router
+from .routes.market_routes import router as market_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("AI Engine starting up — loading models ...")
     try:
-        from .services.predict_loan    import _load_model as load_loan
-        from .services.predict_fraud   import _load_model as load_fraud
-        from .services.predict_savings import _load_model as load_savings
+        from .services.predict_loan      import _load_model as load_loan
+        from .services.predict_fraud     import _load_model as load_fraud
+        from .services.predict_savings   import _load_model as load_savings
+        from .services.predict_market    import _load_model as load_market
+        from .services.predict_spending  import _load_model as load_spending
 
-        for name, loader in [("loan", load_loan), ("fraud", load_fraud), ("savings", load_savings)]:
+        for name, loader in [("loan", load_loan), ("fraud", load_fraud), ("savings", load_savings), ("market", load_market), ("spending", load_spending)]:
             try:
                 loader()
                 logger.info(f"   + {name} model loaded")
@@ -136,6 +139,7 @@ app.include_router(loan_router)
 app.include_router(fraud_router)
 app.include_router(spending_router)
 app.include_router(recommendation_router)
+app.include_router(market_router)
 
 
 @app.get("/", tags=["Health"])
@@ -150,6 +154,7 @@ def root():
             "fraud_detection": "/api/ai/detect-fraud",
             "savings_intelligence": "/api/ai/predict-savings",
             "spending_analysis": "/api/ai/spending-analysis",
+            "market_forecast": "/api/ai/market-forecast",
             "recommendations": "/api/ai/recommendations",
             "model_status": "/api/ai/model-status",
             "retrain": "/api/ai/retrain"
@@ -162,9 +167,11 @@ def root():
 def model_status():
     BASE = os.path.join(os.path.dirname(__file__), 'models')
     models = {
-        'loan_model':    os.path.join(BASE, 'loan_model.pkl'),
-        'fraud_model':   os.path.join(BASE, 'fraud_model.pkl'),
-        'savings_model': os.path.join(BASE, 'savings_model.pkl'),
+        'loan_model':     os.path.join(BASE, 'loan_model.pkl'),
+        'fraud_model':    os.path.join(BASE, 'fraud_model.pkl'),
+        'savings_model':  os.path.join(BASE, 'savings_model.pkl'),
+        'market_model':   os.path.join(BASE, 'market_model.pkl'),
+        'spending_model': os.path.join(BASE, 'spending_model.pkl'),
     }
     status = {}
     for name, path in models.items():

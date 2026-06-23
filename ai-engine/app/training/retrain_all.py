@@ -9,9 +9,11 @@ import time
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(BASE_DIR))
 
-from app.training.train_loan    import train as train_loan
-from app.training.train_fraud   import train as train_fraud
-from app.training.train_savings import train as train_savings
+from app.training.train_loan      import train as train_loan
+from app.training.train_fraud     import train as train_fraud
+from app.training.train_savings   import train as train_savings
+from app.training.train_market    import train as train_market
+from app.training.train_spending  import train as train_spending
 
 
 def retrain_all():
@@ -20,7 +22,7 @@ def retrain_all():
     print("=" * 60)
 
     results = {}
-    for name, fn in [("Loan", train_loan), ("Fraud", train_fraud), ("Savings", train_savings)]:
+    for name, fn in [("Loan", train_loan), ("Fraud", train_fraud), ("Savings", train_savings), ("Market", train_market), ("Spending", train_spending)]:
         print(f"\n{'─'*60}")
         print(f"▶  Retraining {name} model ...")
         print(f"{'─'*60}")

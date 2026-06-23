@@ -261,11 +261,135 @@ def generate_spending_dataset():
     print("    Categories: {}".format(', '.join(sorted(df['category_label'].unique()))))
 
 
+# ─── MARKET DATASET ────────────────────────────────────────────────────────────
+def generate_market_dataset():
+    """
+    Generates a synthetic monthly economic/financial market dataset for Rwanda/East Africa.
+    Features: inflation, GDP growth, interest rate, exchange rate, CPI, unemployment,
+    sector performance, and derived market indicators.
+    """
+    n = 72  # 6 years of monthly data (2020–2025)
+    months = []
+    for year in range(2020, 2026):
+        for month in range(1, 13):
+            months.append(f"{year}-{month:02d}")
+
+    # Base economic trends with realistic Rwanda ranges
+    base_inflation = np.random.uniform(1.5, 3.5, 1)[0]
+    base_gdp = np.random.uniform(2.0, 4.0, 1)[0]
+    base_rate = np.random.uniform(4.5, 6.5, 1)[0]
+    base_exchange = np.random.uniform(1020, 1080, 1)[0]
+
+    inflation_rates = []
+    gdp_growths = []
+    interest_rates = []
+    exchange_rates = []
+    cpi_values = []
+    unemployment_rates = []
+    money_supply = []
+    trade_balance = []
+
+    cpi = 100.0
+    for i in range(n):
+        # Inflation with seasonal and trend components
+        seasonal = 0.5 * np.sin(2 * np.pi * i / 12)
+        trend = 0.03 * i
+        noise = np.random.normal(0, 0.5)
+        infl = max(0.5, base_inflation + seasonal + noise + trend * 0.02)
+        inflation_rates.append(round(infl, 2))
+
+        # GDP growth (annualized quarterly)
+        gdp = max(-2.0, min(8.0, base_gdp + np.random.normal(0, 1.0) + 0.5 * np.sin(2 * np.pi * i / 4)))
+        gdp_growths.append(round(gdp, 2))
+
+        # Central bank interest rate (reacts to inflation)
+        rate = max(3.0, min(12.0, base_rate + (infl - 3.0) * 0.3 + np.random.normal(0, 0.3)))
+        interest_rates.append(round(rate, 2))
+
+        # RWF/USD exchange rate (gradual depreciation + volatility)
+        exch = base_exchange + i * 2.5 + np.random.normal(0, 15)
+        exchange_rates.append(round(max(900, exch), 2))
+
+        # CPI (cumulative)
+        cpi *= (1 + infl / 100 / 12)
+        cpi_values.append(round(cpi, 2))
+
+        # Unemployment rate
+        unemp = max(5.0, min(25.0, 16.0 + np.random.normal(0, 0.8) - gdp * 0.2))
+        unemployment_rates.append(round(unemp, 2))
+
+        # Money supply (M3) in billions RWF
+        ms = 1500 + i * 15 + np.random.normal(0, 50)
+        money_supply.append(round(ms, 2))
+
+        # Trade balance in millions RWF (negative = deficit)
+        tb = -np.random.uniform(50, 300) + np.random.normal(0, 30) + gdp * 10
+        trade_balance.append(round(tb, 2))
+
+    # Sector performance indices (base 100 at start)
+    sectors = {
+        'agriculture':    100 + np.cumsum(np.random.normal(0.3, 1.5, n)),
+        'manufacturing':  100 + np.cumsum(np.random.normal(0.5, 2.0, n)),
+        'services':       100 + np.cumsum(np.random.normal(0.8, 1.8, n)),
+        'technology':     100 + np.cumsum(np.random.normal(1.5, 3.0, n)),
+        'energy':         100 + np.cumsum(np.random.normal(0.4, 2.5, n)),
+        'financial':      100 + np.cumsum(np.random.normal(0.6, 1.5, n)),
+        'real_estate':    100 + np.cumsum(np.random.normal(0.3, 2.0, n)),
+        'healthcare':     100 + np.cumsum(np.random.normal(0.7, 1.2, n)),
+    }
+
+    # Market sentiment (0=very negative, 100=very positive)
+    sentiment = np.clip(
+        50 + (np.array(inflation_rates) - base_inflation) * (-5) +
+        (np.array(gdp_growths) - base_gdp) * 8 +
+        np.random.normal(0, 8, n),
+        0, 100
+    ).astype(int)
+
+    # Market volatility index
+    volatility = np.clip(
+        15 + np.abs(np.array(inflation_rates) - 4) * 3 +
+        np.abs(np.array(gdp_growths) - 3) * 2 +
+        np.random.exponential(3, n),
+        5, 80
+    ).astype(int)
+
+    rows = []
+    for i in range(n):
+        row = {
+            'date': months[i],
+            'year': int(months[i][:4]),
+            'month': int(months[i][5:7]),
+            'inflation_rate': inflation_rates[i],
+            'gdp_growth': gdp_growths[i],
+            'interest_rate': interest_rates[i],
+            'rwf_usd_exchange': exchange_rates[i],
+            'consumer_price_index': cpi_values[i],
+            'unemployment_rate': unemployment_rates[i],
+            'money_supply_bn_rwf': money_supply[i],
+            'trade_balance_mn_rwf': trade_balance[i],
+            'market_sentiment': sentiment[i],
+            'market_volatility': volatility[i],
+        }
+        for sector, values in sectors.items():
+            row[f'sector_{sector}'] = round(values[i], 2)
+        rows.append(row)
+
+    df = pd.DataFrame(rows)
+    path = os.path.join(DATASETS_DIR, 'market_dataset.csv')
+    df.to_csv(path, index=False)
+    print(f"[OK] market_dataset.csv saved -- {len(df)} rows, {len(sectors)} sectors")
+    print(f"    Inflation range: {df['inflation_rate'].min():.1f}% - {df['inflation_rate'].max():.1f}%")
+    print(f"    GDP growth range: {df['gdp_growth'].min():.1f}% - {df['gdp_growth'].max():.1f}%")
+    return df
+
+
 if __name__ == '__main__':
     print("[*] Generating synthetic datasets...")
     generate_loan_dataset()
     generate_fraud_dataset()
     generate_savings_dataset()
     generate_spending_dataset()
+    generate_market_dataset()
     print("\n[DONE] All datasets generated successfully!")
 

@@ -22,56 +22,98 @@ RULES:
 - If you don't know something specific about the user's account, guide them to check the relevant section in the app.
 - NEVER discuss topics like politics, religion, entertainment, or general knowledge unrelated to finance.`;
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const FALLBACK_RESPONSES = {
+    spending: "📊 **Spending Analysis Help**\n\nTo analyze your spending patterns, go to the **AI Insights** page from the top menu. There you'll find:\n• **Category breakdown** of your expenses\n• **Monthly spending trends**\n• **Personalized saving recommendations**\n\nAlternatively, check your **Transactions** page to review your recent activity.",
+    default: "🤔 I'm having trouble connecting to my AI knowledge base right now.\n\nHere's what I can help with right now:\n• **How to send money** – Go to Payments\n• **Apply for a loan** – Go to Loans\n• **Check balance** – Go to Dashboard\n• **View transactions** – Go to Transactions\n\nOr try asking me a simpler banking question!"
+};
+
+function getFallbackResponse(message) {
+    const lower = message.toLowerCase();
+    if (lower.includes('spending') || lower.includes('spend') || lower.includes('analyze') || lower.includes('pattern')) {
+        return FALLBACK_RESPONSES.spending;
+    }
+    return FALLBACK_RESPONSES.default;
+}
+
 const chatWithAI = async (message, conversationHistory = []) => {
     if (!OPENAI_API_KEY) {
-        return { reply: 'AI service is not configured. Please contact support.' };
+        const fallback = getFallbackResponse(message);
+        return { reply: fallback, quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'] };
     }
 
-    try {
-        const messages = [
-            { role: 'system', content: SYSTEM_PROMPT }
-        ];
+    const messages = [
+        { role: 'system', content: SYSTEM_PROMPT }
+    ];
 
-        if (conversationHistory.length > 0) {
-            const recentHistory = conversationHistory.slice(-10);
-            for (const msg of recentHistory) {
-                if (msg.role === 'user' || msg.role === 'assistant') {
-                    messages.push({ role: msg.role, content: msg.text || msg.content });
-                }
+    if (conversationHistory.length > 0) {
+        const recentHistory = conversationHistory.slice(-10);
+        for (const msg of recentHistory) {
+            if (msg.role === 'user' || msg.role === 'assistant') {
+                messages.push({ role: msg.role, content: msg.text || msg.content });
             }
         }
+    }
 
-        messages.push({ role: 'user', content: message });
+    messages.push({ role: 'user', content: message });
 
-        const response = await axios.post(
-            'https://api.openai.com/v1/chat/completions',
-            {
-                model: 'gpt-4o',
-                messages,
-                temperature: 0.7,
-                max_tokens: 500
-            },
-            {
-                headers: {
-                    'Authorization': `Bearer ${OPENAI_API_KEY}`,
-                    'Content-Type': 'application/json'
+    const MAX_RETRIES = 3;
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            const response = await axios.post(
+                'https://api.openai.com/v1/chat/completions',
+                {
+                    model: 'gpt-4o',
+                    messages,
+                    temperature: 0.7,
+                    max_tokens: 500
                 },
-                timeout: 30000
-            }
-        );
+                {
+                    headers: {
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    timeout: 30000
+                }
+            );
 
-        const reply = response.data?.choices?.[0]?.message?.content;
-        return { reply: reply || 'I apologize, but I could not generate a response right now. Please try again.' };
-    } catch (error) {
-        console.error('OpenAI API error:', error.message);
-        if (error.response?.status === 401) {
-            return { reply: 'AI service authentication failed. Please contact support.' };
+            const reply = response.data?.choices?.[0]?.message?.content;
+            return { reply: reply || 'I apologize, but I could not generate a response right now. Please try again.' };
+        } catch (error) {
+            const status = error.response?.status;
+            console.error(`OpenAI API error (attempt ${attempt + 1}/${MAX_RETRIES + 1}):`, error.message);
+
+            if (status === 401) {
+                const fallback = getFallbackResponse(message);
+                return { reply: fallback, quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'] };
+            }
+
+            if (status === 429 && attempt < MAX_RETRIES) {
+                const backoff = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                console.warn(`Rate limited. Retrying in ${Math.round(backoff)}ms...`);
+                await sleep(backoff);
+                continue;
+            }
+
+            if (status === 429) {
+                const fallback = getFallbackResponse(message);
+                return { reply: fallback, quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'] };
+            }
+
+            if (error.code === 'ECONNABORTED') {
+                const fallback = getFallbackResponse(message);
+                return { reply: fallback, quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'] };
+            }
+
+            const fallback = getFallbackResponse(message);
+            return { reply: fallback, quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'] };
         }
-        if (error.response?.status === 429) {
-            return { reply: 'AI service is currently busy. Please try again in a moment.' };
-        }
-        return { reply: 'I apologize, but I am having trouble connecting to my knowledge base right now. Please try again or check the relevant section in the app.' };
     }
+
+    const fallback = getFallbackResponse(message);
+    return { reply: fallback, quickReplies: ['How to send money?', 'Apply for a loan', 'View my balance', 'AI Insights help'] };
 };
 
 module.exports = { chatWithAI };
