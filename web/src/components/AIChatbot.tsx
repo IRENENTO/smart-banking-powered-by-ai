@@ -33,13 +33,13 @@ const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?
   {
     keywords: ['hello', 'hi', 'hey', 'start', 'help', 'bonjour', 'muraho', 'marhaba', 'ahlan'],
     answer:
-      "👋 Hello! I'm **Lend-AI**, your smart banking guide and financial advisor.\n\nI can help you with:\n📊 **Banking** – Dashboard, payments, transfers, loans\n💰 **Finance** – Budget optimization, savings, investments\n🚀 **Business** – Growth advice, market trends, debt management\n\nWhat would you like to know?",
-    quickReplies: ['How to send money?', 'Analyze spending patterns', 'Apply for a loan', 'Investment recommendations'],
+      "👋 Hello! I'm **Lend-AI**, your smart banking guide.\n\nI can help you with:\n📊 **Banking** – Dashboard, payments, sends, loans\n💰 **Finance** – Better budgets, savings, investments\n🚀 **Business** – Growth tips, market trends, debt help\n\nWhat would you like to know?",
+    quickReplies: ['How to send money?', 'Look at my spending', 'Apply for a loan', 'Investment tips'],
   },
   {
     keywords: ['dashboard', 'home', 'overview', 'main page', 'summary'],
     answer:
-      "📊 **Dashboard Guide**\n\nYour Dashboard is your financial command center!\n\n1. **Portfolio Value** – Your total account balance in RWF.\n2. **AI Risk Score** – A score out of 100 measuring your financial health.\n3. **Recent Transactions** – Your latest account activity at a glance.\n\n➡️ Click **Dashboard** in the top menu to go there.",
+      "📊 **Dashboard Guide**\n\nYour Dashboard shows your money at a glance!\n\n1. **Total Money** – All your money in RWF.\n2. **AI Risk Score** – A score out of 100 for your money health.\n3. **Recent Payments** – What you've done with your money.\n\n➡️ Click **Dashboard** in the top menu to go there.",
     quickReplies: ['What is AI Risk Score?', 'How to send money?', 'Check my transactions'],
   },
   {
@@ -57,7 +57,7 @@ const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?
   {
     keywords: ['schedule', 'scheduled', 'recurring', 'automatic', 'repeat'],
     answer:
-      "🗓️ **Scheduled Payments**\n\nScheduled payments are automatic recurring transfers (e.g., weekly, monthly).\n\nYou can view them on the **Payments** page in the **Scheduled Payments** panel on the right.\n\nEach entry shows:\n• Who you pay\n• How often (weekly/monthly)\n• The next due date\n• Amount in RWF",
+      "🗓️ **Scheduled Payments**\n\nScheduled payments send money on their own (e.g., weekly, monthly).\n\nYou can view them on the **Payments** page in the **Scheduled Payments** panel on the right.\n\nEach entry shows:\n• Who you pay\n• How often (weekly/monthly)\n• The next due date\n• Amount in RWF",
     quickReplies: ['How to send money?', 'What is Mobile Money?', 'Go back to start'],
   },
   {
@@ -69,38 +69,38 @@ const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?
   {
     keywords: ['transaction', 'transactions', 'history', 'activity'],
     answer:
-      "📋 **Transactions Guide**\n\nThe **Transactions** page shows your full activity history.\n\nYou can:\n• See all **deposits** and **withdrawals**\n• Filter by **date** or **type**\n• View the **amount** and **description** for each\n\n➡️ Click **Transactions** in the top menu.",
-    quickReplies: ['Check my balance', 'Send money', 'View AI Insights'],
+      "📋 **Transactions Guide**\n\nThe **Transactions** page shows all your payments.\n\nYou can:\n• See all money **put in** and **taken out**\n• Filter by **date** or **type**\n• View the **amount** and **info** for each\n\n➡️ Click **Transactions** in the top menu.",
+    quickReplies: ['Check my balance', 'Send money', 'View AI Tips'],
   },
   {
     keywords: ['loan', 'loans', 'apply', 'loan application', 'borrow', 'credit', 'lending'],
     answer:
-      "💳 **How to Apply for a Loan**\n\nApplying is simple:\n\n**Step 1:** Click **Loans** in the top menu.\n**Step 2:** Click **Apply for Loan**.\n**Step 3:** Fill in:\n   • Loan amount\n   • Purpose\n   • Repayment period\n**Step 4:** Submit. Our AI reviews your risk profile instantly!\n\n🤖 Your **AI Risk Score** determines your eligibility.",
+      "💳 **How to Apply for a Loan**\n\nApplying is simple:\n\n**Step 1:** Click **Loans** in the top menu.\n**Step 2:** Click **Apply for Loan**.\n**Step 3:** Fill in:\n   • Loan amount\n   • Purpose\n   • Pay back period\n**Step 4:** Submit. Our AI checks your risk right away!\n\n🤖 Your **AI Risk Score** decides if you qualify.",
     quickReplies: ['What is AI Risk Score?', 'Check loan status', 'Go back to start'],
   },
   {
     keywords: ['loan status', 'application status', 'my loan', 'pending loan'],
     answer:
-      "🔍 **Loan Status**\n\nTo check your loan application:\n\n➡️ Click **Loans** in the top menu.\n\nYou'll see the current status:\n• **Pending** – Under review\n• **Approved** ✅ – Congratulations!\n• **Rejected** ❌ – Try improving your AI Risk Score first.",
+      "🔍 **Loan Status**\n\nTo check your loan application:\n\n➡️ Click **Loans** in the top menu.\n\nYou'll see the current status:\n• **Pending** – Being checked\n• **Approved** ✅ – Good news!\n• **Rejected** ❌ – Try making your AI Risk Score better first.",
     quickReplies: ['Apply for a loan', 'What is AI Risk Score?', 'Go back to start'],
   },
   {
     keywords: ['savings', 'save', 'saving', 'goal', 'saving goal'],
     answer:
-      "💰 **Savings Guide**\n\nThe **Savings** page helps you build healthy saving habits!\n\nYou can:\n• **Create saving goals** (e.g., new phone, vacation)\n• Track **progress** toward each goal\n• See your **total saved amount**\n\n➡️ Click **Savings** in the top menu to get started.",
-    quickReplies: ['Create a saving goal', 'Check my balance', 'View AI Insights'],
+      "💰 **Savings Guide**\n\nThe **Savings** page helps you save money!\n\nYou can:\n• **Create saving goals** (e.g., new phone, vacation)\n• Track **progress** toward each goal\n• See your **total saved amount**\n\n➡️ Click **Savings** in the top menu to get started.",
+    quickReplies: ['Create a saving goal', 'Check my balance', 'View AI Tips'],
   },
   {
     keywords: ['ai', 'insight', 'insights', 'ai insights', 'artificial intelligence', 'analysis', 'smart'],
     answer:
-      "🤖 **AI Insights**\n\nThis is the brain of AI Smart Banking!\n\nThe AI analyzes your financial behavior and gives you:\n• **Spending patterns** – Where your money goes\n• **Saving recommendations** – How to save more\n• **Risk analysis** – Your financial health score\n• **Loan predictions** – Likelihood of approval\n\n➡️ Click **AI Insights** in the top menu.",
+      "🤖 **AI Tips**\n\nThis is the brain of AI Smart Banking!\n\nThe AI looks at how you use money and gives you:\n• **Spending patterns** – Where your money goes\n• **Saving tips** – How to save more\n• **Risk check** – Your money health score\n• **Loan predictions** – How likely you can get one\n\n➡️ Click **AI Tips** in the top menu.",
     quickReplies: ['What is AI Risk Score?', 'Apply for a loan', 'Go back to start'],
   },
   {
     keywords: ['risk', 'risk score', 'score', 'health', 'financial health', 'credit score'],
     answer:
-      "🛡️ **AI Risk Score Explained**\n\nYour Risk Score (out of 100) measures your financial health.\n\n• **80–100** 🟢 Excellent – High approval chances\n• **60–79** 🟡 Good – Decent approval odds\n• **40–59** 🟠 Fair – Work on saving more\n• **0–39** 🔴 Poor – Focus on reducing debt\n\n**To improve it:** Save regularly, make payments on time, and reduce outstanding loans.",
-    quickReplies: ['Apply for a loan', 'View AI Insights', 'Go back to start'],
+      "🛡️ **AI Risk Score Explained**\n\nYour Risk Score (out of 100) checks your money health.\n\n• **80–100** 🟢 Excellent – High approval chances\n• **60–79** 🟡 Good – Fair chance to get approved\n• **40–59** 🟠 Fair – Try to save more\n• **0–39** 🔴 Poor – Focus on paying back what you owe\n\n**To do better:** Save often, pay on time, and lower what you still owe on loans.",
+    quickReplies: ['Apply for a loan', 'View AI Tips', 'Go back to start'],
   },
   {
     keywords: ['language', 'kinyarwanda', 'french', 'english', 'langue', 'translate', 'change language'],
@@ -129,13 +129,13 @@ const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?
   {
     keywords: ['admin', 'administrator', 'manage users', 'admin panel'],
     answer:
-      "⚙️ **Admin Panel**\n\nThe Admin Panel is for system administrators only.\n\nAdmins can:\n• View all users and accounts\n• Manage loan applications\n• Generate reports\n• Monitor system health\n\n➡️ Access via **Admin** in the navigation (requires admin privileges).",
+      "⚙️ **Admin Panel**\n\nThe Admin Panel is for system admins only.\n\nAdmins can:\n• View all users and accounts\n• Manage loan applications\n• Make reports\n• Check system health\n\n➡️ Access via **Admin** in the navigation (needs admin access).",
     quickReplies: ['View Reports', 'Go back to start'],
   },
   {
     keywords: ['report', 'reports', 'export', 'download', 'statement'],
     answer:
-      "📑 **Reports**\n\nThe **Reports** page lets you generate financial summaries.\n\nYou can:\n• View transaction reports\n• Filter by date range\n• Export data for your records\n\n➡️ Click **Reports** from the admin menu.",
+      "📑 **Reports**\n\nThe **Reports** page lets you make money summaries.\n\nYou can:\n• View payment reports\n• Filter by date range\n• Save data for your records\n\n➡️ Click **Reports** from the admin menu.",
     quickReplies: ['Go back to start', 'View Transactions'],
   },
   {
@@ -153,55 +153,55 @@ const KB: { keywords: string[]; answer: string; quickReplies?: string[]; useAPI?
   {
     keywords: ['budget', 'budgeting', 'spend', 'spending analysis', 'optimize budget', '50/30/20'],
     answer:
-      "📊 **Budget Optimization**\n\nTo improve your budget:\n\n• **Try the 50/30/20 rule:** 50% for needs, 30% for wants, 20% for savings.\n• **Track every expense** for a month to identify where your money goes.\n• **Cut unnecessary subscriptions** and reduce dining out.\n• **Use auto-transfers** to move savings on payday before you can spend it.\n\n➡️ Go to **Transactions** to review your spending or **AI Insights** for a detailed breakdown.",
-    quickReplies: ['Analyze spending patterns', 'Investment recommendations', 'Go back to start'],
+      "📊 **Budget Help**\n\nTo improve your budget:\n\n• **Try the 50/30/20 rule:** 50% for needs, 30% for wants, 20% for savings.\n• **Track every cost** for a month to find where your money goes.\n• **Stop extra subscriptions** and eat out less.\n• **Use auto-sends** to move savings on payday before you spend it.\n\n➡️ Go to **Transactions** to review your spending or **AI Tips** for a full breakdown.",
+    quickReplies: ['Look at my spending', 'Investment tips', 'Go back to start'],
   },
   {
     keywords: ['invest', 'investment', 'portfolio', 'returns', 'poultry', 'stock'],
     answer:
-      "📈 **Investment Recommendations for Rwanda**\n\nBased on current market trends:\n• **Poultry farming** – High returns, low barrier to entry\n• **Mobile money services** – Stable income from digital transactions\n• **Food supply chain** – Growing demand in urban areas\n• **Emergency fund** – Keep 20% in accessible savings\n\n💡 Start small with 50,000 RWF in one sector and scale up.",
+      "📈 **Investment Tips for Rwanda**\n\nBased on current market trends:\n• **Poultry farming** – Good profits, easy to start\n• **Mobile money services** – Steady income from digital payments\n• **Food supply chain** – Growing demand in cities\n• **Emergency fund** – Keep 20% in savings you can get to\n\n💡 Start small with 50,000 RWF in one area and grow.",
     quickReplies: ['Business growth advice', 'Market trends', 'Optimize your budget'],
   },
   {
     keywords: ['business', 'growth', 'startup', 'entrepreneur', 'shop', 'enterprise'],
     answer:
-      "🚀 **Business Growth Advice for Rwanda**\n\n1. **Build a digital credit trail** – Use Mobile Money for all transactions.\n2. **Inventory management** – Track stock daily to avoid overstocking.\n3. **Social media marketing** – Low-cost reach to local customers.\n4. **Keep DTI below 40%** – To qualify for business expansion loans.\n\n💡 Reinvest 30% of profits back into the business for sustainable scaling.",
-    quickReplies: ['Investment recommendations', 'Market trends', 'Apply for a loan'],
+      "🚀 **Business Growth Tips for Rwanda**\n\n1. **Build a digital credit trail** – Use Mobile Money for all payments.\n2. **Inventory management** – Track stock daily to avoid overstocking.\n3. **Social media marketing** – Low-cost reach to local customers.\n4. **Keep DTI below 40%** – To get business growth loans.\n\n💡 Put 30% of profits back into the business for steady growth.",
+    quickReplies: ['Investment tips', 'Market trends', 'Apply for a loan'],
   },
   {
     keywords: ['debt', 'debt management', 'debt-to-income', 'overdraft', 'owing'],
     answer:
-      "💰 **Debt Management**\n\n• **Prioritize high-interest loans** first to minimize total interest.\n• **Pay extra monthly** – Even 45,000 RWF extra can shorten repayment by months.\n• **Keep DTI below 40%** for healthy loan eligibility.\n• **Consolidate debts** if you have multiple high-interest loans.\n\nThis strategy can save you hundreds of thousands in interest payments.",
+      "💰 **Debt Help**\n\n• **Pay high-growth loans first** to pay less total growth.\n• **Pay extra each month** – Even 45,000 RWF extra can shorten pay back time by months.\n• **Keep DTI below 40%** to be able to get loans.\n• **Combine debts** if you have many high-growth loans.\n\nThis plan can save you hundreds of thousands in growth costs.",
     quickReplies: ['Apply for a loan', 'Optimize your budget', 'Go back to start'],
   },
   {
     keywords: ['market', 'market trend', 'sector', 'economic', 'agri-tech', 'e-commerce', 'clean energy'],
     answer:
-      "📊 **Current Market Trends in Rwanda**\n\nHigh-growth sectors:\n• **Agri-tech** – 15% efficiency increase with smart farming\n• **E-commerce** – 25% growth in mobile transactions\n• **Clean Energy** – Government incentives for solar startups\n\n➡️ Check the **Market Insights** page for detailed sector performance.",
-    quickReplies: ['Investment recommendations', 'Business growth advice', 'Go back to start'],
+      "📊 **Current Market Trends in Rwanda**\n\nSectors growing fast:\n• **Agri-tech** – 15% better output with smart farming\n• **E-commerce** – 25% growth in mobile payments\n• **Clean Energy** – Government help for solar startups\n\n➡️ Check the **Market Insights** page for detailed area performance.",
+    quickReplies: ['Investment tips', 'Business growth advice', 'Go back to start'],
   },
   {
     keywords: ['savings strategy', 'save more', 'emergency fund', 'savings rate', 'saving money'],
     answer:
-      "🎯 **Savings Optimization**\n\n• Aim to save **20% of your income** monthly.\n• Build a **3-6 month emergency fund** for unexpected expenses.\n• **Automate transfers** right after payday so you save before spending.\n• Reduce **entertainment and dining expenses** by 15% to boost savings.\n\nTarget: Build 1.2M RWF emergency fund in 18 months by saving 85,000 RWF monthly.",
-    quickReplies: ['Optimize your budget', 'Investment recommendations', 'Go back to start'],
+      "🎯 **Savings Tips**\n\n• Try to save **20% of what you earn** each month.\n• Build a **3-6 month emergency fund** for surprise costs.\n• **Auto-send money** right after payday so you save before spending.\n• Cut **fun and eating out costs** by 15% to grow savings.\n\nTarget: Build 1.2M RWF emergency fund in 18 months by saving 85,000 RWF monthly.",
+    quickReplies: ['Optimize your budget', 'Investment tips', 'Go back to start'],
   },
 ];
 
 const FALLBACK: Message = {
   id: 'fallback',
   role: 'bot',
-  text: "🤔 I'm not sure about that. Here are some things I can help with:",
+  text: "🤔 I'm not sure about that. Here are some things I can help you with:",
   timestamp: new Date(),
-  quickReplies: ['How to send money?', 'Analyze spending patterns', 'Apply for a loan', 'Investment recommendations', 'Go back to start'],
+  quickReplies: ['How to send money?', 'Look at my spending', 'Apply for a loan', 'Investment tips', 'Go back to start'],
 };
 
 const WELCOME_MSG: Message = {
   id: 'welcome',
   role: 'bot',
-  text: "👋 Hi! I'm **Lend-AI**, your smart banking guide and financial advisor.\n\nI can help you with:\n🏦 **Banking** – Send money, apply for loans, check balances\n📊 **Finance** – Budget optimization, savings, investments\n🚀 **Business** – Growth advice, market trends, debt management\n\nWhat would you like help with today?",
+  text: "👋 Hi! I'm **Lend-AI**, your smart banking guide.\n\nI can help you with:\n🏦 **Banking** – Send money, apply for loans, check balances\n📊 **Finance** – Better budgets, savings, investments\n🚀 **Business** – Growth tips, market trends, debt help\n\nWhat would you like help with today?",
   timestamp: new Date(),
-  quickReplies: ['How to send money?', 'Analyze spending patterns', 'Applying for a loan', 'Investment recommendations'],
+  quickReplies: ['How to send money?', 'Look at my spending', 'Applying for a loan', 'Investment tips'],
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -431,11 +431,11 @@ const AIChatbot: React.FC = () => {
           try {
             const history = messages.slice(-10).map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', text: m.text }));
             const apiResponse = await aiService.chat(trimmed, history);
-            botMsg.text = apiResponse.data.reply || apiResponse.data.response || apiResponse.data.message || "I received your message, but I'm not sure how to respond. Can you try rephrasing?";
+            botMsg.text = apiResponse.data.reply || apiResponse.data.response || apiResponse.data.message || "I got your message, but I'm not sure how to answer. Can you ask a different way?";
             botMsg.quickReplies = apiResponse.data.quickReplies || ['Go back to start'];
           } catch (apiError) {
             console.error('API call failed:', apiError);
-            botMsg.text = "I'm having trouble connecting to my knowledge base right now. Please try again later or ask about banking basics.";
+            botMsg.text = "I'm having trouble connecting right now. Please try again later or ask about banking basics.";
             botMsg.quickReplies = ['How to send money?', 'Apply for a loan', 'View my balance'];
           }
         }
@@ -447,7 +447,7 @@ const AIChatbot: React.FC = () => {
         const errorMsg: Message = { 
           id: uid(), 
           role: 'bot', 
-          text: "Sorry, I encountered an error. Please try again.", 
+          text: "Sorry, something went wrong. Please try again.", 
           timestamp: new Date(),
           quickReplies: ['Go back to start']
         };

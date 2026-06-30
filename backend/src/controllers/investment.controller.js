@@ -66,7 +66,7 @@ exports.createInvestment = async (req, res) => {
         const { type, amount, duration, risk_level = 'medium', expected_return } = req.body;
         
         if (!type || !amount || !duration) {
-            return res.status(400).json({ msg: 'Type, amount, and duration are required' });
+            return res.status(400).json({ msg: 'Type, amount, and duration needed' });
         }
 
         const investmentType = investmentTypes.find(t => t.id === type);
@@ -157,7 +157,7 @@ exports.updateInvestment = async (req, res) => {
         }
 
         if (investment.status !== 'active') {
-            return res.status(400).json({ msg: 'Cannot update completed investment' });
+            return res.status(400).json({ msg: 'Completed investments cannot be updated' });
         }
 
         const updateData = {};
@@ -204,14 +204,14 @@ exports.deleteInvestment = async (req, res) => {
         }
 
         if (investment.status !== 'active') {
-            return res.status(400).json({ msg: 'Cannot delete completed investment' });
+            return res.status(400).json({ msg: 'Completed investments cannot be deleted' });
         }
 
         await Investment.delete(investmentId);
 
         res.json({
             success: true,
-            message: 'Investment deleted successfully'
+            message: 'Investment deleted'
         });
     } catch (err) {
         console.error('Delete investment error:', err);
@@ -236,7 +236,7 @@ exports.calculateReturns = async (req, res) => {
         const { type, amount, duration, risk_level = 'medium' } = req.body;
         
         if (!type || !amount || !duration) {
-            return res.status(400).json({ msg: 'Type, amount, and duration are required' });
+            return res.status(400).json({ msg: 'Type, amount, and duration needed' });
         }
 
         const investmentType = investmentTypes.find(t => t.id === type);

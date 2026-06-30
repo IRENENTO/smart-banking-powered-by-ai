@@ -67,6 +67,11 @@ const Transactions: React.FC = () => {
     const [transactions, setTransactions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [selected, setSelected] = useState('All');
+    const [txSearch, setTxSearch] = useState('');
+    const [txMinAmount, setTxMinAmount] = useState('');
+    const [txMaxAmount, setTxMaxAmount] = useState('');
+    const [txDateFrom, setTxDateFrom] = useState('');
+    const [txDateTo, setTxDateTo] = useState('');
     const [fraudAlerts, setFraudAlerts] = useState<any[]>([]);
     const [aiAnalysis, setAiAnalysis] = useState<any>(null);
     const [aiLoading, setAiLoading] = useState(false);
@@ -203,7 +208,18 @@ const Transactions: React.FC = () => {
     };
 
     const categories = ['All', 'Sent', ...Array.from(new Set(transactions.map(t => t.type)))];
-    const filtered = selected === 'All' ? transactions : selected === 'Sent' ? transactions.filter(t => ['payment', 'send', 'transfer'].includes(t.type)) : transactions.filter((item) => item.type === selected);
+    const filtered = transactions.filter(t => {
+        if (selected !== 'All') {
+            if (selected === 'Sent') { if (!['payment', 'send', 'transfer'].includes(t.type)) return false; }
+            else if (t.type !== selected) return false;
+        }
+        if (txSearch && !(t.description || '').toLowerCase().includes(txSearch.toLowerCase()) && !(t.recipient_name || '').toLowerCase().includes(txSearch.toLowerCase())) return false;
+        if (txMinAmount && Number(t.amount) < Number(txMinAmount)) return false;
+        if (txMaxAmount && Number(t.amount) > Number(txMaxAmount)) return false;
+        if (txDateFrom && new Date(t.created_at) < new Date(txDateFrom)) return false;
+        if (txDateTo && new Date(t.created_at) > new Date(txDateTo + 'T23:59:59')) return false;
+        return true;
+    });
     const totalByType = categories.filter(c => c !== 'All' && c !== 'Sent').map(category => ({
         category,
         total: transactions.filter(tx => tx.type === category).reduce((sum, tx) => sum + Number(tx.amount || 0), 0)
@@ -413,6 +429,20 @@ const Transactions: React.FC = () => {
                             <div>Completed: <strong style={{ color: textColor }}>{transactions.filter(t => t.status === 'completed').length}</strong></div>
                         </div>
                     </SectionCard>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input type="text" placeholder="Search description or recipient..." value={txSearch} onChange={e => setTxSearch(e.target.value)}
+                        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13, minWidth: 200 }} />
+                    <input type="number" placeholder="Min amount" value={txMinAmount} onChange={e => setTxMinAmount(e.target.value)}
+                        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13, width: 120 }} />
+                    <input type="number" placeholder="Max amount" value={txMaxAmount} onChange={e => setTxMaxAmount(e.target.value)}
+                        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13, width: 120 }} />
+                    <input type="date" value={txDateFrom} onChange={e => setTxDateFrom(e.target.value)}
+                        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13 }} />
+                    <span style={{ color: mutedColor, fontSize: 12 }}>to</span>
+                    <input type="date" value={txDateTo} onChange={e => setTxDateTo(e.target.value)}
+                        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13 }} />
                 </div>
 
                 <SectionCard title="Transaction History">

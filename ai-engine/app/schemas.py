@@ -1,36 +1,34 @@
-"""
-Pydantic schemas for AI engine request / response validation.
-"""
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 
 # ─── LOAN ─────────────────────────────────────────────────────────────────────
 class LoanPredictRequest(BaseModel):
-    age: int = Field(default=30, ge=18, le=80, description="Applicant age")
-    monthly_income: float = Field(default=200000, ge=0, description="Monthly income in RWF")
+    income: Optional[float] = Field(default=200000, ge=0, description="Monthly income in RWF")
+    expenses: Optional[float] = Field(default=0, ge=0, description="Monthly expenses in RWF")
+    savings: Optional[float] = Field(default=0, ge=0, description="Total savings in RWF")
     loan_amount: float = Field(default=500000, ge=1000, description="Requested loan amount in RWF")
-    duration_months: int = Field(default=12, ge=1, le=120, description="Loan duration in months")
-    existing_debt: float = Field(default=0.0, ge=0, description="Existing debt in RWF")
-    num_dependents: int = Field(default=0, ge=0, le=15)
-    employment_type: str = Field(default="employed", description="employed | self_employed | unemployed | student")
-    education: str = Field(default="secondary", description="primary | secondary | tertiary | none")
-    credit_history: int = Field(default=1, ge=0, le=1, description="1=good, 0=bad")
-    collateral: int = Field(default=0, ge=0, le=1, description="1=has collateral, 0=none")
+    credit_score: Optional[int] = Field(default=650, ge=300, le=850, description="Credit score (300-850)")
+
+    # Legacy fields
+    age: Optional[int] = Field(default=30, ge=18, le=80)
+    monthly_income: Optional[float] = Field(default=200000, ge=0)
+    duration_months: Optional[int] = Field(default=12, ge=1, le=120)
+    existing_debt: Optional[float] = Field(default=0.0, ge=0)
+    num_dependents: Optional[int] = Field(default=0, ge=0, le=15)
+    employment_type: Optional[str] = Field(default="employed")
+    education: Optional[str] = Field(default="secondary")
+    credit_history: Optional[int] = Field(default=1, ge=0, le=1)
+    collateral: Optional[int] = Field(default=0, ge=0, le=1)
 
     class Config:
         json_schema_extra = {
             "example": {
-                "age": 35,
-                "monthly_income": 450000,
+                "income": 450000,
+                "expenses": 200000,
+                "savings": 500000,
                 "loan_amount": 1000000,
-                "duration_months": 24,
-                "existing_debt": 100000,
-                "num_dependents": 2,
-                "employment_type": "employed",
-                "education": "tertiary",
-                "credit_history": 1,
-                "collateral": 1
+                "credit_score": 720
             }
         }
 
@@ -38,50 +36,63 @@ class LoanPredictRequest(BaseModel):
 class LoanPredictResponse(BaseModel):
     success: bool
     loan_approval: bool
+    prediction: str = "Approved"
+    confidence: int = 0
+    risk: str = "Medium"
     risk_score: int
     default_probability: float
     approval_probability: float
     debt_to_income_ratio: float
     reason: str
+    suggested_action: str = ""
     model_metrics: dict = {}
 
 
 # ─── FRAUD ────────────────────────────────────────────────────────────────────
 class FraudDetectRequest(BaseModel):
     amount: float = Field(default=50000, ge=0)
-    hour_of_day: int = Field(default=12, ge=0, le=23)
-    day_of_week: int = Field(default=1, ge=0, le=6)
-    transaction_count_24h: int = Field(default=3, ge=0)
-    distance_from_home: float = Field(default=5.0, ge=0)
-    is_international: int = Field(default=0, ge=0, le=1)
-    account_age_days: int = Field(default=365, ge=0)
-    avg_tx_amount: float = Field(default=40000, ge=0)
-    device_change: int = Field(default=0, ge=0, le=1)
+    location: Optional[str] = Field(default="Kigali")
+    device: Optional[str] = Field(default="mobile")
+    frequency: Optional[int] = Field(default=3, ge=0)
+    transaction_time: Optional[str] = Field(default="")
+
+    # Legacy fields
+    transaction_amount: Optional[float] = Field(default=None)
+    hour_of_day: Optional[int] = Field(default=12, ge=0, le=23)
+    day_of_week: Optional[int] = Field(default=1, ge=0, le=6)
+    transaction_count_24h: Optional[int] = Field(default=3, ge=0)
+    distance_from_home: Optional[float] = Field(default=5.0, ge=0)
+    is_international: Optional[int] = Field(default=0, ge=0, le=1)
+    account_age_days: Optional[int] = Field(default=365, ge=0)
+    avg_tx_amount: Optional[float] = Field(default=40000, ge=0)
+    device_change: Optional[int] = Field(default=0, ge=0, le=1)
+    time: Optional[int] = Field(default=None)
 
     class Config:
         json_schema_extra = {
             "example": {
                 "amount": 500000,
-                "hour_of_day": 2,
-                "day_of_week": 6,
-                "transaction_count_24h": 18,
-                "distance_from_home": 150.0,
-                "is_international": 1,
-                "account_age_days": 15,
-                "avg_tx_amount": 40000,
-                "device_change": 1
+                "location": "Kigali",
+                "device": "mobile",
+                "frequency": 5,
+                "transaction_time": "2026-06-15T14:30:00"
             }
         }
 
 
 class FraudDetectResponse(BaseModel):
     success: bool
-    fraud_risk: str          # LOW | MEDIUM | HIGH | CRITICAL
+    fraud_risk: str
     risk_percentage: int
+    fraud_score: int = 0
+    risk_level: str = ""
+    confidence: int = 0
+    color: str = "Green"
     is_anomaly: bool
     classifier_fraud_probability: float
     risk_flags: List[str]
     action_required: bool
+    suggested_action: str = ""
     model_metrics: dict = {}
 
 
@@ -96,6 +107,11 @@ class SavingsPredictRequest(BaseModel):
     investment_amount: float = Field(default=0, ge=0)
     employment_type: str = Field(default="employed")
     has_insurance: int = Field(default=0, ge=0, le=1)
+
+    # New alias fields
+    income: Optional[float] = Field(default=None)
+    expenses: Optional[float] = Field(default=None)
+    savings: Optional[float] = Field(default=None)
 
     class Config:
         json_schema_extra = {
@@ -149,7 +165,7 @@ class EconomicForecast(BaseModel):
 
 # ─── SPENDING ANALYTICS ───────────────────────────────────────────────────────
 class SpendingAnalysisRequest(BaseModel):
-    transactions: List[dict] = Field(default=[], description="List of transaction objects with amount, category, date")
+    transactions: List[dict] = Field(default=[], description="Transaction objects with amount, category, date")
     monthly_income: float = Field(default=300000, ge=0)
 
     class Config:
@@ -183,18 +199,23 @@ class SpendingAnalysisResponse(BaseModel):
     category_breakdown: List[CategoryBreakdown]
     spending_insight: str
     recommendations: List[str]
+    ai_powered: bool = True
+    predicted_spending: float = 0
+    is_anomaly: bool = False
+    anomaly_score: float = 0
+    model_metrics: dict = {}
 
 
 # ─── MARKET FORECAST ───────────────────────────────────────────────────────────
 class MarketForecastRequest(BaseModel):
     year: int = Field(default=2026, ge=2020, le=2030)
     month: int = Field(default=6, ge=1, le=12)
-    interest_rate: float = Field(default=6.5, ge=0, description="Central bank interest rate (%)")
-    rwf_usd_exchange: float = Field(default=1150, ge=500, description="RWF per 1 USD")
+    interest_rate: float = Field(default=6.5, ge=0)
+    rwf_usd_exchange: float = Field(default=1150, ge=500)
     consumer_price_index: float = Field(default=130, ge=50)
     unemployment_rate: float = Field(default=16.0, ge=0, le=50)
     money_supply_bn_rwf: float = Field(default=2000, ge=0)
-    trade_balance_mn_rwf: float = Field(default=-150, description="Negative = deficit")
+    trade_balance_mn_rwf: float = Field(default=-150)
     market_volatility: float = Field(default=25, ge=0, le=100)
     sector_agriculture: float = Field(default=110, ge=0)
     sector_manufacturing: float = Field(default=115, ge=0)
@@ -231,13 +252,21 @@ class MarketForecastResponse(BaseModel):
     model_metrics: dict = {}
 
 
-# ─── SPENDING ANALYTICS (ML-enhanced) ──────────────────────────────────────────
-class MLSpendingAnalysisResponse(SpendingAnalysisResponse):
-    ai_powered: bool = True
-    predicted_spending: float = 0
-    is_anomaly: bool = False
-    anomaly_score: float = 0
-    model_metrics: dict = {}
+# ─── MARKET INTELLIGENCE (Rwanda sectors) ──────────────────────────────────────
+class SectorPrediction(BaseModel):
+    sector: str
+    trend: str = "Stable"
+    expected_return: float = 0.0
+    risk_level: str = "Medium"
+    growth_potential: str = "Medium"
+    recommendation: str = "Hold"
+
+
+class MarketIntelligenceResponse(BaseModel):
+    success: bool
+    sector_predictions: List[SectorPrediction]
+    market_summary: str = ""
+    investment_advice: List[str] = []
 
 
 # ─── RECOMMENDATIONS ──────────────────────────────────────────────────────────
@@ -250,7 +279,13 @@ class RecommendationRequest(BaseModel):
     investment_amount: float = Field(default=0, ge=0)
     employment_type: str = Field(default="employed")
     risk_tolerance: str = Field(default="moderate", description="low | moderate | high")
-    financial_goals: List[str] = Field(default=["savings"], description="e.g. savings, investment, debt, home, education")
+    financial_goals: List[str] = Field(default=["savings"])
+
+    # Aliases
+    income: Optional[float] = Field(default=None)
+    expenses: Optional[float] = Field(default=None)
+    savings: Optional[float] = Field(default=None)
+    goals: Optional[List[str]] = Field(default=None)
 
     class Config:
         json_schema_extra = {
@@ -276,6 +311,29 @@ class RecommendationResponse(BaseModel):
     budgeting_recommendation: dict
     sector_recommendations: List[dict]
     priority_actions: List[str]
+
+
+# ─── AI DASHBOARD ──────────────────────────────────────────────────────────────
+class AIModelMetrics(BaseModel):
+    model_name: str
+    accuracy: float = 0
+    precision: float = 0
+    recall: float = 0
+    f1_score: float = 0
+    auc_roc: float = 0
+    available: bool = False
+    size_kb: float = 0
+    training_date: str = ""
+    dataset_size: int = 0
+    algorithm: str = ""
+
+
+class AIDashboardResponse(BaseModel):
+    success: bool
+    models: List[AIModelMetrics]
+    total_predictions: int = 0
+    engine_status: str = "operational"
+    model_version: str = "2.0.0"
 
 
 # ─── RETRAIN ──────────────────────────────────────────────────────────────────

@@ -188,7 +188,7 @@ const Dashboard: React.FC = () => {
 
           if (recomData.sector_recommendations?.length > 0) {
             const best = recomData.sector_recommendations.reduce((a: any, b: any) => (a.growth_rate || 0) > (b.growth_rate || 0) ? a : b);
-            setBestSector({ name: best.sector_name || 'Technology', growth: best.expected_return || '+22%', risk: best.risk_level || 'medium' });
+            setBestSector({ name: best.sector_name || 'Technology', growth: String(best.expected_return || '+22%'), risk: best.risk_level || 'medium' });
           }
 
           setFraudAlertScore(recomData.financial_health_summary?.score ? Math.round((100 - recomData.financial_health_summary.score) * 0.7) : 20);
@@ -466,38 +466,6 @@ const Dashboard: React.FC = () => {
             </motion.div>
           </SectionCard>
 
-          <SectionCard
-            title={t('card.loanEligibility')}
-            subtitle={aiRiskScore !== null ? `AI Risk Score: ${aiRiskScore}/100` : 'Enable AI for risk assessment'}
-            headerRight={
-              <motion.div
-                animate={{ rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                style={{ fontWeight: 700, color: aiRiskScore !== null && aiRiskScore < 50 ? '#10b981' : '#0A9396', fontSize: '18px' }}
-              >
-                {aiLoading ? '...' : aiRiskScore !== null ? (aiRiskScore < 50 ? t('dash.lowRisk') : aiRiskScore < 75 ? t('dash.mediumRisk') : t('dash.highRisk')) : 'N/A'}
-              </motion.div>
-            }
-          >
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
-              style={{ marginTop: 20 }}
-            >
-              <LoadingButton
-                loading={loading === 'loan'}
-                onClick={() => setLoanEligibilityOpen(true)}
-                variant="ghost"
-                size="sm"
-              >
-                <FileText size={16} />
-                {t('card.checkEligibility')}
-                <ArrowRight size={14} />
-              </LoadingButton>
-            </motion.div>
-          </SectionCard>
-
           <SectionCard title={t('card.aiInsight')} subtitle={aiEngineOnline ? 'AI Engine is active' : 'Using estimated predictions'}>
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -513,30 +481,6 @@ const Dashboard: React.FC = () => {
                   <Zap size={20} />
                 </motion.div>
                 {aiLoading ? 'Loading...' : (aiRecommendationText || (recentInsights.length > 0 ? recentInsights[0].message : t('dash.noInsights')))}
-              </div>
-            </motion.div>
-          </SectionCard>
-
-          <SectionCard title={t('card.savingsProgress')}>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.2 }}
-              style={{ marginTop: 20 }}
-            >
-              <div style={{ fontSize: '24px', fontWeight: 700, color: '#059669', marginBottom: 16 }}>
-                {aiLoading ? '...' : (aiHealthScore ? `${aiHealthScore}%` : 'N/A')}
-              </div>
-              <div style={{ height: 12, background: '#e2e8f0', borderRadius: 999, overflow: 'hidden' }}>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${aiHealthScore || 0}%` }}
-                  transition={{ duration: 1.5, delay: 1.3 }}
-                  style={{ height: '100%', background: 'linear-gradient(90deg, #059669, #10b981)', borderRadius: 999 }}
-                />
-              </div>
-              <div style={{ marginTop: 12, fontSize: '14px', color: '#475569' }}>
-                {aiSavingsReco || 'Create a savings goal to get started.'}
               </div>
             </motion.div>
           </SectionCard>

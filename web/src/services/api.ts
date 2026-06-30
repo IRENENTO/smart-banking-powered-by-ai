@@ -127,6 +127,14 @@ export const aiService = {
         const response = await api.post('/ai/retrain', { model });
         return response.data;
     },
+    getMarketIntelligence: async () => {
+        const response = await api.post('/ai/market-intelligence', {});
+        return response.data;
+    },
+    getAIDashboard: async () => {
+        const response = await api.get('/ai/ai-dashboard');
+        return response.data;
+    },
 };
 
 // Add AI Engine direct test endpoint

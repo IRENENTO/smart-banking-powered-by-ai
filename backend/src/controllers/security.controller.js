@@ -12,22 +12,22 @@ exports.setTransactionPin = async (req, res) => {
     
     try {
         if (!transactionPin) {
-            return res.status(400).json({ msg: 'Transaction PIN is required' });
+            return res.status(400).json({ msg: 'Transaction PIN needed' });
         }
 
         // Validation
         if (transactionPin.length !== 4) {
-            return res.status(400).json({ msg: 'PIN must be exactly 4 digits' });
+            return res.status(400).json({ msg: 'PIN must be 4 digits' });
         }
 
         if (!/^\d{4}$/.test(transactionPin)) {
-            return res.status(400).json({ msg: 'PIN must contain only numbers' });
+            return res.status(400).json({ msg: 'PIN must be only numbers' });
         }
 
         // Avoid common PINs
         const commonPins = ['0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '1234'];
         if (commonPins.includes(transactionPin)) {
-            return res.status(400).json({ msg: 'Please choose a more secure PIN' });
+            return res.status(400).json({ msg: 'Choose a more secure PIN' });
         }
 
         // Find user by ID from token
@@ -50,7 +50,7 @@ exports.setTransactionPin = async (req, res) => {
         const updatedUser = await User.findById(userId);
 
         res.json({ 
-            msg: 'Transaction PIN set successfully',
+            msg: 'Transaction PIN saved',
             user: {
                 id: updatedUser.id,
                 email: updatedUser.email,
@@ -71,7 +71,7 @@ exports.verifyTransactionPin = async (req, res) => {
     
     try {
         if (!transactionPin) {
-            return res.status(400).json({ msg: 'Transaction PIN is required' });
+            return res.status(400).json({ msg: 'Transaction PIN needed' });
         }
 
         const userId = req.user.id;
@@ -82,7 +82,7 @@ exports.verifyTransactionPin = async (req, res) => {
         }
 
         if (!user.pin_set) {
-            return res.status(400).json({ msg: 'Transaction PIN not set' });
+            return res.status(400).json({ msg: 'No transaction PIN set' });
         }
 
         // Get security info
@@ -95,7 +95,7 @@ exports.verifyTransactionPin = async (req, res) => {
         // Check if PIN is locked
         if (security.pin_locked_until && new Date() < new Date(security.pin_locked_until)) {
             return res.status(400).json({ 
-                msg: 'PIN is locked. Please try again later.',
+                msg: 'PIN is locked. Try again later.',
                 lockedUntil: security.pin_locked_until
             });
         }
@@ -116,7 +116,7 @@ exports.verifyTransactionPin = async (req, res) => {
             }
             
             return res.status(400).json({ 
-                msg: 'Invalid PIN',
+                msg: 'Wrong PIN',
                 attemptsRemaining: Math.max(0, 3 - newAttempts),
                 locked: newAttempts >= 3
             });
@@ -126,7 +126,7 @@ exports.verifyTransactionPin = async (req, res) => {
         await UserSecurity.resetPinAttempts(userId);
 
         res.json({ 
-            msg: 'PIN verified successfully',
+            msg: 'PIN verified',
             verified: true
         });
     } catch (err) {
@@ -155,7 +155,7 @@ exports.forgotPinSendOTP = async (req, res) => {
         const result = await sendOTPEmail(user.email, otpCode);
 
         const response = {
-            msg: result.sent ? 'OTP sent to your email' : 'Email delivery failed. Use the OTP below to proceed.',
+            msg: result.sent ? 'OTP sent to your email' : 'Email delivery failed. Use the OTP below.',
             expiresAt,
             emailSent: result.sent,
         };
@@ -176,16 +176,16 @@ exports.forgotPinReset = async (req, res) => {
 
     try {
         if (!otp || !newPin) {
-            return res.status(400).json({ msg: 'OTP and new PIN are required' });
+            return res.status(400).json({ msg: 'OTP and new PIN needed' });
         }
 
         if (newPin.length !== 4 || !/^\d{4}$/.test(newPin)) {
-            return res.status(400).json({ msg: 'PIN must be exactly 4 digits' });
+            return res.status(400).json({ msg: 'PIN must be 4 digits' });
         }
 
         const commonPins = ['0000', '1111', '2222', '3333', '4444', '5555', '6666', '7777', '8888', '9999', '1234'];
         if (commonPins.includes(newPin)) {
-            return res.status(400).json({ msg: 'Please choose a more secure PIN' });
+            return res.status(400).json({ msg: 'Choose a more secure PIN' });
         }
 
         const userId = req.user.id;
@@ -196,15 +196,15 @@ exports.forgotPinReset = async (req, res) => {
         }
 
         if (!user.otp_code || !user.otp_expires_at) {
-            return res.status(400).json({ msg: 'No OTP was sent. Request a new one.' });
+            return res.status(400).json({ msg: 'No OTP sent. Request a new one.' });
         }
 
         if (new Date() > new Date(user.otp_expires_at)) {
-            return res.status(400).json({ msg: 'OTP has expired. Request a new one.' });
+            return res.status(400).json({ msg: 'OTP expired. Request a new one.' });
         }
 
         if (String(user.otp_code).trim() !== String(otp).trim()) {
-            return res.status(400).json({ msg: 'Invalid OTP code' });
+            return res.status(400).json({ msg: 'Wrong OTP code' });
         }
 
         await User.update(userId, { otp_code: null, otp_expires_at: null });
@@ -214,7 +214,7 @@ exports.forgotPinReset = async (req, res) => {
         await UserSecurity.setTransactionPin(userId, hashedPin);
         await User.update(userId, { pin_set: true });
 
-        res.json({ msg: 'Transaction PIN reset successfully' });
+        res.json({ msg: 'Transaction PIN reset' });
     } catch (err) {
         console.error('Forgot PIN reset error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });

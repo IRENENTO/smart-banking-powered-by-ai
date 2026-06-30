@@ -23,7 +23,7 @@ exports.getSecuritySettings = async (req, res) => {
     console.error('Error fetching security settings:', error);
     res.status(500).json({
       success: false,
-      msg: 'Failed to fetch security settings'
+      msg: 'Could not load security settings'
     });
   }
 };
@@ -60,7 +60,7 @@ exports.updateSecuritySettings = async (req, res) => {
 
     res.json({
       success: true,
-      msg: 'Security settings updated successfully'
+      msg: 'Security settings updated'
     });
   } catch (error) {
     console.error('Error updating security settings:', error);
@@ -95,7 +95,7 @@ exports.getNotificationSettings = async (req, res) => {
     console.error('Error fetching notification settings:', error);
     res.status(500).json({
       success: false,
-      msg: 'Failed to fetch notification settings'
+      msg: 'Could not load notification settings'
     });
   }
 };
@@ -129,7 +129,7 @@ exports.updateNotificationSettings = async (req, res) => {
 
     res.json({
       success: true,
-      msg: 'Notification settings updated successfully'
+      msg: 'Notification settings updated'
     });
   } catch (error) {
     console.error('Error updating notification settings:', error);
@@ -163,7 +163,7 @@ exports.getPrivacySettings = async (req, res) => {
     console.error('Error fetching privacy settings:', error);
     res.status(500).json({
       success: false,
-      msg: 'Failed to fetch privacy settings'
+      msg: 'Could not load privacy settings'
     });
   }
 };
@@ -197,7 +197,7 @@ exports.updatePrivacySettings = async (req, res) => {
 
     res.json({
       success: true,
-      msg: 'Privacy settings updated successfully'
+      msg: 'Privacy settings updated'
     });
   } catch (error) {
     console.error('Error updating privacy settings:', error);
@@ -230,7 +230,7 @@ exports.getTransactionLimits = async (req, res) => {
     console.error('Error fetching transaction limits:', error);
     res.status(500).json({
       success: false,
-      msg: 'Failed to fetch transaction limits'
+      msg: 'Could not load transaction limits'
     });
   }
 };
@@ -244,7 +244,7 @@ exports.updateTransactionLimits = async (req, res) => {
     if (daily_limit < 1000 || weekly_limit < 5000 || monthly_limit < 10000 || single_transaction_limit < 500) {
       return res.status(400).json({
         success: false,
-        msg: 'Transaction limits are too low. Minimum amounts apply.'
+        msg: 'Transaction limits too low. Minimum amounts apply.'
       });
     }
 
@@ -271,13 +271,13 @@ exports.updateTransactionLimits = async (req, res) => {
 
     res.json({
       success: true,
-      msg: 'Transaction limits updated successfully'
+      msg: 'Transaction limits updated'
     });
   } catch (error) {
     console.error('Error updating transaction limits:', error);
     res.status(500).json({
       success: false,
-      msg: 'Failed to update transaction limits'
+      msg: 'Could not update transaction limits'
     });
   }
 };
@@ -305,7 +305,7 @@ exports.getUserPreferences = async (req, res) => {
     console.error('Error fetching user preferences:', error);
     res.status(500).json({
       success: false,
-      msg: 'Failed to fetch user preferences'
+      msg: 'Could not load user preferences'
     });
   }
 };
@@ -338,13 +338,13 @@ exports.updateUserPreferences = async (req, res) => {
 
     res.json({
       success: true,
-      msg: 'Preferences updated successfully'
+      msg: 'Preferences updated'
     });
   } catch (error) {
     console.error('Error updating user preferences:', error);
     res.status(500).json({
       success: false,
-      msg: 'Failed to update user preferences'
+      msg: 'Could not update user preferences'
     });
   }
 };
@@ -360,7 +360,7 @@ exports.getCards = async (req, res) => {
     res.json({ success: true, data: cards });
   } catch (error) {
     console.error('Error fetching cards:', error);
-    res.status(500).json({ success: false, msg: 'Failed to fetch cards' });
+    res.status(500).json({ success: false, msg: 'Could not load cards' });
   }
 };
 
@@ -379,10 +379,10 @@ exports.addCard = async (req, res) => {
       [userId, card_type, card_number, card_holder_name, expiry_date, cvv, is_default]
     );
 
-    res.json({ success: true, msg: 'Card added successfully', cardId: result.insertId });
+    res.json({ success: true, msg: 'Card added', cardId: result.insertId });
   } catch (error) {
     console.error('Error adding card:', error);
-    res.status(500).json({ success: false, msg: 'Failed to add card' });
+    res.status(500).json({ success: false, msg: 'Could not add card' });
   }
 };
 
@@ -391,10 +391,10 @@ exports.deleteCard = async (req, res) => {
     const userId = req.user.id;
     const cardId = req.params.id;
     await getDb().query('DELETE FROM cards WHERE id = ? AND user_id = ?', [cardId, userId]);
-    res.json({ success: true, msg: 'Card deleted successfully' });
+    res.json({ success: true, msg: 'Card deleted' });
   } catch (error) {
     console.error('Error deleting card:', error);
-    res.status(500).json({ success: false, msg: 'Failed to delete card' });
+    res.status(500).json({ success: false, msg: 'Could not delete card' });
   }
 };
 
@@ -404,10 +404,10 @@ exports.updateCardStatus = async (req, res) => {
     const cardId = req.params.id;
     const { status } = req.body;
     await getDb().query('UPDATE cards SET card_status = ?, updated_at = NOW() WHERE id = ? AND user_id = ?', [status, cardId, userId]);
-    res.json({ success: true, msg: `Card ${status} successfully` });
+    res.json({ success: true, msg: `Card set to ${status}` });
   } catch (error) {
     console.error('Error updating card status:', error);
-    res.status(500).json({ success: false, msg: 'Failed to update card status' });
+    res.status(500).json({ success: false, msg: 'Could not update card status' });
   }
 };
 

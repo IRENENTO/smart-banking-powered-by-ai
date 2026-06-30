@@ -43,19 +43,23 @@ from .routes.fraud_routes import router as fraud_router
 from .routes.spending_routes import router as spending_router
 from .routes.recommendation_routes import router as recommendation_router
 from .routes.market_routes import router as market_router
+from .routes.market_intelligence_routes import router as market_intel_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("AI Engine starting up — loading models ...")
     try:
-        from .services.predict_loan      import _load_model as load_loan
-        from .services.predict_fraud     import _load_model as load_fraud
-        from .services.predict_savings   import _load_model as load_savings
-        from .services.predict_market    import _load_model as load_market
-        from .services.predict_spending  import _load_model as load_spending
+        from .services.predict_loan          import _load_model as load_loan
+        from .services.predict_fraud         import _load_model as load_fraud
+        from .services.predict_savings       import _load_model as load_savings
+        from .services.predict_market        import _load_model as load_market
+        from .services.predict_spending      import _load_model as load_spending
+        from .services.market_intelligence  import _load_model as load_market_intel
 
-        for name, loader in [("loan", load_loan), ("fraud", load_fraud), ("savings", load_savings), ("market", load_market), ("spending", load_spending)]:
+        loaders = [("loan", load_loan), ("fraud", load_fraud), ("savings", load_savings),
+                   ("market", load_market), ("spending", load_spending), ("market_intel", load_market_intel)]
+        for name, loader in loaders:
             try:
                 loader()
                 logger.info(f"   + {name} model loaded")
@@ -89,9 +93,8 @@ async def check_rate_limit(request):
 app = FastAPI(
     title="AI Smart Banking — Intelligence Engine",
     description=(
-        "Machine-learning powered APIs for loan approval prediction, "
-        "real-time fraud detection, financial health scoring, "
-        "spending analytics, and AI recommendations. "
+        "AI-powered APIs for loan checks, fraud detection, "
+        "money health scoring, spending analysis, and AI tips. "
         "Built for the AI Smart Banking Platform (Rwanda)."
     ),
     version="2.0.0",
@@ -109,6 +112,12 @@ async def security_middleware(request, call_next):
     rate_resp = await check_rate_limit(request)
     if rate_resp:
         return rate_resp
+
+    # In development mode (default key), skip API key check so the frontend
+    # and SwaggerUI can call endpoints directly. In production, a custom
+    # AI_ENGINE_API_KEY env var is required and must match.
+    if API_KEY == "dev-key-change-in-production":
+        return await call_next(request)
 
     key = request.headers.get("X-API-Key")
     if key != API_KEY:
@@ -140,6 +149,7 @@ app.include_router(fraud_router)
 app.include_router(spending_router)
 app.include_router(recommendation_router)
 app.include_router(market_router)
+app.include_router(market_intel_router)
 
 
 @app.get("/", tags=["Health"])
@@ -155,6 +165,8 @@ def root():
             "savings_intelligence": "/api/ai/predict-savings",
             "spending_analysis": "/api/ai/spending-analysis",
             "market_forecast": "/api/ai/market-forecast",
+            "market_intelligence": "/api/ai/market-intelligence",
+            "ai_dashboard": "/api/ai/ai-dashboard",
             "recommendations": "/api/ai/recommendations",
             "model_status": "/api/ai/model-status",
             "retrain": "/api/ai/retrain"

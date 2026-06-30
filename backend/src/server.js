@@ -251,7 +251,7 @@ app.get('/api/test-ai-connection', async (req, res) => {
     const axios = require('axios');
     
     const AI_URL = process.env.AI_ENGINE_URL || 'https://smart-banking-ai-engine1.onrender.com';
-    const AI_KEY = process.env.AI_ENGINE_API_KEY || 'smart-banking-ai-key-2024';
+    const AI_KEY = process.env.AI_ENGINE_API_KEY || 'dev-key-change-in-production';
     
     console.log(`Testing AI Engine connection to: ${AI_URL}`);
     

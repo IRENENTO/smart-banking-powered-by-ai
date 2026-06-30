@@ -93,7 +93,7 @@ def predict_savings(data: dict) -> dict:
     if not row['has_insurance']:
         tips.append("No insurance detected. Consider health or life insurance for protection.")
     if row['investment_amount'] == 0:
-        tips.append("Start investing even small amounts to benefit from compound growth.")
+        tips.append("Start investing even small amounts to grow your money over time.")
     if row['existing_savings'] < row['monthly_income'] * 3:
         tips.append("Build an emergency fund of at least 3 months of income.")
     if not tips:

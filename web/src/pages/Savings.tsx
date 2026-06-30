@@ -31,6 +31,8 @@ const Savings: React.FC = () => {
 
     const [aiPrediction, setAiPrediction] = useState<any>(null);
     const [aiLoading, setAiLoading] = useState(true);
+    const [savingsSearch, setSavingsSearch] = useState('');
+    const [savingsFilter, setSavingsFilter] = useState<'all' | 'in_progress' | 'completed'>('all');
 
     useEffect(() => {
         fetchGoals();
@@ -263,14 +265,36 @@ const totalSaved = goals.reduce((sum, g) => sum + toNum(g.current_amount ?? g.cu
                     </SectionCard>
                 )}
 
-                <h2 style={{ marginTop: 24, marginBottom: 18, fontSize: 18, fontWeight: 700, color: textColor }}>Your Savings Goals</h2>
+                <div style={{ display: 'flex', gap: 10, marginTop: 24, marginBottom: 18, flexWrap: 'wrap', alignItems: 'center' }}>
+                    <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: textColor, flex: 1 }}>Your Savings Goals</h2>
+                    <input type="text" placeholder="Search goals..." value={savingsSearch} onChange={e => setSavingsSearch(e.target.value)}
+                        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13, minWidth: 180 }} />
+                    <select value={savingsFilter} onChange={e => setSavingsFilter(e.target.value as 'all' | 'in_progress' | 'completed')}
+                        style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${isDark ? '#334155' : '#cbd5e1'}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13 }}>
+                        <option value="all">All Goals</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: 40, color: mutedColor }}>Loading goals...</div>
                 ) : goals.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: 40, color: mutedColor }}>{t('savings.noGoals')}</div>
                 ) : (
+                    (() => {
+                        const filteredGoals = goals
+                            .filter(g => {
+                                const pct = progress(g);
+                                if (savingsFilter === 'completed') return pct >= 100;
+                                if (savingsFilter === 'in_progress') return pct > 0 && pct < 100;
+                                return true;
+                            })
+                            .filter(g => !savingsSearch || (g.name || '').toLowerCase().includes(savingsSearch.toLowerCase()));
+                        return filteredGoals.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: 40, color: mutedColor }}>{savingsSearch || savingsFilter !== 'all' ? 'No goals match your filters' : t('savings.noGoals')}</div>
+                        ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 18 }}>
-                        {goals.map((goal) => (
+                        {filteredGoals.map((goal) => (
                             <SectionCard key={goal.id} title={goal.name} headerRight={<span style={{ fontWeight: 700, color: '#0A9396' }}>{progress(goal)}%</span>}>
                                 <div style={{ marginTop: 6, fontSize: 18, fontWeight: 700, color: textColor }}>
                                     RWF {toNum(goal.current_amount ?? goal.current).toLocaleString()} / {toNum(goal.target_amount ?? goal.target).toLocaleString()}
@@ -296,6 +320,8 @@ const totalSaved = goals.reduce((sum, g) => sum + toNum(g.current_amount ?? g.cu
                             </SectionCard>
                         ))}
                     </div>
+                        );
+                    })()
                 )}
             </div>
 

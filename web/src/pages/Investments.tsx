@@ -135,7 +135,7 @@ const Investments: React.FC = () => {
           recommendation: lookup.risk === 'low' ? 'STRONG INVESTMENT' : lookup.risk === 'medium' ? 'GOOD INVESTMENT' : 'SPECULATIVE',
           risk_score: lookup.risk === 'low' ? 20 : lookup.risk === 'medium' ? 50 : 75,
           ai_confidence: aiOnline ? 'HIGH' : 'MEDIUM',
-          insight: 'Analysis based on ' + predictionInput.sector + ' in ' + (RWANDA_DISTRICTS[predictionInput.region]?.description || predictionInput.region) + '.',
+          insight: 'Look based on ' + predictionInput.sector + ' in ' + (RWANDA_DISTRICTS[predictionInput.region]?.description || predictionInput.region) + '.',
           ai_powered: aiOnline,
         });
       } catch { setPredictionResult(null); }
@@ -169,22 +169,30 @@ const Investments: React.FC = () => {
             status: 'active',
           };
           setDemoInvestments(prev => [...prev, newInvest]);
+          investmentService.createInvestment({
+            type: predictionInput.sector,
+            amount: predictionInput.amount,
+            duration: 12,
+            risk_level: lookup.risk,
+            expected_return: lookup.growth,
+          }).catch(() => {});
           setPredictionResult(null);
           setPredictionInput(p => ({ ...p, sector: '' }));
-          toast.success(`Invested RWF ${predictionInput.amount.toLocaleString()} in ${predictionInput.sector}`);
+          toast.success(`Put RWF ${predictionInput.amount.toLocaleString()} into ${predictionInput.sector}`);
           try { await refreshBankData(); } catch {}
         } catch {
-          toast.error('Investment failed.');
+          toast.error('Investment did not work.');
         } finally { setInvesting(false); }
       }
     });
   };
 
   useEffect(() => {
-    if (demoInvestments.length === 0) return;
+    const hasActive = demoInvestments.some(inv => inv.status === 'active') || investments.some(inv => inv.status === 'active');
+    if (!hasActive) return;
     const interval = setInterval(async () => {
       let totalPayout = 0;
-      const updated = demoInvestments.map(inv => {
+      const updatedDemo = demoInvestments.map(inv => {
         if (inv.status !== 'active') return inv;
         const dailyReturn = inv.amount * (inv.expectedReturn / 100) / (inv.duration * 30);
         const newEarned = (inv.earned || 0) + dailyReturn;
@@ -193,14 +201,24 @@ const Investments: React.FC = () => {
         if (newEarned >= totalExpected) return { ...inv, earned: totalExpected, status: 'matured' };
         return { ...inv, earned: newEarned };
       });
-      setDemoInvestments(updated);
+      setDemoInvestments(updatedDemo);
+      const updatedServer = investments.map(inv => {
+        if (inv.status !== 'active') return inv;
+        const dailyReturn = inv.amount * ((inv.expected_return || 10) / 100) / ((inv.duration || 12) * 30);
+        const newActual = (inv.actual_return || 0) + dailyReturn;
+        totalPayout += dailyReturn;
+        const totalExpected = inv.amount * ((inv.expected_return || 10) / 100);
+        if (newActual >= totalExpected) return { ...inv, actual_return: totalExpected, status: 'matured' };
+        return { ...inv, actual_return: newActual };
+      });
+      setInvestments(updatedServer);
       if (totalPayout > 0) {
         try { await deposit(totalPayout, 'Investment returns'); } catch { setLocalBalanceOffset(prev => prev + totalPayout); }
         try { await refreshBankData(); } catch {}
       }
     }, 10000);
     return () => clearInterval(interval);
-  }, [demoInvestments.length]);
+  }, [demoInvestments.length, investments.length]);
 
   const loadAIRecommendations = async () => {
     try {
@@ -216,14 +234,14 @@ const Investments: React.FC = () => {
 
   const generateFallbackRecs = () => ({
     sector_recommendations: [
-      { sector_name: 'Agriculture', expected_return: '+16%', risk_level: 'low', growth_rate: 16, recommendation: 'Strong growth in Rwanda agri-sector.', insight: 'Export demand rising.' },
-      { sector_name: 'Technology', expected_return: '+22%', risk_level: 'medium', growth_rate: 22, recommendation: 'Fintech boom continues.', insight: 'Kigali innovation hub expanding.' },
-      { sector_name: 'Real Estate', expected_return: '+12%', risk_level: 'low', growth_rate: 12, recommendation: 'Steady growth in housing.', insight: 'Urbanization driving demand.' },
-      { sector_name: 'Energy', expected_return: '+18%', risk_level: 'low', growth_rate: 18, recommendation: 'Renewable energy opportunities.', insight: 'Government incentives available.' },
+      { sector_name: 'Farming', expected_return: '+16%', risk_level: 'low', growth_rate: 16, recommendation: 'Strong growth in Rwandan farming.', insight: 'Export demand growing.' },
+      { sector_name: 'Tech', expected_return: '+22%', risk_level: 'medium', growth_rate: 22, recommendation: 'Money-tech boom continues.', insight: 'Kigali tech hub growing.' },
+      { sector_name: 'Property', expected_return: '+12%', risk_level: 'low', growth_rate: 12, recommendation: 'Steady growth in homes.', insight: 'City growth driving demand.' },
+      { sector_name: 'Power', expected_return: '+18%', risk_level: 'low', growth_rate: 18, recommendation: 'Clean power opportunities.', insight: 'Government help ready.' },
     ],
-    savings_recommendations: ['Diversify across multiple sectors', 'Consider long-term investment horizons', 'Monitor market conditions regularly'],
-    sector_allocations: [{ sector: 'Agriculture', allocation: 30, rationale: 'Stable growth' }, { sector: 'Technology', allocation: 25, rationale: 'High growth' }, { sector: 'Energy', allocation: 25, rationale: 'Sustainable' }, { sector: 'Real Estate', allocation: 20, rationale: 'Steady returns' }],
-    priority_actions: ['Enable AI Engine for real-time predictions', 'Start with low-risk sectors', 'Set up regular investment reviews'],
+    savings_recommendations: ['Spread your money across different areas', 'Think about long-term goals', 'Watch market changes often'],
+    sector_allocations: [{ sector: 'Farming', allocation: 30, rationale: 'Steady growth' }, { sector: 'Tech', allocation: 25, rationale: 'Fast growth' }, { sector: 'Power', allocation: 25, rationale: 'Clean' }, { sector: 'Property', allocation: 20, rationale: 'Steady profit' }],
+    priority_actions: ['Turn on AI for live guesses', 'Start with safe areas', 'Set up regular check-ups'],
     financial_health_summary: { rating: 'positive', score: 70 },
     ai_powered: false,
   });
@@ -276,11 +294,17 @@ const Investments: React.FC = () => {
     finally { setBusy(null); }
   };
 
-  const handleDeleteInvestment = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this investment?')) return;
+  const handleDeleteInvestment = async (id: number | string) => {
+    if (!window.confirm('Are you sure you want to remove this investment?')) return;
     setBusy(`delete-${id}`); setError(''); setMessage('');
+    if (typeof id === 'string' && id.startsWith('demo-inv-')) {
+      setDemoInvestments(prev => prev.filter(inv => inv.id !== id));
+      setMessage('Investment removed');
+      setBusy(null);
+      return;
+    }
     try {
-      await investmentService.deleteInvestment(id);
+      await investmentService.deleteInvestment(id as number);
       setMessage('Investment deleted successfully'); loadInvestments();
     } catch {
       setLocalInvestments(prev => prev.filter(inv => inv.id !== id));
@@ -290,11 +314,11 @@ const Investments: React.FC = () => {
   };
 
   const handleCalculateReturns = async () => {
-    if (!calculatorData.amount || !calculatorData.duration) { setError('Please enter amount and duration'); return; }
+    if (!calculatorData.amount || !calculatorData.duration) { setError('Please enter amount and time'); return; }
     try {
       const response = await investmentService.calculateReturns({ type: calculatorData.type, amount: Number(calculatorData.amount), duration: Number(calculatorData.duration), risk_level: calculatorData.risk_level });
       setCalculatorResult(response.data);
-    } catch (err: any) { setError(err.response?.data?.msg || 'Failed to calculate returns'); }
+    } catch (err: any) { setError(err.response?.data?.msg || 'Could not figure out profit'); }
   };
 
   const resetForm = () => { setFormData({ type: 'stocks', amount: '', duration: '', risk_level: 'medium', expected_return: '' }); };
@@ -324,16 +348,32 @@ const Investments: React.FC = () => {
       })) || []
   ).filter((s: any) => s.name);
 
+  const allInvestments: Investment[] = [
+    ...investments,
+    ...demoInvestments.map(d => ({
+      id: d.id,
+      type: d.sector || 'Business',
+      amount: d.amount,
+      duration: d.duration,
+      risk_level: d.risk || 'medium',
+      expected_return: d.expectedReturn,
+      actual_return: d.earned || 0,
+      status: d.status,
+      created_at: d.createdAt ? new Date(d.createdAt).toISOString() : new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })),
+  ];
+
   if (loading) {
     return (
-      <PageLayout title="Investments" subtitle="Loading your investment portfolio...">
+      <PageLayout title="Investments" subtitle="Loading your investments...">
         <div className="flex items-center justify-center py-20"><div className="shimmer" style={{ width: 300, height: 20 }} /></div>
       </PageLayout>
     );
   }
 
   return (
-    <PageLayout title="Investments" subtitle="Manage your investment portfolio with AI guidance">
+    <PageLayout title="Investments" subtitle="Handle your investments with AI help">
       <div className="space-y-6" style={{ display: 'grid', gap: 30 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -341,7 +381,7 @@ const Investments: React.FC = () => {
               padding: '4px 12px', borderRadius: 999, fontSize: 11, fontWeight: 600,
               background: aiOnline ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
               color: aiOnline ? '#10b981' : '#f59e0b', display: 'flex', alignItems: 'center', gap: 4,
-            }}><Brain size={12} /> AI {aiOnline ? 'Active' : 'Fallback'}</span>
+            }}><Brain size={12} /> AI {aiOnline ? 'On' : 'Off'}</span>
             {effectiveBalance !== null && (
               <span style={{
                 padding: '4px 12px', borderRadius: 999, fontSize: 11, fontWeight: 600,
@@ -349,14 +389,14 @@ const Investments: React.FC = () => {
                 display: 'flex', alignItems: 'center', gap: 4,
               }}>
                 <DollarSign size={12} />
-                Balance: RWF {effectiveBalance.toLocaleString()}
-                {localBalanceOffset !== 0 && <span style={{ opacity: 0.6 }}>(demo)</span>}
+                Cash: RWF {effectiveBalance.toLocaleString()}
+                {localBalanceOffset !== 0 && <span style={{ opacity: 0.6 }}>(test)</span>}
               </span>
             )}
           </div>
           <div className="flex flex-wrap gap-3">
-            <LoadingButton onClick={() => setShowCreateForm(!showCreateForm)} variant="primary"><Plus size={16} />{showCreateForm ? 'Cancel' : 'Create Investment'}</LoadingButton>
-            <LoadingButton onClick={() => setShowCalculator(!showCalculator)} variant="secondary"><Calculator size={16} />{showCalculator ? 'Hide Calculator' : 'Calculate Returns'}</LoadingButton>
+            <LoadingButton onClick={() => setShowCreateForm(!showCreateForm)} variant="primary"><Plus size={16} />{showCreateForm ? 'Stop' : 'Start Investment'}</LoadingButton>
+            <LoadingButton onClick={() => setShowCalculator(!showCalculator)} variant="secondary"><Calculator size={16} />{showCalculator ? 'Hide Tool' : 'See Profit'}</LoadingButton>
           </div>
         </div>
 
@@ -375,7 +415,7 @@ const Investments: React.FC = () => {
           <div style={{ display: 'grid', gap: 24 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
               {sectorData.length > 0 && (
-                <SectionCard title={predictionInput.region ? `Sector Performance — ${predictionInput.region.charAt(0).toUpperCase() + predictionInput.region.slice(1)}` : 'Sector Performance'}>
+                <SectionCard title={predictionInput.region ? `Sector Growth — ${predictionInput.region.charAt(0).toUpperCase() + predictionInput.region.slice(1)}` : 'Sector Growth'}>
                   <div style={{ width: '100%', height: 260, marginTop: 8 }}>
                     <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                       <BarChart data={sectorData} layout="vertical">
@@ -393,18 +433,18 @@ const Investments: React.FC = () => {
                   </div>
                   {!predictionInput.region && (
                     <div style={{ marginTop: 8, fontSize: 12, color: mutedColor, textAlign: 'center', fontStyle: 'italic' }}>
-                      Select a district above to see localized sector performance.
+                      Pick a district above to see local area growth.
                     </div>
                   )}
                 </SectionCard>
               )}
 
-              <SectionCard title="Investment Prediction">
+              <SectionCard title="Investment Guess">
                 <div style={{ display: 'grid', gap: 14, marginTop: 8 }}>
                   <div>
-                    <label style={labelStyle}>District</label>
+                    <label style={labelStyle}>Area</label>
                     <select value={predictionInput.region} onChange={e => { setPredictionInput(p => ({ ...p, region: e.target.value, sector: '' })); setPredictionResult(null); }} style={inputStyle}>
-                      <option value="">Select a district...</option>
+                      <option value="">Pick an area...</option>
                       {Object.entries(RWANDA_DISTRICTS).map(([key]) => (
                         <option key={key} value={key}>{key.charAt(0).toUpperCase() + key.slice(1)}</option>
                       ))}
@@ -414,10 +454,10 @@ const Investments: React.FC = () => {
                     <label style={labelStyle}>Business Sector</label>
                     <select value={predictionInput.sector} onChange={e => setPredictionInput(p => ({ ...p, sector: e.target.value }))} style={inputStyle} disabled={!predictionInput.region}>
                       {!predictionInput.region ? (
-                        <option value="">Select a district first...</option>
+                        <option value="">Pick a district first...</option>
                       ) : (
                         <>
-                          <option value="">Choose a business...</option>
+                          <option value="">Pick a business...</option>
                           {(RWANDA_DISTRICTS[predictionInput.region]?.businesses || []).map((b: string) => (
                             <option key={b} value={b}>{b}</option>
                           ))}
@@ -426,10 +466,10 @@ const Investments: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label style={labelStyle}>Investment Amount (RWF)</label>
+                    <label style={labelStyle}>Amount to Invest (RWF)</label>
                     <input type="text" inputMode="decimal" value={predictionInput.amount} onChange={e => setPredictionInput(p => ({ ...p, amount: e.target.value === '' ? 0 : Number(e.target.value) }))} style={inputStyle} />
                   </div>
-                  {predicting && <div style={{ fontSize: 12, color: mutedColor, textAlign: 'center' }}>AI analyzing...</div>}
+                  {predicting && <div style={{ fontSize: 12, color: mutedColor, textAlign: 'center' }}>AI thinking...</div>}
                 </div>
               </SectionCard>
             </div>
@@ -451,7 +491,7 @@ const Investments: React.FC = () => {
                   }}
                 >
                   <Zap size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                  {investing ? 'Processing...' : `Invest RWF ${predictionInput.amount.toLocaleString()}`}
+                  {investing ? 'Working...' : `Put RWF ${predictionInput.amount.toLocaleString()} into this`}
                 </button>
               </>
             )}
@@ -460,10 +500,10 @@ const Investments: React.FC = () => {
               recommendations={[
                 ...(aiRecommendations.savings_recommendations || []),
                 ...(predictionInput.region && RWANDA_DISTRICTS[predictionInput.region]
-                  ? ['Trending: ' + RWANDA_DISTRICTS[predictionInput.region].businesses[0] + ' in ' + predictionInput.region.charAt(0).toUpperCase() + predictionInput.region.slice(1)]
+                  ? ['Popular: ' + RWANDA_DISTRICTS[predictionInput.region].businesses[0] + ' in ' + predictionInput.region.charAt(0).toUpperCase() + predictionInput.region.slice(1)]
                   : []),
                 ...(predictionInput.region && RWANDA_DISTRICTS[predictionInput.region]
-                  ? ['Explore ' + RWANDA_DISTRICTS[predictionInput.region].businesses[1] + ' — growing demand in this district']
+                  ? ['Look at ' + RWANDA_DISTRICTS[predictionInput.region].businesses[1] + ' — growing need in this area']
                   : []),
               ]}
               sectorAllocations={aiRecommendations.sector_allocations || []}
@@ -473,7 +513,7 @@ const Investments: React.FC = () => {
             />
 
             {demoInvestments.length > 0 && (
-              <SectionCard title="Active Investments">
+              <SectionCard title="Live Investments">
                 <div style={{ display: 'grid', gap: 12, marginTop: 8 }}>
                   {demoInvestments.map(inv => {
                     const totalExpected = inv.amount * (inv.expectedReturn / 100);
@@ -484,7 +524,7 @@ const Investments: React.FC = () => {
                           <div>
                             <span style={{ fontSize: 14, fontWeight: 600, color: textColor }}>{inv.sector}</span>
                             <span style={{ marginLeft: 8, padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700, background: inv.status === 'active' ? 'rgba(16,185,129,0.15)' : 'rgba(59,130,246,0.15)', color: inv.status === 'active' ? '#10b981' : '#3b82f6' }}>
-                              {inv.status === 'active' ? 'Growing' : 'Matured'}
+                              {inv.status === 'active' ? 'Active' : 'Done'}
                             </span>
                           </div>
                           <span style={{ fontSize: 12, color: mutedColor }}>
@@ -500,7 +540,7 @@ const Investments: React.FC = () => {
                           <div style={{ height: '100%', borderRadius: 2, width: `${progress}%`, background: progress >= 100 ? '#3b82f6' : '#10b981', transition: 'width 1s' }} />
                         </div>
                         <div style={{ fontSize: 11, color: mutedColor, textAlign: 'right', marginTop: 4 }}>
-                          {progress >= 100 ? 'Fully matured' : `${Math.round(progress)}% of target`}
+                          {progress >= 100 ? 'Fully done' : `${Math.round(progress)}% of goal`}
                         </div>
                       </div>
                     );
@@ -512,33 +552,33 @@ const Investments: React.FC = () => {
         )}
 
         {showCalculator && (
-          <SectionCard title="Investment Calculator" subtitle="Calculate potential returns for different investment scenarios" style={cardBg}>
+          <SectionCard title="Investment Tool" subtitle="See possible profits for different plans" style={cardBg}>
             <div style={{ display: 'grid', gap: 20, marginTop: 20 }}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <label style={{ display: 'grid', gap: 6 }}>
-                  <span style={labelStyle}>Investment Type</span>
+                  <span style={labelStyle}>Type</span>
                   <select value={calculatorData.type} onChange={(e) => setCalculatorData({ ...calculatorData, type: e.target.value })} style={inputStyle}>
-                    {investmentTypes.length === 0 ? (<option value="stocks">Stock Market</option>) : investmentTypes.map(type => (<option key={type.id} value={type.id}>{type.name}</option>))}
+                    {investmentTypes.length === 0 ? (<option value="stocks">Stocks</option>) : investmentTypes.map(type => (<option key={type.id} value={type.id}>{type.name}</option>))}
                   </select>
                 </label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Amount (RWF)</span><input type="text" inputMode="decimal" value={calculatorData.amount} onChange={(e) => setCalculatorData({ ...calculatorData, amount: e.target.value })} placeholder="10000" className="input-field" style={inputStyle} /></label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Duration (months)</span><input type="text" inputMode="numeric" value={calculatorData.duration} onChange={(e) => setCalculatorData({ ...calculatorData, duration: e.target.value })} placeholder="12" className="input-field" style={inputStyle} /></label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Risk Level</span>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Sum (RWF)</span><input type="text" inputMode="decimal" value={calculatorData.amount} onChange={(e) => setCalculatorData({ ...calculatorData, amount: e.target.value })} placeholder="10000" className="input-field" style={inputStyle} /></label>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Time (months)</span><input type="text" inputMode="numeric" value={calculatorData.duration} onChange={(e) => setCalculatorData({ ...calculatorData, duration: e.target.value })} placeholder="12" className="input-field" style={inputStyle} /></label>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Risk</span>
                   <select value={calculatorData.risk_level} onChange={(e) => setCalculatorData({ ...calculatorData, risk_level: e.target.value })} style={inputStyle}>
                     <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
                   </select>
                 </label>
               </div>
-              <button onClick={handleCalculateReturns} className="btn btn-primary" style={{ justifySelf: 'start' }}>Calculate Returns</button>
+              <button onClick={handleCalculateReturns} className="btn btn-primary" style={{ justifySelf: 'start' }}>See Profit</button>
             </div>
             {calculatorResult && (
               <div className={`glass-card ${isDark ? 'card-accent' : ''}`} style={{ marginTop: 20, padding: 20, ...(!isDark ? { background: '#f0f9ff', border: '1px solid #bae6fd' } : {}) }}>
-                <h4 style={{ color: isDark ? '#2dcece' : '#0A9396', margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>Projected Returns</h4>
+                <h4 style={{ color: isDark ? '#2dcece' : '#0A9396', margin: '0 0 16px', fontSize: 16, fontWeight: 700 }}>Expected Profit</h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Principal</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a' }}>{Number(calculatorResult.principal || 0).toLocaleString()} RWF</div></div>
-                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Expected Returns</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#4ade80' : '#059669' }}>{Number(calculatorResult.total_returns || 0).toLocaleString()} RWF</div></div>
-                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Final Amount</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#2dcece' : '#0A9396' }}>{Number(calculatorResult.final_amount || 0).toLocaleString()} RWF</div></div>
-                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Return Rate</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a' }}>{calculatorResult.expected_return_rate}%</div></div>
+                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Main Amount</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a' }}>{Number(calculatorResult.principal || 0).toLocaleString()} RWF</div></div>
+                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Expected Profit</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#4ade80' : '#059669' }}>{Number(calculatorResult.total_returns || 0).toLocaleString()} RWF</div></div>
+                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Total at End</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#2dcece' : '#0A9396' }}>{Number(calculatorResult.final_amount || 0).toLocaleString()} RWF</div></div>
+                  <div><div className="card-title" style={{ color: isDark ? undefined : '#64748b' }}>Profit Rate</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a' }}>{calculatorResult.expected_return_rate}%</div></div>
                 </div>
               </div>
             )}
@@ -546,46 +586,46 @@ const Investments: React.FC = () => {
         )}
 
         {showCreateForm && (
-          <SectionCard title={editingInvestment ? 'Edit Investment' : 'Create New Investment'} subtitle={editingInvestment ? 'Update your existing investment details' : 'Start a new investment with AI guidance'} style={cardBg}>
+          <SectionCard title={editingInvestment ? 'Change Investment' : 'Start New Investment'} subtitle={editingInvestment ? 'Change your current investment info' : 'Start a new investment with AI help'} style={cardBg}>
             <form onSubmit={editingInvestment ? handleUpdateInvestment : handleCreateInvestment} style={{ display: 'grid', gap: 20, marginTop: 20 }}>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {!editingInvestment && (
-                  <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Investment Type</span>
+                  <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Type</span>
                     <select value={formData.type} onChange={(e) => { const t = typeInfo(e.target.value); setFormData({ ...formData, type: e.target.value, risk_level: t?.risk_levels[0] || 'medium', expected_return: '' }); }} required style={inputStyle}>
                       {investmentTypes.length === 0 ? (<option value="stocks">Stock Market</option>) : investmentTypes.map(type => (<option key={type.id} value={type.id}>{type.name}</option>))}
                     </select>
                   </label>
                 )}
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Amount (RWF)</span><input type="text" inputMode="decimal" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} placeholder="10000" required className="input-field" style={inputStyle} />
-                  {typeInfo(formData.type) && <span style={{ fontSize: 11, color: isDark ? '#5f8fa6' : '#6b7280' }}>Min: {typeInfo(formData.type)!.min_amount.toLocaleString()} RWF</span>}
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Sum (RWF)</span><input type="text" inputMode="decimal" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} placeholder="10000" required className="input-field" style={inputStyle} />
+                  {typeInfo(formData.type) && <span style={{ fontSize: 11, color: isDark ? '#5f8fa6' : '#6b7280' }}>At least: {typeInfo(formData.type)!.min_amount.toLocaleString()} RWF</span>}
                 </label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Duration (months)</span><input type="text" inputMode="numeric" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} placeholder="12" required className="input-field" style={inputStyle} /></label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Risk Level</span>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Time (months)</span><input type="text" inputMode="numeric" value={formData.duration} onChange={(e) => setFormData({ ...formData, duration: e.target.value })} placeholder="12" required className="input-field" style={inputStyle} /></label>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Risk</span>
                   <select value={formData.risk_level} onChange={(e) => setFormData({ ...formData, risk_level: e.target.value })} required style={inputStyle}>
                     {(typeInfo(formData.type)?.risk_levels || ['low', 'medium', 'high']).map(level => (<option key={level} value={level}>{level.charAt(0).toUpperCase() + level.slice(1)}</option>))}
                   </select>
                 </label>
-                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Expected Return % (Optional)</span><input type="text" inputMode="decimal" value={formData.expected_return} onChange={(e) => setFormData({ ...formData, expected_return: e.target.value })} placeholder={typeInfo(formData.type)?.expected_returns[formData.risk_level]?.toString()} className="input-field" style={inputStyle} /></label>
+                <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Expected Profit % (not needed)</span><input type="text" inputMode="decimal" value={formData.expected_return} onChange={(e) => setFormData({ ...formData, expected_return: e.target.value })} placeholder={typeInfo(formData.type)?.expected_returns[formData.risk_level]?.toString()} className="input-field" style={inputStyle} /></label>
               </div>
               <div className="flex flex-wrap gap-3">
-                <button type="submit" className="btn btn-primary" disabled={busy !== null} aria-busy={busy !== null}>{busy === 'create' || busy === 'update' ? 'Processing...' : (editingInvestment ? 'Update Investment' : 'Create Investment')}</button>
+                <button type="submit" className="btn btn-primary" disabled={busy !== null} aria-busy={busy !== null}>{busy === 'create' || busy === 'update' ? 'Working...' : (editingInvestment ? 'Change Investment' : 'Start Investment')}</button>
                 <button type="button" className={isDark ? 'btn btn-ghost' : 'btn btn-outline'}
                   style={!isDark ? { background: '#ffffff', color: '#374151', border: '1px solid #d1d5db', padding: '10px 20px', borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer' } : undefined}
-                  onClick={() => { setShowCreateForm(false); setEditingInvestment(null); resetForm(); }} disabled={busy !== null}>Cancel</button>
+                  onClick={() => { setShowCreateForm(false); setEditingInvestment(null); resetForm(); }} disabled={busy !== null}>Stop</button>
               </div>
             </form>
           </SectionCard>
         )}
 
-        <SectionCard title="Your Investments" subtitle={investments.length === 0 ? 'Start building your investment portfolio' : 'Manage your active investments'} style={cardBg}>
-          {investments.length === 0 ? (
+        <SectionCard title="Your Investments" subtitle={allInvestments.length === 0 ? 'Start building your investments' : 'Handle your current investments'} style={cardBg}>
+          {allInvestments.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 0' }}>
-              <div style={{ color: mutedColor, marginBottom: 16 }}>No investments yet. Create your first investment!</div>
-              <LoadingButton onClick={() => setShowCreateForm(true)} variant="primary">Create Your First Investment</LoadingButton>
+              <div style={{ color: mutedColor, marginBottom: 16 }}>No investments yet. Start your first one!</div>
+              <LoadingButton onClick={() => setShowCreateForm(true)} variant="primary">Start Your First Investment</LoadingButton>
             </div>
           ) : (
             <div style={{ display: 'grid', gap: 16 }}>
-              {investments.map((investment) => {
+              {allInvestments.map((investment) => {
                 const info = typeInfo(investment.type);
                 return (
                   <motion.div key={investment.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
@@ -597,15 +637,15 @@ const Investments: React.FC = () => {
                         <span className={`chip ${riskColors[investment.risk_level] || 'chip-teal'}`}>{investment.risk_level} risk</span>
                       </div>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Amount</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#f1f5f9' : '#111827' }}>{investment.amount.toLocaleString()} RWF</div></div>
-                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Duration</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#f1f5f9' : '#111827' }}>{investment.duration} months</div></div>
-                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Expected Return</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#4ade80' : '#059669' }}>{investment.expected_return}%</div></div>
-                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Actual Returns</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#2dcece' : '#0A9396' }}>{investment.actual_return.toLocaleString()} RWF</div></div>
+                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Sum</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#f1f5f9' : '#111827' }}>{investment.amount.toLocaleString()} RWF</div></div>
+                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Time</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#f1f5f9' : '#111827' }}>{investment.duration} months</div></div>
+                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Expected Profit</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#4ade80' : '#059669' }}>{investment.expected_return}%</div></div>
+                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Actual Profit</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#2dcece' : '#0A9396' }}>{investment.actual_return.toLocaleString()} RWF</div></div>
                       </div>
                       <div style={{ marginTop: 10, fontSize: 11, color: mutedColor }}>Created: {new Date(investment.created_at).toLocaleDateString()}</div>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {investment.status === 'active' && (<LoadingButton onClick={() => startEditInvestment(investment)} disabled={busy !== null} variant="outline" size="sm"><Edit2 size={14} /> Edit</LoadingButton>)}
+                      {investment.status === 'active' && typeof investment.id !== 'string' && (<LoadingButton onClick={() => startEditInvestment(investment)} disabled={busy !== null} variant="outline" size="sm"><Edit2 size={14} /> Edit</LoadingButton>)}
                       <LoadingButton onClick={() => handleDeleteInvestment(investment.id)} disabled={busy === `delete-${investment.id}` || investment.status !== 'active'} variant="ghost" size="sm"><Trash2 size={14} /> Delete</LoadingButton>
                     </div>
                   </motion.div>
@@ -617,7 +657,7 @@ const Investments: React.FC = () => {
       </div>
       {pinAction && (
         <PinModal
-          action="Confirm investment"
+          action="OK investment"
           onSuccess={() => { const cb = pinAction.cb; setPinAction(null); cb(); }}
           onCancel={() => setPinAction(null)}
         />

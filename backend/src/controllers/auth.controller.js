@@ -9,27 +9,27 @@ exports.register = async (req, res) => {
     const email = rawEmail?.toString().trim().toLowerCase();
     try {
         if (!name || !email || !phone || !password) {
-            return res.status(400).json({ msg: 'Name, email, phone, and password are required' });
+            return res.status(400).json({ msg: 'Name, email, phone, and password needed' });
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return res.status(400).json({ msg: 'Please enter a valid email address' });
+            return res.status(400).json({ msg: 'Enter a valid email address' });
         }
 
         if (phone.length < 10) {
-            return res.status(400).json({ msg: 'Please enter a valid phone number' });
+            return res.status(400).json({ msg: 'Enter a valid phone number' });
         }
 
         if (password.length < 8) {
-            return res.status(400).json({ msg: 'Password must be at least 8 characters long' });
+            return res.status(400).json({ msg: 'Password must be 8 or more characters' });
         }
 
         let existing = await User.findByEmail(email);
-        if (existing) return res.status(400).json({ msg: 'User with this email already exists' });
+        if (existing) return res.status(400).json({ msg: 'An account with this email already exists' });
 
         existing = await User.findByPhone(phone);
-        if (existing) return res.status(400).json({ msg: 'User with this phone number already exists' });
+        if (existing) return res.status(400).json({ msg: 'An account with this phone already exists' });
 
         const user = await User.create({ name, email, phone, password, balance: 100000.00, email_verified: false, profile_completed: false, pin_set: false });
 
@@ -44,8 +44,8 @@ exports.register = async (req, res) => {
 
         const response = {
             msg: result.sent
-                ? 'Registration successful. Please verify your email to continue.'
-                : 'Registration successful but email delivery failed. Use the OTP below to verify.',
+                ? 'Account created! Check your email to verify.'
+                : 'Account created but email delivery failed. Use the OTP below to verify.',
             token,
             user: {
                 id: user.id,
@@ -78,14 +78,14 @@ exports.login = async (req, res) => {
     const email = rawEmail?.toString().trim().toLowerCase();
     try {
         if (!email || !password) {
-            return res.status(400).json({ msg: 'Email and password are required' });
+            return res.status(400).json({ msg: 'Email and password needed' });
         }
 
         const user = await User.findByEmail(email);
-        if (!user) return res.status(400).json({ msg: 'Invalid credentials' });
+        if (!user) return res.status(400).json({ msg: 'Wrong email or password' });
 
         const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ msg: 'Invalid credentials' });
+        if (!isMatch) return res.status(400).json({ msg: 'Wrong email or password' });
 
         const payload = { user: { id: user.id, role: user.role } };
         const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });

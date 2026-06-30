@@ -210,7 +210,7 @@ const LoanApplication: React.FC = () => {
                                     <TrendingUp size={20} color="#3b82f6" />
                                     <span style={{ fontWeight: 700, fontSize: 16, color: '#3b82f6' }}>
                                         {aiPrediction.approval_probability 
-                                            ? `${(aiPrediction.approval_probability * 100).toFixed(0)}%` 
+                                            ? `${Number(aiPrediction.approval_probability).toFixed(0)}%` 
                                             : aiPrediction.approval_status === 'APPROVED' ? '> 70%' : '< 50%'}
                                     </span>
                                 </div>
@@ -221,7 +221,7 @@ const LoanApplication: React.FC = () => {
                                     <AlertTriangle size={20} color="#f59e0b" />
                                     <span style={{ fontWeight: 700, fontSize: 16, color: '#f59e0b' }}>
                                         {aiPrediction.default_probability 
-                                            ? `${(aiPrediction.default_probability * 100).toFixed(1)}%` 
+                                            ? `${Number(aiPrediction.default_probability).toFixed(1)}%` 
                                             : 'N/A'}
                                     </span>
                                 </div>

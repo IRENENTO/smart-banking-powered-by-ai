@@ -1,11 +1,10 @@
 const axios = require('axios');
 const { AI_ENGINE_URL, AI_ENGINE_API_KEY } = require('../config/env');
 
-const AI_TIMEOUT = 30000; // Increased timeout for ML predictions
+const AI_TIMEOUT = 30000;
 
-// Log configuration on startup
 console.log(`[AI Service] Configuring AI Engine at: ${AI_ENGINE_URL}`);
-console.log(`[AI Service] API Key configured: ${AI_ENGINE_API_KEY ? '✅ Yes' : '❌ Missing'}`);
+console.log(`[AI Service] API Key configured: ${AI_ENGINE_API_KEY ? 'Yes' : 'Missing'}`);
 
 const aiClient = axios.create({
     baseURL: AI_ENGINE_URL,
@@ -16,7 +15,6 @@ const aiClient = axios.create({
     }
 });
 
-// Add response interceptor for better error handling
 aiClient.interceptors.response.use(
     response => response,
     error => {
@@ -54,13 +52,19 @@ exports.predictLoan = async (data) => {
                 employment_status: data.employment_status || 'employed',
                 transaction_history: data.transaction_history || []
             });
+            // Unify response format for frontend
             return {
                 success: true,
-                risk_score: result.risk_score,
-                approval_status: result.loan_approval ? 'APPROVED' : 'REJECTED',
-                default_probability: result.default_probability,
-                approval_probability: result.approval_probability,
-                explanation: result.reason,
+                risk_score: result.risk_score ?? 50,
+                approval_status: result.prediction === 'Approved' ? 'APPROVED' : 'REJECTED',
+                approved: result.loan_approval ?? (result.prediction === 'Approved'),
+                prediction: result.prediction || (result.loan_approval ? 'Approved' : 'Rejected'),
+                confidence: result.confidence ?? (result.approval_probability ? Math.round(result.approval_probability * 100) : 50),
+                risk: result.risk || (result.risk_score < 30 ? 'Low' : result.risk_score < 60 ? 'Medium' : 'High'),
+                default_probability: result.default_probability ? result.default_probability * 100 : (result.risk_score || 50),
+                approval_probability: result.approval_probability ? result.approval_probability * 100 : (100 - (result.risk_score || 50)),
+                explanation: result.reason || result.reason || 'AI-powered assessment.',
+                suggested_action: result.suggested_action || '',
                 ai_powered: true
             };
         },
@@ -70,8 +74,14 @@ exports.predictLoan = async (data) => {
                 success: true,
                 risk_score: riskScore,
                 approval_status: riskScore < 60 ? 'APPROVED' : riskScore < 75 ? 'REVIEW' : 'REJECTED',
-                default_probability: riskScore / 100,
+                approved: riskScore < 60,
+                prediction: riskScore < 60 ? 'Approved' : 'Rejected',
+                confidence: 100 - riskScore,
+                risk: riskScore < 30 ? 'Low' : riskScore < 60 ? 'Medium' : 'High',
+                default_probability: riskScore,
+                approval_probability: 100 - riskScore,
                 explanation: riskScore < 60 ? 'Low risk profile.' : 'High risk detected.',
+                suggested_action: riskScore < 60 ? 'Loan Approved' : 'Manual review recommended',
                 ai_powered: false
             };
         }
@@ -87,15 +97,21 @@ exports.detectFraud = async (data) => {
                 location: data.location || 'unknown',
                 device: data.device || 'unknown',
                 frequency: data.frequency || 1,
+                time: data.time || new Date().getHours(),
                 transaction_time: data.transaction_time || new Date().toISOString()
             });
             return {
                 success: true,
-                fraud_risk: result.fraud_risk,
-                risk_percentage: result.risk_percentage,
-                is_anomaly: result.is_anomaly,
-                action_required: result.action_required,
-                risk_flags: result.risk_flags,
+                fraud_risk: result.fraud_risk || result.risk_level || 'LOW',
+                risk_percentage: result.risk_percentage || result.fraud_score || 0,
+                fraud_score: result.fraud_score || result.risk_percentage || 0,
+                risk_level: result.risk_level || result.fraud_risk || 'LOW',
+                confidence: result.confidence || result.risk_percentage || 0,
+                color: result.color || (result.risk_percentage < 25 ? 'Green' : result.risk_percentage < 55 ? 'Yellow' : 'Red'),
+                is_anomaly: result.is_anomaly || false,
+                action_required: result.action_required || false,
+                risk_flags: result.risk_flags || [],
+                suggested_action: result.suggested_action || '',
                 ai_powered: true
             };
         },
@@ -110,9 +126,14 @@ exports.detectFraud = async (data) => {
                 success: true,
                 fraud_risk: riskPct < 25 ? 'LOW' : riskPct < 55 ? 'MEDIUM' : 'HIGH',
                 risk_percentage: riskPct,
+                fraud_score: riskPct,
+                risk_level: riskPct < 25 ? 'LOW' : riskPct < 55 ? 'MEDIUM' : 'HIGH',
+                confidence: riskPct,
+                color: riskPct < 25 ? 'Green' : riskPct < 55 ? 'Yellow' : 'Red',
                 is_anomaly: riskPct > 50,
                 action_required: riskPct > 70,
                 risk_flags: riskPct > 50 ? ['unusual_amount'] : [],
+                suggested_action: riskPct > 70 ? 'Block transaction' : 'No action needed',
                 ai_powered: false
             };
         }
@@ -138,7 +159,7 @@ exports.predictSavings = async (data) => {
                 recommended_monthly_saving: result.recommended_monthly_saving,
                 disposable_income: result.disposable_income,
                 savings_rate_pct: result.savings_rate_pct,
-                recommendations: result.recommendations,
+                recommendations: result.recommendations || [],
                 ai_powered: true
             };
         },
@@ -176,14 +197,17 @@ exports.analyzeSpending = async (transactions, monthlyIncome) => {
             });
             return {
                 success: true,
-                category_breakdown: result.category_breakdown || [],
+                category_breakdown: (result.category_breakdown || []).map(c => ({
+                    name: c.category || c.name,
+                    value: c.amount || c.value || 0,
+                })),
                 total_spent: result.total_spent || 0,
                 total_income: result.monthly_income || result.total_income || 0,
                 savings_rate: result.savings_rate || 0,
                 top_spending_category: result.top_category || result.top_spending_category || 'N/A',
-                spending_insights: result.spending_insight || result.spending_insights || 'No insights available.',
+                spending_insights: typeof result.spending_insight === 'string' ? [result.spending_insight] : (result.spending_insight || result.spending_insights || ['No insights available.']),
                 recommendations: result.recommendations || [],
-                ai_powered: true
+                ai_powered: result.ai_powered !== false
             };
         },
         () => {
@@ -197,7 +221,7 @@ exports.analyzeSpending = async (transactions, monthlyIncome) => {
                 total_income: income,
                 savings_rate: income > 0 ? Math.max(0, Math.round((1 - totalSpent / income) * 100)) : 0,
                 top_spending_category: 'N/A',
-                spending_insights: ['Connect to AI Engine for detailed analysis.'],
+                spending_insights: ['AI Engine unavailable — using basic analysis.'],
                 recommendations: ['Enable AI Engine for personalized spending insights.'],
                 ai_powered: false
             };
@@ -230,12 +254,13 @@ exports.getRecommendations = async (data) => {
             };
             return {
                 success: true,
-                financial_health_summary: result.financial_health_summary,
+                financial_health_summary: result.financial_health_summary || { score: 60, rating: 'Fair' },
                 savings_recommendations: result.savings_recommendation ? formatRecToStrings(result.savings_recommendation) : [],
                 investment_recommendations: result.investment_recommendation ? formatRecToStrings(result.investment_recommendation) : [],
                 budgeting_advice: result.budgeting_recommendation ? formatRecToStrings(result.budgeting_recommendation) : [],
                 sector_recommendations: result.sector_recommendations || [],
                 priority_actions: result.priority_actions || [],
+                all_recommendations: result.all_recommendations || [],
                 ai_powered: true
             };
         },
@@ -256,18 +281,69 @@ exports.getRecommendations = async (data) => {
     );
 };
 
+// ==================== MARKET INTELLIGENCE ====================
+exports.getMarketIntelligence = async () => {
+    return safeAICall(
+        async () => {
+            const { data } = await aiClient.post('/market-intelligence', {});
+            return {
+                success: true,
+                sector_predictions: data.sector_predictions || [],
+                market_summary: data.market_summary || '',
+                investment_advice: data.investment_advice || [],
+                ai_powered: true
+            };
+        },
+        () => ({
+            success: true,
+            sector_predictions: [],
+            market_summary: 'AI Engine unavailable for market predictions.',
+            investment_advice: ['Connect to AI Engine for market intelligence.'],
+            ai_powered: false
+        })
+    );
+};
+
+// ==================== AI DASHBOARD ====================
+exports.getAIDashboard = async () => {
+    return safeAICall(
+        async () => {
+            const { data } = await aiClient.get('/ai-dashboard');
+            return {
+                success: true,
+                models: data.models || [],
+                engine_status: data.engine_status || 'operational',
+                model_version: data.model_version || '2.0.0',
+                total_predictions: data.total_predictions || 0,
+                ai_powered: true
+            };
+        },
+        () => ({
+            success: true,
+            models: [],
+            engine_status: 'offline',
+            model_version: 'unknown',
+            total_predictions: 0,
+            ai_powered: false
+        })
+    );
+};
+
 // ==================== MODEL STATUS ====================
 exports.getModelStatus = async () => {
     return safeAICall(
         async () => {
             const { data } = await aiClient.get('/model-status');
+            const models = Object.entries(data.models || {}).map(([name, info]) => ({
+                name, status: info.available ? 'available' : 'unavailable', size_kb: info.size_kb
+            }));
             return {
                 success: true,
-                models: data.models || data,
-                status: data.status || 'active',
-                last_trained: data.last_trained,
-                accuracy: data.accuracy,
-                version: data.version,
+                models,
+                status: 'active',
+                last_trained: '',
+                accuracy: 0,
+                version: '2.0.0',
                 ai_powered: true
             };
         },
@@ -289,9 +365,7 @@ exports.getModelStatus = async () => {
 exports.retrainModel = async (modelName) => {
     return safeAICall(
         async () => {
-            const { data } = await aiClient.post('/retrain', {
-                model: modelName || 'all'
-            });
+            const { data } = await aiClient.post('/retrain', { model: modelName || 'all' });
             return {
                 success: true,
                 message: data.message || 'Model retraining initiated',
@@ -321,11 +395,7 @@ exports.getAIEngineHealth = async () => {
         };
     } catch (error) {
         console.error('AI Engine health check failed:', error.message);
-        return {
-            status: 'unhealthy',
-            error: error.message,
-            ai_powered: false
-        };
+        return { status: 'unhealthy', error: error.message, ai_powered: false };
     }
 };
 
@@ -374,7 +444,7 @@ const ruleBasedRisk = (data) => {
     return Math.max(0, Math.min(100, score));
 };
 
-// ==================== DEPRECATED ALIASES (backward compat) ====================
+// ==================== DEPRECATED ALIASES ====================
 exports.analyzeLoanRisk = exports.predictLoan;
 exports.analyzeLoanRiskLegacy = exports.predictLoan;
 

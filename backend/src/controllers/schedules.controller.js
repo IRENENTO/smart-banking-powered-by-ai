@@ -20,11 +20,11 @@ exports.createSchedule = async (req, res) => {
         const { name, description, amount, frequency, startDate, endDate, recipient_type, recipient_value } = req.body;
 
         if (!name || !amount || amount <= 0 || !startDate || !frequency) {
-            return res.status(400).json({ msg: 'Name, amount, start date, and frequency are required' });
+            return res.status(400).json({ msg: 'Name, amount, start date, and frequency needed' });
         }
 
         if (!['daily', 'weekly', 'monthly'].includes(frequency)) {
-            return res.status(400).json({ msg: 'Frequency must be daily, weekly, or monthly' });
+            return res.status(400).json({ msg: 'Pick daily, weekly, or monthly' });
         }
 
         const connection = global.dbConnection;
@@ -50,7 +50,7 @@ exports.createSchedule = async (req, res) => {
             WHERE id = ?
         `, [result.insertId]);
 
-        res.status(201).json({ msg: 'Schedule created successfully', data: rows[0] });
+        res.status(201).json({ msg: 'Schedule created', data: rows[0] });
     } catch (err) {
         console.error('Create schedule error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });
@@ -94,7 +94,7 @@ exports.updateSchedule = async (req, res) => {
             [scheduleId]
         );
 
-        res.json({ msg: 'Schedule updated successfully', data: rows[0] });
+        res.json({ msg: 'Schedule updated', data: rows[0] });
     } catch (err) {
         console.error('Update schedule error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });
@@ -107,7 +107,7 @@ exports.pauseSchedule = async (req, res) => {
         const { action } = req.body;
 
         if (!action || !['pause', 'resume'].includes(action)) {
-            return res.status(400).json({ msg: 'Action must be "pause" or "resume"' });
+            return res.status(400).json({ msg: 'Pick "pause" or "resume"' });
         }
 
         const newStatus = action === 'pause' ? 'paused' : 'active';
@@ -143,7 +143,7 @@ exports.deleteSchedule = async (req, res) => {
             return res.status(404).json({ msg: 'Schedule not found' });
         }
 
-        res.json({ msg: 'Schedule deleted successfully' });
+        res.json({ msg: 'Schedule deleted' });
     } catch (err) {
         console.error('Delete schedule error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });

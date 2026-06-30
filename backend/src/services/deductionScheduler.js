@@ -42,13 +42,13 @@ async function processLoanDeductions(connection) {
             const newStatus = isCompleted ? 'completed' : loan.status;
 
             await connection.execute(
-                'UPDATE accounts SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND balance >= ?',
+                'UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?',
                 [deductionAmount, loan.account_id, deductionAmount]
             );
 
             await connection.execute(`
                 UPDATE loans
-                SET paid_amount = ?, next_deduction_date = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+                SET paid_amount = ?, next_deduction_date = ?, status = ?
                 WHERE id = ?
             `, [newPaidAmount, nextDate, newStatus, loan.id]);
 
@@ -86,7 +86,7 @@ async function processPaymentSchedules(connection) {
             }
 
             await connection.execute(
-                'UPDATE accounts SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND balance >= ?',
+                'UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?',
                 [amount, schedule.account_id, amount]
             );
 
@@ -99,7 +99,7 @@ async function processPaymentSchedules(connection) {
 
             await connection.execute(`
                 UPDATE payment_schedules
-                SET next_payment_date = ?, status = ?, updated_at = CURRENT_TIMESTAMP
+                SET next_payment_date = ?, status = ?
                 WHERE id = ?
             `, [newStatus === 'completed' ? null : nextDate, newStatus, schedule.id]);
 
@@ -144,7 +144,7 @@ async function processSavingsGoals(connection) {
             const isCompleted = newCurrent >= targetAmount;
 
             await connection.execute(
-                'UPDATE accounts SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND balance >= ?',
+                'UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?',
                 [amount, goal.account_id, amount]
             );
 

@@ -119,7 +119,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
                 <div className="flex-1 p-6 overflow-y-auto">
                     {children}
                 </div>
-                <Footer />
+                {/* Footer removed per user request */}
             </main>
         </div>
     );

@@ -5,11 +5,11 @@ exports.applyForLoan = async (req, res) => {
     const { amount, purpose, duration, monthlyIncome, existingDebt, deductionAmount, deductionPeriod } = req.body;
     try {
         if (!amount || amount <= 0) {
-            return res.status(400).json({ msg: 'Invalid loan amount' });
+            return res.status(400).json({ msg: 'Enter a valid loan amount' });
         }
 
         if (!duration || duration <= 0) {
-            return res.status(400).json({ msg: 'Invalid loan duration' });
+            return res.status(400).json({ msg: 'Enter a valid loan duration' });
         }
 
         const aiResult = await aiService.analyzeLoanRisk({
@@ -49,7 +49,7 @@ exports.applyForLoan = async (req, res) => {
         });
 
         res.status(201).json({
-            msg: 'Loan application submitted successfully',
+            msg: 'Loan application sent',
             loan: {
                 id: loan.id,
                 user_id: loan.user_id,
@@ -141,7 +141,7 @@ exports.updateLoanStatus = async (req, res) => {
         const { loanId, status, riskScore } = req.body;
 
         if (!loanId || !status || !['pending', 'approved', 'rejected'].includes(status)) {
-            return res.status(400).json({ msg: 'Invalid request parameters' });
+            return res.status(400).json({ msg: 'Invalid request' });
         }
 
         const loan = await Loan.findById(loanId);
@@ -151,7 +151,7 @@ exports.updateLoanStatus = async (req, res) => {
 
         await Loan.updateStatus(loanId, status, riskScore);
 
-        res.json({ msg: 'Loan status updated successfully', status });
+        res.json({ msg: 'Loan status updated', status });
     } catch (err) {
         console.error('Update loan error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });
@@ -169,20 +169,20 @@ exports.deleteLoan = async (req, res) => {
         }
 
         if (loan.user_id !== userId) {
-            return res.status(403).json({ msg: 'Not authorized to delete this loan' });
+            return res.status(403).json({ msg: 'You cannot delete this loan' });
         }
 
         if (loan.status !== 'pending') {
-            return res.status(400).json({ msg: 'Can only delete pending loan applications' });
+            return res.status(400).json({ msg: 'Only pending loans can be deleted' });
         }
 
         const deleted = await Loan.delete(loanId, userId);
 
         if (!deleted) {
-            return res.status(404).json({ msg: 'Loan not found or already deleted' });
+            return res.status(404).json({ msg: 'Loan not found or already removed' });
         }
 
-        res.json({ msg: 'Loan application deleted successfully' });
+        res.json({ msg: 'Loan deleted' });
     } catch (err) {
         console.error('Delete loan error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });
@@ -205,8 +205,8 @@ exports.checkEligibility = async (req, res) => {
             interestRate: 12.5,
             monthlyPayment: Math.round(eligibleAmount / 24),
             message: eligible
-              ? 'Great news! You qualify for a loan based on your financial profile.'
-              : 'Your existing debt is too high. Reduce it to improve eligibility.'
+              ? 'Great! You qualify for a loan based on your profile.'
+              : 'Your debt is too high. Lower it to qualify.'
         });
     } catch (err) {
         console.error('Check eligibility error:', err);
@@ -220,7 +220,7 @@ exports.requestExtension = async (req, res) => {
         const { extraDays } = req.body;
 
         if (!extraDays || extraDays <= 0 || extraDays > 365) {
-            return res.status(400).json({ msg: 'Invalid extension days (1-365)' });
+            return res.status(400).json({ msg: 'Enter between 1 and 365 days' });
         }
 
         const loan = await Loan.findById(loanId);
@@ -229,7 +229,7 @@ exports.requestExtension = async (req, res) => {
         }
 
         if (loan.status !== 'approved' && loan.status !== 'disbursed') {
-            return res.status(400).json({ msg: 'Can only extend active loans' });
+            return res.status(400).json({ msg: 'Only active loans can be extended' });
         }
 
         const result = await Loan.requestExtension(loanId, extraDays);
@@ -266,7 +266,7 @@ exports.makePayment = async (req, res) => {
         const { amount } = req.body;
 
         if (!amount || amount <= 0) {
-            return res.status(400).json({ msg: 'Invalid payment amount' });
+            return res.status(400).json({ msg: 'Enter a valid payment amount' });
         }
 
         const loan = await Loan.findById(loanId);
@@ -275,7 +275,7 @@ exports.makePayment = async (req, res) => {
         }
 
         if (loan.status !== 'approved' && loan.status !== 'active' && loan.status !== 'disbursed') {
-            return res.status(400).json({ msg: 'Can only pay active loans' });
+            return res.status(400).json({ msg: 'Only active loans can be paid' });
         }
 
         const User = require('../models/User');
@@ -283,7 +283,7 @@ exports.makePayment = async (req, res) => {
         const amountNum = parseFloat(amount);
 
         if (currentBalance < amountNum) {
-            return res.status(400).json({ msg: 'Insufficient balance' });
+            return res.status(400).json({ msg: 'Not enough money' });
         }
 
         const newBalance = currentBalance - amountNum;
@@ -306,7 +306,7 @@ exports.makePayment = async (req, res) => {
         );
 
         res.json({
-            msg: result.isCompleted ? 'Loan fully paid!' : 'Payment recorded successfully',
+            msg: result.isCompleted ? 'Loan fully paid!' : 'Payment recorded',
             data: result
         });
     } catch (err) {
@@ -321,11 +321,11 @@ exports.setDeduction = async (req, res) => {
         const { deductionAmount, deductionPeriod } = req.body;
 
         if (!deductionAmount || deductionAmount <= 0) {
-            return res.status(400).json({ msg: 'Invalid deduction amount' });
+            return res.status(400).json({ msg: 'Enter a valid deduction amount' });
         }
 
         if (!['daily', 'weekly', 'monthly'].includes(deductionPeriod)) {
-            return res.status(400).json({ msg: 'Invalid deduction period. Use daily, weekly, or monthly' });
+            return res.status(400).json({ msg: 'Pick daily, weekly, or monthly' });
         }
 
         const loan = await Loan.findById(loanId);
@@ -334,12 +334,12 @@ exports.setDeduction = async (req, res) => {
         }
 
         if (loan.status !== 'approved' && loan.status !== 'active' && loan.status !== 'disbursed') {
-            return res.status(400).json({ msg: 'Can only set deduction for active loans' });
+            return res.status(400).json({ msg: 'Only active loans can have deductions' });
         }
 
         await Loan.setDeductionSchedule(loanId, deductionAmount, deductionPeriod);
 
-        res.json({ msg: 'Deduction schedule set successfully' });
+        res.json({ msg: 'Deduction schedule saved' });
     } catch (err) {
         console.error('Set deduction error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });

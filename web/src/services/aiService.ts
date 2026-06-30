@@ -14,9 +14,14 @@ export interface LoanPredictionResponse {
     success: boolean;
     risk_score: number;
     approval_status: 'APPROVED' | 'REJECTED' | 'REVIEW';
+    approved?: boolean;
+    prediction?: string;
+    confidence?: number;
+    risk?: string;
     default_probability: number;
     approval_probability: number;
     explanation: string;
+    suggested_action?: string;
     ai_powered: boolean;
 }
 
@@ -26,19 +31,24 @@ export interface FraudDetectionRequest {
     device?: string;
     frequency?: number;
     transaction_time?: string;
+    time?: number;
 }
 
 export interface FraudDetectionResponse {
     success: boolean;
-    fraud_risk: 'LOW' | 'MEDIUM' | 'HIGH';
+    fraud_risk: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
     risk_percentage: number;
+    fraud_score?: number;
+    risk_level?: string;
+    confidence?: number;
+    color?: string;
     is_anomaly: boolean;
     is_fraudulent?: boolean;
-    risk_level?: string;
     reason?: string;
-    location?: string;
     action_required: boolean;
     risk_flags: string[];
+    suggested_action?: string;
+    location?: string;
     ai_powered: boolean;
 }
 
@@ -75,19 +85,28 @@ export interface RecommendationRequest {
 
 export interface RecommendationResponse {
     success: boolean;
-    financial_health_summary: { score: number; rating: string };
+    financial_health_summary: any;
     savings_recommendations: string[];
     investment_recommendations: string[];
     budgeting_advice: string[];
-    sector_recommendations: Array<{ sector_name: string; expected_return: string; risk_level: string }>;
+    sector_recommendations: Array<{
+        sector?: string;
+        sector_name?: string;
+        allocation?: string;
+        reason?: string;
+        expected_return?: string | number;
+        risk_level?: string;
+        growth_rate?: number;
+    }>;
     priority_actions: string[];
+    all_recommendations?: Array<{ title: string; confidence: number; priority: string; reason: string; expected_impact: string }>;
     total_predictions?: number;
     ai_powered: boolean;
 }
 
 export interface SpendingAnalysisResponse {
     success: boolean;
-    category_breakdown: Array<{ name: string; value: number }>;
+    category_breakdown: Array<{ name: string; value: number; category?: string; amount?: number; percentage?: number; transaction_count?: number }>;
     total_spent: number;
     total_income: number;
     savings_rate: number;
@@ -99,28 +118,66 @@ export interface SpendingAnalysisResponse {
     ai_powered: boolean;
 }
 
-// Helper function for fallback responses
+export interface MarketIntelligenceResponse {
+    success: boolean;
+    sector_predictions: Array<{
+        sector: string;
+        trend: string;
+        expected_return: number;
+        risk_level: string;
+        growth_potential: string;
+        recommendation: string;
+    }>;
+    market_summary: string;
+    investment_advice: string[];
+    ai_powered: boolean;
+}
+
+export interface AIDashboardResponse {
+    success: boolean;
+    models: Array<{
+        model_name: string;
+        available: boolean;
+        size_kb: number;
+        accuracy: number;
+        precision: number;
+        recall: number;
+        f1_score: number;
+        training_date: string;
+        dataset_size: number;
+        algorithm: string;
+    }>;
+    engine_status: string;
+    model_version: string;
+    total_predictions: number;
+    ai_powered: boolean;
+}
+
+// ==================== FALLBACKS ====================
+
 const getFallbackLoanResponse = (data: LoanPredictionRequest): LoanPredictionResponse => {
     const income = data.income || 0;
     const loanAmount = data.loan_amount || 0;
     let riskScore = 50;
-    
     if (income > 0) {
-        const debtToIncome = loanAmount / income;
-        if (debtToIncome > 2) riskScore += 20;
-        else if (debtToIncome > 1) riskScore += 10;
+        const dti = loanAmount / income;
+        if (dti > 2) riskScore += 20;
+        else if (dti > 1) riskScore += 10;
         else riskScore -= 10;
     }
-    
     riskScore = Math.max(0, Math.min(100, riskScore));
-    
     return {
         success: false,
         risk_score: riskScore,
         approval_status: riskScore < 60 ? 'APPROVED' : riskScore < 75 ? 'REVIEW' : 'REJECTED',
-        default_probability: riskScore / 100,
-        approval_probability: (100 - riskScore) / 100,
+        approved: riskScore < 60,
+        prediction: riskScore < 60 ? 'Approved' : 'Rejected',
+        confidence: 100 - riskScore,
+        risk: riskScore < 30 ? 'Low' : riskScore < 60 ? 'Medium' : 'High',
+        default_probability: riskScore,
+        approval_probability: 100 - riskScore,
         explanation: riskScore < 60 ? 'Based on your financial profile, you have good approval chances.' : 'High risk detected. Consider reducing loan amount.',
+        suggested_action: riskScore < 60 ? 'Loan Approved' : 'Manual review recommended',
         ai_powered: false
     };
 };
@@ -133,14 +190,18 @@ const getFallbackFraudResponse = (data: FraudDetectionRequest): FraudDetectionRe
     const hour = new Date().getHours();
     if (hour < 4 || hour > 23) riskPct += 10;
     riskPct = Math.min(100, riskPct);
-    
     return {
         success: false,
         fraud_risk: riskPct < 25 ? 'LOW' : riskPct < 55 ? 'MEDIUM' : 'HIGH',
         risk_percentage: riskPct,
+        fraud_score: riskPct,
+        risk_level: riskPct < 25 ? 'LOW' : riskPct < 55 ? 'MEDIUM' : 'HIGH',
+        confidence: riskPct,
+        color: riskPct < 25 ? 'Green' : riskPct < 55 ? 'Yellow' : 'Red',
         is_anomaly: riskPct > 50,
         action_required: riskPct > 70,
         risk_flags: riskPct > 50 ? ['unusual_amount'] : [],
+        suggested_action: riskPct > 70 ? 'Block transaction' : 'No action needed',
         ai_powered: false
     };
 };
@@ -149,7 +210,6 @@ const getFallbackSavingsResponse = (data: SavingsPredictionRequest): SavingsPred
     const income = data.income || 0;
     const expenses = data.expenses || 0;
     const disposable = Math.max(0, income - expenses);
-    
     return {
         success: false,
         financial_health_score: 60,
@@ -165,7 +225,6 @@ const getFallbackSavingsResponse = (data: SavingsPredictionRequest): SavingsPred
 const getFallbackRecommendationsResponse = (data: RecommendationRequest): RecommendationResponse => {
     const income = data.income || 0;
     const expenses = data.expenses || 0;
-    
     return {
         success: false,
         financial_health_summary: { score: 60, rating: 'Fair' },
@@ -183,17 +242,9 @@ const getFallbackSpendingResponse = (transactions: any[], monthlyIncome?: number
         if (t.balance_before != null && t.balance_after != null) return Number(t.balance_after) < Number(t.balance_before);
         return ['payment', 'withdrawal', 'withdraw', 'expense'].includes(t.type);
     };
-    const isIncome = (t: any) => {
-        if (t.balance_before != null && t.balance_after != null) return Number(t.balance_after) > Number(t.balance_before);
-        return ['deposit', 'income'].includes(t.type);
-    };
     const expenses = (transactions || []).filter(t => isExpense(t));
-    const incomes = (transactions || []).filter(t => isIncome(t));
     const totalSpent = expenses.reduce((s, t) => s + Number(t.amount || 0), 0);
-    const totalIncome = incomes.reduce((s, t) => s + Number(t.amount || 0), 0);
-    const income = monthlyIncome || totalIncome || 1;
-
-    // Build category breakdown from expense transactions
+    const income = monthlyIncome || 1;
     const catMap: Record<string, number> = {};
     expenses.forEach(t => {
         const cat = t.category || t.type || 'other';
@@ -202,12 +253,11 @@ const getFallbackSpendingResponse = (transactions: any[], monthlyIncome?: number
     const category_breakdown = Object.entries(catMap)
         .map(([name, value]) => ({ name, value }))
         .sort((a, b) => b.value - a.value);
-
     return {
         success: false,
         category_breakdown,
         total_spent: totalSpent,
-        total_income: totalIncome,
+        total_income: income,
         savings_rate: income > 0 ? Math.max(0, Math.round((1 - totalSpent / income) * 100)) : 0,
         top_spending_category: category_breakdown[0]?.name || 'N/A',
         spending_insights: ['Connect to AI Engine for detailed analysis.'],
@@ -216,7 +266,8 @@ const getFallbackSpendingResponse = (transactions: any[], monthlyIncome?: number
     };
 };
 
-// AI Service Functions with fallbacks
+// ==================== API FUNCTIONS ====================
+
 export const predictLoan = async (data: LoanPredictionRequest): Promise<LoanPredictionResponse> => {
     try {
         const response = await api.post('/ai/predict-loan', data);
@@ -273,12 +324,7 @@ export const getModelStatus = async () => {
         return response.data;
     } catch (error) {
         console.error('Failed to get model status:', error);
-        return { 
-            success: false, 
-            status: 'offline', 
-            ai_powered: false,
-            models: []
-        };
+        return { success: false, status: 'offline', ai_powered: false, models: [] };
     }
 };
 
@@ -288,10 +334,38 @@ export const retrainModel = async (model?: string) => {
         return response.data;
     } catch (error) {
         console.error('Failed to retrain model:', error);
-        return { 
-            success: false, 
-            message: 'AI Engine unavailable. Cannot retrain models.',
-            status: 'failed',
+        return { success: false, message: 'AI Engine unavailable.', status: 'failed', ai_powered: false };
+    }
+};
+
+export const getMarketIntelligence = async (): Promise<MarketIntelligenceResponse> => {
+    try {
+        const response = await api.post('/ai/market-intelligence', {});
+        return response.data;
+    } catch (error) {
+        console.error('Failed to get market intelligence:', error);
+        return {
+            success: false,
+            sector_predictions: [],
+            market_summary: 'Market intelligence unavailable.',
+            investment_advice: ['Connect to AI Engine for market intelligence.'],
+            ai_powered: false
+        };
+    }
+};
+
+export const getAIDashboard = async (): Promise<AIDashboardResponse> => {
+    try {
+        const response = await api.get('/ai/ai-dashboard');
+        return response.data;
+    } catch (error) {
+        console.error('Failed to get AI dashboard:', error);
+        return {
+            success: false,
+            models: [],
+            engine_status: 'offline',
+            model_version: 'unknown',
+            total_predictions: 0,
             ai_powered: false
         };
     }
@@ -303,11 +377,7 @@ export const getMarketPredictions = async () => {
         return response.data;
     } catch (error) {
         console.error('Failed to get market predictions:', error);
-        return { 
-            success: false, 
-            predictions: [],
-            ai_powered: false
-        };
+        return { success: false, predictions: [], ai_powered: false };
     }
 };
 
@@ -317,40 +387,26 @@ export const getSectorAnalytics = async () => {
         return response.data;
     } catch (error) {
         console.error('Failed to get sector analytics:', error);
-        return { 
-            success: false, 
-            sectors: [],
-            ai_powered: false
-        };
+        return { success: false, sectors: [], ai_powered: false };
     }
 };
 
-// Test AI Engine connection
 export const testAIConnection = async () => {
     try {
         const response = await api.get('/test-ai-connection');
         return response.data;
     } catch (error) {
         console.error('AI Engine connection test failed:', error);
-        return { 
-            success: false, 
-            message: 'AI Engine unavailable',
-            ai_powered: false
-        };
+        return { success: false, message: 'AI Engine unavailable', ai_powered: false };
     }
 };
 
-// Get AI Engine health status
 export const getAIEngineHealth = async () => {
     try {
         const response = await api.get('/ai-engine/status');
         return response.data;
     } catch (error) {
         console.error('AI Engine health check failed:', error);
-        return { 
-            success: false, 
-            status: 'unhealthy',
-            ai_powered: false
-        };
+        return { success: false, status: 'unhealthy', ai_powered: false };
     }
 };

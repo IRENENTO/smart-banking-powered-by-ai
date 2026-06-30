@@ -200,7 +200,7 @@ const Landing: React.FC = () => {
                             Why Choose AI Smart Banking?
                         </h2>
                         <p style={{ color: darkMode ? '#cfeff5' : '#475569', fontSize: 'clamp(15px, 2vw, 18px)', marginTop: 16 }}>
-                            Experience the future of banking with our innovative features
+                            Try the future of banking with our smart features
                         </p>
                     </motion.div>
                     
@@ -217,7 +217,7 @@ const Landing: React.FC = () => {
                                     <Shield size={48} style={{ color: 'white' }} />
                                 </motion.div>
                                 <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: 'white', textAlign: 'center' }}>Smart Accounts</h3>
-                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Manage your checking and savings with guaranteed clarity and AI-powered insights.</p>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Manage your accounts with a clear view and AI advice.</p>
                             </motion.div>
                         </Link>
                         <Link to={isAuthenticated ? "/payments" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
@@ -232,7 +232,7 @@ const Landing: React.FC = () => {
                                     <Zap size={48} style={{ color: 'white' }} />
                                 </motion.div>
                                 <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: 'white', textAlign: 'center' }}>Instant Payments</h3>
-                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Fast transfers, mobile money, and scheduled payments from one beautiful dashboard.</p>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Fast transfers, mobile money, and planned payments from one simple dashboard.</p>
                             </motion.div>
                         </Link>
                         <Link to={isAuthenticated ? "/ai-insights" : "/login"} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
@@ -247,7 +247,7 @@ const Landing: React.FC = () => {
                                     <Star size={48} style={{ color: '#0A9396' }} />
                                 </motion.div>
                                 <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: '#0A9396', textAlign: 'center' }}>AI Insights</h3>
-                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.7)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Get intelligent spending guidance and personalised financial alerts that learn from you.</p>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.7)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5, textAlign: 'center' }}>Get smart spending advice and personal money alerts that learn from you.</p>
                             </motion.div>
                         </Link>
                     </div>
@@ -269,9 +269,9 @@ const Landing: React.FC = () => {
                                 style={{ background: 'linear-gradient(135deg, rgba(11, 31, 58, 0.92), rgba(30, 41, 59, 0.88))', backdropFilter: 'blur(20px)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 12px 30px rgba(11, 31, 58, 0.1)', height: '100%' }}
                             >
                                 <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: '#0A9396' }}>💎 Premium Features</h3>
-                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.7)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5 }}>Exclusive benefits for premium members including priority support and advanced analytics.</p>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.7)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5 }}>Special benefits for premium members including fast support and detailed reports.</p>
                                 <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                                    {['Priority Support', 'Advanced Analytics', 'Custom Reports'].map((feature, index) => (
+                                    {['Fast Support', 'Detailed Reports', 'Custom Reports'].map((feature, index) => (
                                         <motion.div
                                             key={feature}
                                             initial={{ opacity: 0, scale: 0.8 }}
@@ -303,7 +303,7 @@ const Landing: React.FC = () => {
                                 style={{ background: 'linear-gradient(135deg, rgba(10, 147, 150, 0.9), rgba(5, 150, 105, 0.85))', backdropFilter: 'blur(20px)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 12px 30px rgba(10, 147, 150, 0.12)', height: '100%' }}
                             >
                                 <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: 'white' }}>❤️ Trusted by Thousands</h3>
-                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5 }}>Join thousands of satisfied customers who trust us with their financial future.</p>
+                                <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5 }}>Join thousands of happy customers who trust us with their money.</p>
                                 <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, textAlign: 'center' }}>
                                     {[
                                         { number: '50K+', label: 'Users' },
@@ -333,7 +333,7 @@ const Landing: React.FC = () => {
                             style={{ background: 'linear-gradient(135deg, rgba(244, 162, 97, 0.85), rgba(239, 130, 60, 0.9))', backdropFilter: 'blur(20px)', padding: 'clamp(20px, 3vw, 28px)', borderRadius: 20, boxShadow: '0 12px 30px rgba(244, 162, 97, 0.12)', height: '100%' }}
                         >
                             <h3 style={{ margin: 0, fontSize: 'clamp(16px, 2vw, 18px)', fontWeight: 700, color: 'white' }}>🚀 Quick Start</h3>
-                            <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5 }}>Get started in minutes with our simple onboarding process and intuitive interface.</p>
+                            <p style={{ marginTop: 8, color: 'rgba(255,255,255,0.85)', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.5 }}>Get started in minutes with our simple sign-up and easy-to-use design.</p>
                             <LoadingButton
                                 loading={loading === 'quickstart'}
                                 onClick={() => handleAction('quickstart', '/register')}
@@ -393,14 +393,14 @@ const Landing: React.FC = () => {
                                 transition={{ delay: 0.8 }}
                                 viewport={{ once: true }}
                             >
-                                Use AI to uncover better saving opportunities, protect your money, and make smarter decisions with every transaction.
+                                Use AI to find better ways to save, protect your money, and make smarter choices every time.
                             </motion.p>
                             <div className="ai-benefit-cards">
                                 {[
-                                    { icon: '⚡', title: 'Real-time alerts', desc: 'Stay ahead of suspicious activity and payment due dates.' },
-                                    { icon: '📊', title: 'Smarter budgeting', desc: 'Understand how spending impacts your goals instantly.' },
-                                    { icon: '💰', title: 'Loan prediction', desc: 'See your borrowing power before you apply.' },
-                                    { icon: '🎯', title: 'Goal progress', desc: 'Keep your savings targets in view with progress tracking.' }
+                                    { icon: '⚡', title: 'Real-time alerts', desc: 'Know about unusual activity and payment due dates right away.' },
+                                    { icon: '📊', title: 'Smarter budgeting', desc: 'See how your spending affects your goals instantly.' },
+                                    { icon: '💰', title: 'Loan prediction', desc: 'See how much you can borrow before you apply.' },
+                                    { icon: '🎯', title: 'Goal progress', desc: 'Keep your savings goals in view with progress tracking.' }
                                 ].map((benefit, index) => (
                                     <motion.div
                                         key={benefit.title}
@@ -444,8 +444,8 @@ const Landing: React.FC = () => {
                                     border: '1px solid rgba(255,255,255,0.5)'
                                 }}
                             >
-                                <h3 style={{ fontSize: 'clamp(17px, 2.5vw, 20px)', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>💡 Financial Insight</h3>
-                                <p style={{ color: '#475569', marginTop: 12, lineHeight: 1.5, fontSize: 'clamp(13px, 1.5vw, 15px)' }}>Your latest spending snapshot with AI guidance.</p>
+                                <h3 style={{ fontSize: 'clamp(17px, 2.5vw, 20px)', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>💡 Money Tip</h3>
+                                <p style={{ color: '#475569', marginTop: 12, lineHeight: 1.5, fontSize: 'clamp(13px, 1.5vw, 15px)' }}>A quick look at your spending with AI advice.</p>
                                 <div style={{ marginTop: 'clamp(16px, 2vw, 24px)', display: 'grid', gap: 16 }}>
                                     {[
                                         { title: '🚨 Spending alert', subtitle: 'You are spending too much on transport.', type: 'warning' },
@@ -487,11 +487,11 @@ const Landing: React.FC = () => {
                                     border: '1px solid rgba(255,255,255,0.5)'
                                 }}
                             >
-                                <h3 style={{ fontSize: 'clamp(17px, 2.5vw, 20px)', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>💳 Financial Overview</h3>
+                                <h3 style={{ fontSize: 'clamp(17px, 2.5vw, 20px)', margin: 0, background: 'linear-gradient(135deg, #0A9396, #0B1F3A)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>💳 Money Overview</h3>
                                 <div style={{ marginTop: 'clamp(16px, 2vw, 24px)', display: 'grid', gap: 16 }}>
                                     {[
                                         { label: 'Account balance', value: 'RWF 452,800', icon: '💎', color: '#0A9396' },
-                                        { label: 'AI score', value: '88/100 financial health', icon: '🤖', color: '#F4A261' },
+                                        { label: 'AI score', value: '88/100 money health', icon: '🤖', color: '#F4A261' },
                                         { label: 'Saved this month', value: 'RWF 92,000', icon: '📈', color: '#059669' }
                                     ].map((stat, index) => (
                                         <motion.div
@@ -624,7 +624,7 @@ const Landing: React.FC = () => {
                             Our Services
                         </h2>
                         <p style={{ fontSize: '20px', color: darkMode ? '#cfeff5' : '#64748b', maxWidth: '800px', margin: '0 auto', lineHeight: 1.6 }}>
-                            Discover our comprehensive range of AI-powered banking services designed to meet your financial needs:
+                            Explore our full range of AI banking services made for your money needs:
                         </p>
                     </motion.div>
 
@@ -642,10 +642,10 @@ const Landing: React.FC = () => {
                                 </motion.div>
                                 <h3 style={{ margin: '0 0 8px', fontSize: 'clamp(17px, 2.2vw, 20px)', fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Smart Savings</h3>
                                 <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 'clamp(13px, 1.5vw, 14px)', lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
-                                    AI-powered savings accounts that help you save smarter with personalized recommendations and automated savings goals.
+                                    AI savings accounts that help you save better with personal tips and automated savings goals.
                                 </p>
                                 <div style={{ display: 'grid', gap: 10 }}>
-                                    {['AI Savings Insights', 'Goal-based Savings', 'Automated Transfers', 'Competitive Interest Rates'].map((f, i) => (
+                                    {['AI Savings Tips', 'Goal-based Savings', 'Automated Transfers', 'Good Interest Rates'].map((f, i) => (
                                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
                                             <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
                                         </div>
@@ -668,10 +668,10 @@ const Landing: React.FC = () => {
                                 </motion.div>
                                 <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Digital Loans</h3>
                                 <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
-                                    Quick and easy loan approvals powered by AI credit scoring. Get funds within minutes.
+                                    Quick and easy loan approvals with AI credit scoring. Get money within minutes.
                                 </p>
                                 <div style={{ display: 'grid', gap: 10 }}>
-                                    {['Instant Approval', 'Flexible Terms', 'Low Interest Rates', 'No Collateral Required'].map((f, i) => (
+                                    {['Instant Approval', 'Flexible Terms', 'Low Interest Rates', 'No Security Needed'].map((f, i) => (
                                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
                                             <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
                                         </div>
@@ -699,7 +699,7 @@ const Landing: React.FC = () => {
                                 </div>
                                 <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Mobile Banking</h3>
                                 <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
-                                    Complete banking services on your mobile device. Bank anytime, anywhere.
+                                    Full banking services on your phone. Bank anytime, anywhere.
                                 </p>
                                 <div style={{ display: 'grid', gap: 10 }}>
                                     {['24/7 Access', 'Bill Payments', 'Money Transfers', 'Mobile Top-up'].map((f, i) => (
@@ -725,10 +725,10 @@ const Landing: React.FC = () => {
                                 </motion.div>
                                 <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Investment Services</h3>
                                 <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
-                                    AI-driven investment recommendations tailored to your risk profile and financial goals.
+                                    AI investment advice made for your risk level and money goals.
                                 </p>
                                 <div style={{ display: 'grid', gap: 10 }}>
-                                    {['AI Portfolio Management', 'Risk Assessment', 'Market Insights', 'Diversified Options'].map((f, i) => (
+                                    {['AI Investment Management', 'Risk Check', 'Market Tips', 'Many Options'].map((f, i) => (
                                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
                                             <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
                                         </div>
@@ -751,10 +751,10 @@ const Landing: React.FC = () => {
                                 </motion.div>
                                 <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Spending Analysis</h3>
                                 <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
-                                    AI-powered breakdown of your spending with clear categories, trend analysis, and smart saving recommendations.
+                                    AI breakdown of your spending with clear categories, trends, and smart saving tips.
                                 </p>
                                 <div style={{ display: 'grid', gap: 10 }}>
-                                    {['Spending by Category', 'Monthly Trends', 'AI Financial Intelligence', 'Smart Saving Tips'].map((f, i) => (
+                                    {['Spending by Category', 'Monthly Trends', 'AI Money Tips', 'Smart Saving Tips'].map((f, i) => (
                                         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: darkMode ? '#e0f2fe' : '#334155' }}>
                                             <span style={{ color: '#10b981', fontWeight: 700 }}>✓</span> {f}
                                         </div>
@@ -777,7 +777,7 @@ const Landing: React.FC = () => {
                                 </motion.div>
                                 <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700, color: darkMode ? 'white' : '#0B1F3A', textAlign: 'center' }}>Business Banking</h3>
                                 <p style={{ color: darkMode ? '#cfeff5' : '#64748b', fontSize: 14, lineHeight: 1.6, marginBottom: 20, textAlign: 'center' }}>
-                                    Comprehensive banking solutions for businesses of all sizes in Rwanda.
+                                    Full banking services for businesses of all sizes in Rwanda.
                                 </p>
                                 <div style={{ display: 'grid', gap: 10 }}>
                                     {['Business Accounts', 'Payroll Services', 'Trade Finance', 'Business Loans'].map((f, i) => (

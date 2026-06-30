@@ -72,12 +72,12 @@ exports.deleteAccount = async (req, res) => {
         }
 
         if (parseFloat(account.balance) > 0) {
-            return res.status(400).json({ msg: 'Account balance must be zero before deletion' });
+            return res.status(400).json({ msg: 'Balance must be zero to delete account' });
         }
 
         await Account.deleteByUserId(userId);
 
-        res.json({ msg: 'Account deleted successfully' });
+        res.json({ msg: 'Account deleted' });
     } catch (err) {
         console.error('Delete account error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });

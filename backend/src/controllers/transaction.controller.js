@@ -63,7 +63,7 @@ exports.deposit = async (req, res) => {
         const userId = req.user.id;
 
         if (!amount || amount <= 0) {
-            return res.status(400).json({ msg: 'Invalid deposit amount' });
+            return res.status(400).json({ msg: 'Enter a valid deposit amount' });
         }
 
         const user = await User.findById(userId);
@@ -98,7 +98,7 @@ exports.deposit = async (req, res) => {
         });
 
         res.status(201).json({
-            msg: 'Deposit successful',
+            msg: 'Money added!',
             transaction: {
                 id: transaction.id,
                 reference_number: transaction.reference_number,
@@ -121,7 +121,7 @@ exports.withdraw = async (req, res) => {
         const userId = req.user.id;
 
         if (!amount || amount <= 0) {
-            return res.status(400).json({ msg: 'Invalid withdrawal amount' });
+            return res.status(400).json({ msg: 'Enter a valid withdrawal amount' });
         }
 
         const user = await User.findById(userId);
@@ -138,7 +138,7 @@ exports.withdraw = async (req, res) => {
         const balanceBefore = parseFloat(account.balance);
         
         if (balanceBefore < amount) {
-            return res.status(400).json({ msg: 'Insufficient balance' });
+            return res.status(400).json({ msg: 'Not enough money' });
         }
 
         // Withdraw from account
@@ -156,7 +156,7 @@ exports.withdraw = async (req, res) => {
         });
 
         res.status(201).json({
-            msg: 'Withdrawal successful',
+            msg: 'Money taken out!',
             transaction: {
                 id: transaction.id,
                 reference_number: transaction.reference_number,

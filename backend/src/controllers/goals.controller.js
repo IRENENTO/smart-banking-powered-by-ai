@@ -23,7 +23,7 @@ exports.createGoal = async (req, res) => {
     try {
         const { name, target, current, deadline } = req.body;
         if (!name || !target || !deadline) {
-            return res.status(400).json({ msg: 'Name, target amount, and deadline are required' });
+            return res.status(400).json({ msg: 'Name, target amount, and deadline needed' });
         }
         const connection = global.dbConnection;
         const [result] = await connection.execute(
@@ -111,7 +111,7 @@ exports.deleteGoal = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ msg: 'Goal not found' });
         }
-        res.json({ msg: 'Goal deleted successfully' });
+        res.json({ msg: 'Goal deleted' });
     } catch (err) {
         console.error('Delete goal error:', err);
         res.status(500).json({ msg: `Server Error: ${err.message}` });

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
-import { aiService } from '../services/api';
+import { aiService, marketService } from '../services/api';
 import * as aiEngine from '../services/aiService';
 import { profileService } from '../services/api';
 import { TrendingUp, AlertTriangle, Target, Sparkles, Brain, RefreshCw, Shield, DollarSign, Zap, ThumbsUp, Calendar } from 'lucide-react';
@@ -75,9 +75,10 @@ const AIInsights: React.FC = () => {
             let healthData = { score: 60, rating: 'Fair', totalIncome: 0, totalExpenses: 0, savingsRate: 0, recommendations: ['Enable AI for personalized insights.'] as string[] };
 
             if (isOnline) {
-                const [savingsData, recsData] = await Promise.all([
+                const [savingsData, recsData, fraudRes] = await Promise.all([
                     aiEngine.predictSavings({ income: 300000, expenses: 150000 }).catch(() => null),
                     aiEngine.getRecommendations({ income: 300000, expenses: 150000 }).catch(() => null),
+                    marketService.getFraudAlerts().catch(() => ({ data: { data: null } })),
                 ]);
 
                 if (savingsData) {
@@ -91,12 +92,13 @@ const AIInsights: React.FC = () => {
                     };
                 }
 
+                const fraudData = fraudRes?.data?.data || fraudRes?.data;
                 setMarketData({
                     trends: recsData?.sector_recommendations ? generateTrendData(recsData) : [],
                     sectors: generateSectors(recsData),
                     recommendations: recsData || null,
                     riskAnalysis: { sectors: generateRiskSectors(recsData), overall_market_risk: 'moderate', ai_insight: 'AI analysis available.' },
-                    fraudAlerts: DEMO_FRAUD_ALERTS,
+                    fraudAlerts: fraudData || DEMO_FRAUD_ALERTS,
                     economicIndicators: { inflation_rate: 2.5, gdp_growth: 3.2, market_sentiment: 'positive' },
                 });
             } else {

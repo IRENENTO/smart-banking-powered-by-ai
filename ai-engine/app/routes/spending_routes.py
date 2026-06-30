@@ -1,19 +1,19 @@
 """
 Spending Analytics Routes
 ==========================
-POST /api/ai/spending-analysis — Analyze spending patterns and trends (ML-powered)
+POST /api/ai/spending-analysis — ML-powered spending pattern analysis
 """
 from fastapi import APIRouter, HTTPException
-from ..schemas import SpendingAnalysisRequest, MLSpendingAnalysisResponse
+from ..schemas import SpendingAnalysisRequest, SpendingAnalysisResponse
 
 router = APIRouter(tags=["Spending Analytics"], prefix="/api/ai")
 
 
 @router.post(
     "/spending-analysis",
-    response_model=MLSpendingAnalysisResponse,
-    summary="Analyze spending patterns (ML-powered)",
-    description="ML-powered spending analysis with category breakdowns, anomaly detection, and financial insights."
+    response_model=SpendingAnalysisResponse,
+    summary="Analyze spending patterns with AI",
+    description="Real ML-powered spending analysis with category breakdown, anomaly detection, and financial insights."
 )
 def spending_analysis_endpoint(request: SpendingAnalysisRequest):
     try:

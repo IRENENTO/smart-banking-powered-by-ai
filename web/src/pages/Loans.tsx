@@ -70,6 +70,10 @@ const Loans: React.FC = () => {
   const [deductionPeriod, setDeductionPeriod] = useState<Record<string, string>>({});
   const [settingDeduction, setSettingDeduction] = useState(false);
 
+  const [loanFilterStatus, setLoanFilterStatus] = useState<string>('all');
+  const [loanSearch, setLoanSearch] = useState('');
+  const [loanSortBy, setLoanSortBy] = useState<'date' | 'amount' | 'risk'>('date');
+
   const [demoLoans, setDemoLoans] = useState<any[]>([
     {
       id: 'demo-1',
@@ -265,10 +269,25 @@ const Loans: React.FC = () => {
     };
   };
 
+  const normalizePrediction = (data: any) => {
+    if (!data) return data;
+    const d = { ...data };
+    if (!('approved' in d) && d.approval_status) {
+      d.approved = d.approval_status === 'APPROVED';
+    }
+    if (d.approval_probability != null && d.approval_probability <= 1) {
+      d.approval_probability = d.approval_probability * 100;
+    }
+    if (d.default_probability != null && d.default_probability <= 1) {
+      d.default_probability = d.default_probability * 100;
+    }
+    return d;
+  };
+
   const extractPredictionData = (response: any, fallback: () => any) => {
     try {
       if (response && typeof response === 'object' && ('approved' in response || 'risk_score' in response)) {
-        return response;
+        return normalizePrediction(response);
       }
     } catch {}
     return fallback();
@@ -671,7 +690,7 @@ const Loans: React.FC = () => {
                           <div style={{ padding: 16, borderRadius: 14, background: isDark ? 'rgba(245,158,11,0.1)' : '#fffbeb', border: '1px solid rgba(245,158,11,0.2)', textAlign: 'center' }}>
                             <TrendingUp size={20} color="#f59e0b" style={{ margin: '0 auto 8px' }} />
                             <div style={{ fontSize: 12, color: mutedColor, marginBottom: 4 }}>Approval Probability</div>
-                            <div style={{ fontSize: 18, fontWeight: 700, color: '#f59e0b' }}>{aiPrediction.approval_probability || '--'}%</div>
+                            <div style={{ fontSize: 18, fontWeight: 700, color: '#f59e0b' }}>{aiPrediction.approval_probability != null ? `${Number(aiPrediction.approval_probability).toFixed(1)}%` : '--'}</div>
                           </div>
                           <div style={{ padding: 16, borderRadius: 14, background: isDark ? 'rgba(239,68,68,0.1)' : '#fef2f2', border: '1px solid rgba(239,68,68,0.2)', textAlign: 'center' }}>
                             <AlertTriangle size={20} color="#ef4444" style={{ margin: '0 auto 8px' }} />
@@ -696,28 +715,36 @@ const Loans: React.FC = () => {
                             <div style={{ marginTop: 16, borderTop: `1px solid ${borderColor}`, paddingTop: 16 }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                                 <Calculator size={16} color="#0A9396" />
-                                <span style={{ fontWeight: 700, fontSize: 15, color: textColor }}>Repayment Calculator</span>
+                                <span style={{ fontWeight: 700, fontSize: 15, color: textColor }}>Select Loan Type</span>
                               </div>
                               <div style={{ fontSize: 12, color: mutedColor, marginBottom: 10 }}>
                                 Rate: <strong>{r}% p.a.</strong> &middot; Term: <strong>{n} months</strong>
                               </div>
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                                <div style={{ padding: 14, borderRadius: 12, background: isDark ? 'rgba(10,147,150,0.08)' : '#f0fdfa', border: '1px solid rgba(10,147,150,0.2)' }}>
-                                  <div style={{ fontSize: 11, fontWeight: 700, color: '#0A9396', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Simple Interest</div>
+                                <motion.div
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => setSelectedLoanType('simple')}
+                                  style={{ padding: 14, borderRadius: 12, cursor: 'pointer', background: selectedLoanType === 'simple' ? 'linear-gradient(135deg, rgba(10,147,150,0.15), rgba(78,205,196,0.15))' : (isDark ? 'rgba(10,147,150,0.08)' : '#f0fdfa'), border: `2px solid ${selectedLoanType === 'simple' ? '#0A9396' : 'rgba(10,147,150,0.2)'}`, transition: 'all 0.2s' }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: selectedLoanType === 'simple' ? '#0A9396' : '#0A9396', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Simple Interest {selectedLoanType === 'simple' ? '✓ Selected' : '— Click to select'}</div>
                                   <div style={{ display: 'grid', gap: 3, fontSize: 13 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Monthly</span><span style={{ fontWeight: 700, color: textColor }}>RWF {simple.monthlyPayment.toLocaleString()}</span></div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Interest</span><span style={{ fontWeight: 700, color: '#ef4444' }}>RWF {simple.totalInterest.toLocaleString()}</span></div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Repayment</span><span style={{ fontWeight: 700, color: textColor }}>RWF {simple.totalAmount.toLocaleString()}</span></div>
                                   </div>
-                                </div>
-                                <div style={{ padding: 14, borderRadius: 12, background: isDark ? 'rgba(139,92,246,0.08)' : '#f5f3ff', border: '1px solid rgba(139,92,246,0.2)' }}>
-                                  <div style={{ fontSize: 11, fontWeight: 700, color: '#8b5cf6', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compound (EMI)</div>
+                                </motion.div>
+                                <motion.div
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
+                                  onClick={() => setSelectedLoanType('compound')}
+                                  style={{ padding: 14, borderRadius: 12, cursor: 'pointer', background: selectedLoanType === 'compound' ? 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(167,139,250,0.15))' : (isDark ? 'rgba(139,92,246,0.08)' : '#f5f3ff'), border: `2px solid ${selectedLoanType === 'compound' ? '#8b5cf6' : 'rgba(139,92,246,0.2)'}`, transition: 'all 0.2s' }}>
+                                  <div style={{ fontSize: 11, fontWeight: 700, color: selectedLoanType === 'compound' ? '#8b5cf6' : '#8b5cf6', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Compound (EMI) {selectedLoanType === 'compound' ? '✓ Selected' : '— Click to select'}</div>
                                   <div style={{ display: 'grid', gap: 3, fontSize: 13 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Monthly</span><span style={{ fontWeight: 700, color: textColor }}>RWF {compound.emi.toLocaleString()}</span></div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Interest</span><span style={{ fontWeight: 700, color: '#ef4444' }}>RWF {compound.totalInterest.toLocaleString()}</span></div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: mutedColor }}>Total Repayment</span><span style={{ fontWeight: 700, color: textColor }}>RWF {compound.totalAmount.toLocaleString()}</span></div>
                                   </div>
-                                </div>
+                                </motion.div>
                               </div>
                               {yearly.length > 0 && (
                                 <div style={{ marginTop: 12 }}>
@@ -744,7 +771,7 @@ const Loans: React.FC = () => {
                         <div style={{ marginTop: 8, fontSize: 11, color: mutedColor, textAlign: 'right' }}>
                           {aiPrediction.ai_powered ? 'AI Powered' : 'Standard Analysis'}
                         </div>
-                        {aiPrediction.approved && (() => {
+                        {aiPrediction.approved && selectedLoanType && (() => {
                           const p = predictionForm.amount;
                           return (
                           <button onClick={handleApplyFromPrediction}
@@ -760,7 +787,7 @@ const Loans: React.FC = () => {
                               <span style={{ fontWeight: 700, fontSize: 15 }}>Apply for This Loan</span>
                             </div>
                             <div style={{ marginTop: 6, fontSize: 12, opacity: 0.8, textAlign: 'center' }}>
-                              RWF {p.toLocaleString()} &middot; Choose loan type &middot; AI assessment
+                              RWF {p.toLocaleString()} &middot; {selectedLoanType === 'simple' ? 'Simple Interest' : 'Compound EMI'} &middot; AI assessment
                             </div>
                           </button>
                           );
@@ -1174,23 +1201,50 @@ const Loans: React.FC = () => {
           </>
         )}
 
-          {activeTab === 'history' && (
+          {activeTab === 'history' && (() => {
+            const filteredLoans = [...loans]
+              .filter(l => loanFilterStatus === 'all' || l.status === loanFilterStatus)
+              .filter(l => !loanSearch || (l.purpose || '').toLowerCase().includes(loanSearch.toLowerCase()))
+              .sort((a, b) => {
+                if (loanSortBy === 'amount') return Number(b.amount) - Number(a.amount);
+                if (loanSortBy === 'risk') return (a.risk_score || 99) - (b.risk_score || 99);
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+              });
+            return (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <h2 style={{ color: textColor, margin: 0 }}>Loan History</h2>
-                <span style={{ fontSize: 13, color: mutedColor }}>{loans.length} loan{loans.length !== 1 ? 's' : ''}</span>
+                <span style={{ fontSize: 13, color: mutedColor }}>{filteredLoans.length} loan{filteredLoans.length !== 1 ? 's' : ''}</span>
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                <input type="text" placeholder="Search by purpose..." value={loanSearch} onChange={e => setLoanSearch(e.target.value)}
+                  style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${borderColor}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13, minWidth: 200 }} />
+                <select value={loanFilterStatus} onChange={e => setLoanFilterStatus(e.target.value)}
+                  style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${borderColor}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13 }}>
+                  <option value="all">All Status</option>
+                  <option value="active">Active</option>
+                  <option value="approved">Approved</option>
+                  <option value="pending">Pending</option>
+                  <option value="rejected">Rejected</option>
+                </select>
+                <select value={loanSortBy} onChange={e => setLoanSortBy(e.target.value as 'date' | 'amount' | 'risk')}
+                  style={{ padding: '8px 14px', borderRadius: 8, border: `1px solid ${borderColor}`, background: isDark ? '#0f172a' : 'white', color: textColor, fontSize: 13 }}>
+                  <option value="date">Sort: Newest</option>
+                  <option value="amount">Sort: Amount</option>
+                  <option value="risk">Sort: Risk Score</option>
+                </select>
               </div>
               {loadingLoans ? (
                 <div style={{ textAlign: 'center', padding: 60, color: mutedColor }}>Loading loans...</div>
-              ) : loans.length === 0 ? (
+              ) : filteredLoans.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: 60, color: mutedColor }}>
                   <DollarSign size={48} style={{ margin: '0 auto 16px', opacity: 0.3 }} />
-                  <div style={{ fontWeight: 600, marginBottom: 8, color: textColor }}>No loans yet</div>
-                  <div style={{ fontSize: 13 }}>Apply for your first loan to get started.</div>
+                  <div style={{ fontWeight: 600, marginBottom: 8, color: textColor }}>{loanSearch || loanFilterStatus !== 'all' ? 'No loans match your filters' : 'No loans yet'}</div>
+                  <div style={{ fontSize: 13 }}>{loanSearch || loanFilterStatus !== 'all' ? 'Try adjusting your search or filter criteria.' : 'Apply for your first loan to get started.'}</div>
                 </div>
               ) : (
                 <div style={{ display: 'grid', gap: 16 }}>
-                  {loans.map((loan, idx) => {
+                  {filteredLoans.map((loan, idx) => {
                     const status = statusConfig[loan.status] || statusConfig.pending;
                     const remaining = loan.status === 'active' || loan.status === 'approved'
                       ? calculateRemainingDays(loan.created_at, loan.duration || 12)
@@ -1536,7 +1590,8 @@ const Loans: React.FC = () => {
                 </div>
               )}
             </div>
-          )}
+          );
+          })()}
 
           {activeTab === 'info' && (
             <div>
