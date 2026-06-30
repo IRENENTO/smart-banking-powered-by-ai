@@ -46,6 +46,11 @@ async function processLoanDeductions(connection) {
                 [deductionAmount, loan.account_id, deductionAmount]
             );
 
+            await connection.execute(
+                'UPDATE users SET balance = GREATEST(balance - ?, 0) WHERE id = ?',
+                [deductionAmount, loan.user_id]
+            );
+
             await connection.execute(`
                 UPDATE loans
                 SET paid_amount = ?, next_deduction_date = ?, status = ?
@@ -88,6 +93,11 @@ async function processPaymentSchedules(connection) {
             await connection.execute(
                 'UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?',
                 [amount, schedule.account_id, amount]
+            );
+
+            await connection.execute(
+                'UPDATE users SET balance = GREATEST(balance - ?, 0) WHERE id = ?',
+                [amount, schedule.user_id]
             );
 
             const nextDate = calculateNextDate(schedule.frequency);
@@ -146,6 +156,11 @@ async function processSavingsGoals(connection) {
             await connection.execute(
                 'UPDATE accounts SET balance = balance - ? WHERE id = ? AND balance >= ?',
                 [amount, goal.account_id, amount]
+            );
+
+            await connection.execute(
+                'UPDATE users SET balance = GREATEST(balance - ?, 0) WHERE id = ?',
+                [amount, goal.user_id]
             );
 
             await connection.execute(`

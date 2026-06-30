@@ -4,9 +4,14 @@
   "homepage": ".",
   "scripts": {
     "start": "react-scripts start",
+    "prebuild": "node scripts/scan-security.js && node scripts/security-check.js",
     "build": "react-scripts build",
+    "postbuild": "node scripts/verify-build.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
+    "security:scan": "node scripts/scan-security.js",
+    "security:check": "node scripts/security-check.js",
+    "security:verify": "node scripts/verify-build.js",
     "predeploy": "npm run build",
     "deploy": "netlify deploy --prod"
   },

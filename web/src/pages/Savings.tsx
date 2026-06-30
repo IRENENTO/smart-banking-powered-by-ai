@@ -4,7 +4,7 @@ import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
 import SavingsGoalModal from '../components/SavingsGoalModal';
 import FinancialHealthCard from '../components/FinancialHealthCard';
-import { savingsService, accountService } from '../services/api';
+import { savingsService, paymentService } from '../services/api';
 import * as aiEngine from '../services/aiService';
 import { Plus, Settings, DollarSign, TrendingUp, Brain, Target, Shield } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
@@ -74,8 +74,8 @@ const Savings: React.FC = () => {
 
     const fetchBalance = async () => {
         try {
-            const response = await accountService.getBalance();
-            setBalance(response.data.balance || response.data || 0);
+            const response = await paymentService.getBalance();
+            setBalance(response.data?.balance ?? response.data ?? 0);
         } catch (err) {
             console.error('Error fetching balance:', err);
         }

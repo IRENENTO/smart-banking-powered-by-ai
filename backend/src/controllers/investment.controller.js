@@ -1,4 +1,5 @@
 const Investment = require('../models/Investment');
+const User = require('../models/User');
 
 const investmentTypes = [
     {
@@ -85,10 +86,35 @@ exports.createInvestment = async (req, res) => {
         }
 
         const userId = req.user.id;
+        const amountNum = parseFloat(amount);
+
+        const currentBalance = await User.getBalance(userId);
+        if (currentBalance < amountNum) {
+            return res.status(400).json({ msg: 'Insufficient balance for this investment' });
+        }
+
+        const newBalance = currentBalance - amountNum;
+        await User.updateBalance(userId, newBalance);
+
+        const connection = global.dbConnection;
+        if (connection) {
+            await connection.execute(
+                'UPDATE accounts SET balance = balance - ? WHERE user_id = ? AND balance >= ?',
+                [amountNum, userId, amountNum]
+            );
+
+            const refNumber = 'INV-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+            await connection.execute(
+                `INSERT INTO transactions (user_id, type, amount, description, reference_number, balance_before, balance_after, status, created_at)
+                 VALUES (?, 'investment', ?, ?, ?, ?, ?, 'completed', NOW())`,
+                [userId, amountNum, `Investment: ${investmentType.name}`, refNumber, currentBalance, newBalance]
+            );
+        }
+
         const investment = await Investment.create({
             user_id: userId,
             type,
-            amount,
+            amount: amountNum,
             duration,
             risk_level,
             expected_return: expected_return || investmentType.expected_returns[risk_level],
@@ -100,12 +126,14 @@ exports.createInvestment = async (req, res) => {
             data: {
                 id: investment.id,
                 type: investment.type,
-                amount: investment.amount,
+                amount: parseFloat(investment.amount),
                 duration: investment.duration,
                 risk_level: investment.risk_level,
                 expected_return: investment.expected_return,
                 status: investment.status,
-                created_at: investment.created_at
+                created_at: investment.created_at,
+                balance_before: currentBalance,
+                balance_after: newBalance
             }
         });
     } catch (err) {

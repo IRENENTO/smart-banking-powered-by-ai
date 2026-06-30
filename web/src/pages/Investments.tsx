@@ -265,18 +265,12 @@ const Investments: React.FC = () => {
   const handleCreateInvestment = async (e: React.FormEvent) => {
     e.preventDefault(); setBusy('create'); setError(''); setMessage('');
     try {
-      await investmentService.createInvestment({ type: formData.type, amount: Number(formData.amount), duration: Number(formData.duration), risk_level: formData.risk_level, expected_return: formData.expected_return ? Number(formData.expected_return) : undefined });
-      try { await withdraw(Number(formData.amount), `Investment: ${formData.type}`); } catch { setLocalBalanceOffset(prev => prev - Number(formData.amount)); }
+      const response = await investmentService.createInvestment({ type: formData.type, amount: Number(formData.amount), duration: Number(formData.duration), risk_level: formData.risk_level, expected_return: formData.expected_return ? Number(formData.expected_return) : undefined });
       setMessage('Investment created successfully'); setShowCreateForm(false); resetForm(); loadInvestments();
-    } catch {
-      try { await withdraw(Number(formData.amount), `Investment: ${formData.type}`); } catch { setLocalBalanceOffset(prev => prev - Number(formData.amount)); }
-      const newInv = {
-        id: Date.now(), type: formData.type, amount: Number(formData.amount), duration: Number(formData.duration),
-        risk_level: formData.risk_level, expected_return: Number(formData.expected_return) || 0,
-        actual_return: 0, status: 'active', created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-      };
-      setLocalInvestments(prev => [...prev, newInv]);
-      setMessage('Investment created (offline)'); setShowCreateForm(false); resetForm(); loadInvestments();
+      try { await refreshBankData(); } catch {}
+    } catch (err: any) {
+      const msg = err.response?.data?.msg || 'Failed to create investment';
+      setError(msg);
     }
     finally { setBusy(null); }
   };

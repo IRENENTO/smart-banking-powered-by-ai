@@ -100,19 +100,21 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+            scriptSrc: ["'self'"],
             styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
             fontSrc: ["'self'", 'https://fonts.gstatic.com'],
             imgSrc: ["'self'", 'data:', 'blob:'],
             connectSrc: [
-                "'self'", 
+                "'self'",
                 'https://smart-banking-powered-by-ai.onrender.com',
-                'https://chipper-starlight-301049.netlify.app',
-                'https://smartbankingpoweredbyai.netlify.app',
                 'https://*.netlify.app',
                 'http://localhost:3000',
                 'http://localhost:4000'
             ],
+            frameAncestors: ["'none'"],
+            formAction: ["'self'"],
+            baseUri: ["'self'"],
+            objectSrc: ["'none'"],
         },
     },
 }));
