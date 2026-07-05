@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, KeyRound, CheckCircle, Loader, X } from 'lucide-react';
+import { Shield, KeyRound, CheckCircle, X } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 import AppShell from '../components/AppShell';
 import SectionCard from '../components/SectionCard';
 import LoadingButton from '../components/LoadingButton';
@@ -382,7 +383,7 @@ const Settings: React.FC = () => {
                   cursor: pinLoading ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}>
-                  {pinLoading ? <><Loader size={18} className="animate-spin" /> Sending...</> : 'Send OTP'}
+                  {pinLoading ? <><ThreeBody size={18} color="#fff" /> Sending...</> : 'Send OTP'}
                 </button>
               </form>
             ) : (
@@ -427,7 +428,7 @@ const Settings: React.FC = () => {
                   cursor: pinLoading ? 'not-allowed' : 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 }}>
-                  {pinLoading ? <><Loader size={18} className="animate-spin" /> Resetting...</> : 'Reset PIN'}
+                  {pinLoading ? <><ThreeBody size={18} color="#fff" /> Resetting...</> : 'Reset PIN'}
                 </button>
                 <button type="button" onClick={() => { setPinStep('otp'); setPinError(''); setPinMessage(''); }}
                   style={{ marginTop: 12, background: 'none', border: 'none', color: modalMutedColor, fontSize: 13, cursor: 'pointer', width: '100%', textDecoration: 'underline' }}>

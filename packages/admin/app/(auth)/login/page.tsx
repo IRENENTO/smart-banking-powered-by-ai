@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import ThreeBody from '@/components/ThreeBody';
 
 export default function AdminLogin() {
   const router = useRouter();
@@ -83,9 +84,9 @@ export default function AdminLogin() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-primary text-black font-bold py-3.5 rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-lg shadow-primary/30"
+              className="w-full bg-primary text-black font-bold py-3.5 rounded-xl hover:bg-primary-dark transition-colors disabled:opacity-50 shadow-lg shadow-primary/30 inline-flex items-center justify-center gap-2"
             >
-              {loading ? 'Signing in...' : 'Sign In'}
+              {loading ? <><ThreeBody size={18} color="#000" /> Signing in...</> : 'Sign In'}
             </button>
           </form>
         </div>

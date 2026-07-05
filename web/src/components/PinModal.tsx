@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { securityService } from '../services/api';
 import { Shield, X } from 'lucide-react';
+import ThreeBody from './ThreeBody';
 
 interface PinModalProps {
   action: string;
@@ -92,7 +93,7 @@ const PinModal: React.FC<PinModalProps> = ({ action, onSuccess, onCancel }) => {
         </div>
 
         {error && <p style={{ color: '#ef4444', fontSize: 12, margin: '0 0 12px' }}>{error}</p>}
-        {loading && <p style={{ color: '#0A9396', fontSize: 12, margin: '0 0 12px' }}>Verifying...</p>}
+        {loading && <div style={{ color: '#0A9396', fontSize: 12, margin: '0 0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}><ThreeBody size={14} color="#0A9396" /> Verifying...</div>}
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, maxWidth: 240, margin: '0 auto' }}>
           {['1','2','3','4','5','6','7','8','9'].map(d => (

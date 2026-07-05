@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
 import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import ThreeBody from './ThreeBody';
 
 interface ButtonProps extends HTMLMotionProps<"button"> {
   isLoading?: boolean;
@@ -46,7 +46,7 @@ export const Button: React.FC<ButtonProps> = ({
       {/* @ts-ignore: react-i18next type conflict with React 18 children */}
       <span className="flex items-center justify-center pointer-events-none">
         {isLoading && (
-          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          <ThreeBody size={16} className="mr-2" />
         )}
         {!isLoading && leftIcon && <span className="mr-2 flex items-center">{leftIcon}</span>}
         {children}

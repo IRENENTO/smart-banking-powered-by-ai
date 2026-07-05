@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { profileService, uploadService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import styles from './Auth.module.css';
+import ThreeBody from '../components/ThreeBody';
 
 const parseJSON = (value: string | null) => {
     if (!value || value === 'undefined' || value === 'null') return null;
@@ -320,12 +321,14 @@ const CompleteProfile: React.FC = () => {
                         
                         {error && <div className={styles.errorMsg}>{error}</div>}
                         
-                        <input 
+                        <button 
                             className={styles.loginButton} 
-                            type="submit" 
-                            value={uploading ? 'Uploading...' : loading ? 'Saving...' : t.button}
+                            type="submit"
                             disabled={loading || uploading}
-                        />
+                            style={{ opacity: (loading || uploading) ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                        >
+                            {uploading ? <><ThreeBody size={18} color="#fff" /> Uploading...</> : loading ? <><ThreeBody size={18} color="#fff" /> Saving...</> : t.button}
+                        </button>
                     </form>
                     
                     <div className={styles.resendSection}>

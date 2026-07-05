@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { securityService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 import styles from './Auth.module.css';
+import ThreeBody from '../components/ThreeBody';
 
 const parseJSON = (value: string | null) => {
     if (!value || value === 'undefined' || value === 'null') return null;
@@ -260,12 +261,14 @@ const SetSecurity: React.FC = () => {
                         
                         {error && <div className={styles.errorMsg}>{error}</div>}
                         
-                        <input 
+                        <button 
                             className={styles.loginButton} 
-                            type="submit" 
-                            value={loading ? 'Setting PIN...' : t.button}
+                            type="submit"
                             disabled={loading}
-                        />
+                            style={{ opacity: loading ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                        >
+                            {loading ? <><ThreeBody size={18} color="#fff" /> Setting PIN...</> : t.button}
+                        </button>
                     </form>
                     
                     <div className={styles.resendSection}>

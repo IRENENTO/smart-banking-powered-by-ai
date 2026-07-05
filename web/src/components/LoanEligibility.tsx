@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, AlertCircle, TrendingUp, Calculator } from 'lucide-react';
 import { loanService } from '../services/api';
 import Modal from './Modal';
+import ThreeBody from './ThreeBody';
 import { useNavigate } from 'react-router-dom';
 import { calculateSimpleInterest, calculateCompoundEMI, generateYearlyBreakdown } from '../utils/interestCalculations';
 
@@ -103,7 +104,7 @@ const LoanEligibility: React.FC<LoanEligibilityProps> = ({ isOpen, onClose }) =>
             disabled={loading}
             className="w-full px-4 py-3 bg-[#0A9396] text-white rounded-xl font-medium hover:bg-[#087a7d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
           >
-            {loading ? 'Checking...' : 'Check Eligibility'}
+            {loading ? <><ThreeBody size={16} color="#fff" /> Checking...</> : 'Check Eligibility'}
           </button>
         </form>
       ) : (

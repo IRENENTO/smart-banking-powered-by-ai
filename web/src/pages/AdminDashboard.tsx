@@ -8,6 +8,7 @@ import {
     Sparkles, Brain, Target, DollarSign, Clock, Wallet,
     Plus, Edit2, Trash2, Search
 } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -317,8 +318,8 @@ const AdminDashboard: React.FC = () => {
                                 <Clock size={12} className="inline mr-1" />
                                 {lastRefresh.toLocaleTimeString()}
                             </span>
-                            <button onClick={handleRefresh} disabled={refreshing} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50">
-                                <RefreshCw size={16} className={refreshing ? 'animate-spin' : ''} />
+                            <button onClick={handleRefresh} disabled={refreshing} className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors disabled:opacity-50 inline-flex items-center justify-center">
+                                {refreshing ? <ThreeBody size={16} /> : <RefreshCw size={16} />}
                             </button>
                         </div>
                     </div>
@@ -693,7 +694,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex gap-3 justify-end mt-4">
                             <button onClick={() => { setShowUserModal(false); setEditUser(null); }} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Cancel</button>
                             <button onClick={editUser ? handleUpdateUser : handleCreateUser} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                                {saving ? <><Loader size={16} className="inline animate-spin mr-1" /> Saving...</> : editUser ? 'Update' : 'Create'}
+                                {saving ? <><ThreeBody size={16} color="#fff" /> Saving...</> : editUser ? 'Update' : 'Create'}
                             </button>
                         </div>
                     </div>
@@ -718,7 +719,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex gap-3 justify-end mt-4">
                             <button onClick={() => setShowTxModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Cancel</button>
                             <button onClick={handleCreateTransaction} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                                {saving ? <><Loader size={16} className="inline animate-spin mr-1" /> Saving...</> : 'Create'}
+                                {saving ? <><ThreeBody size={16} color="#fff" /> Saving...</> : 'Create'}
                             </button>
                         </div>
                     </div>
@@ -743,7 +744,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex gap-3 justify-end mt-4">
                             <button onClick={() => { setShowLoanModal(false); setEditLoan(null); }} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Cancel</button>
                             <button onClick={editLoan ? handleUpdateLoan : handleCreateLoan} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                                {saving ? <><Loader size={16} className="inline animate-spin mr-1" /> Saving...</> : editLoan ? 'Update' : 'Create'}
+                                {saving ? <><ThreeBody size={16} color="#fff" /> Saving...</> : editLoan ? 'Update' : 'Create'}
                             </button>
                         </div>
                     </div>
@@ -764,7 +765,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex gap-3 justify-end mt-4">
                             <button onClick={() => setShowFraudModal(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Cancel</button>
                             <button onClick={handleCreateFraudAlert} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                                {saving ? <><Loader size={16} className="inline animate-spin mr-1" /> Saving...</> : 'Create'}
+                                {saving ? <><ThreeBody size={16} color="#fff" /> Saving...</> : 'Create'}
                             </button>
                         </div>
                     </div>
@@ -785,7 +786,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex gap-3 justify-end mt-4">
                             <button onClick={() => { setReviewAlert(null); setFormData({}); }} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Cancel</button>
                             <button onClick={handleReviewFraudAlert} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors">
-                                {saving ? <><Loader size={16} className="inline animate-spin mr-1" /> Saving...</> : 'Submit Review'}
+                                {saving ? <><ThreeBody size={16} color="#fff" /> Saving...</> : 'Submit Review'}
                             </button>
                         </div>
                     </div>
@@ -804,7 +805,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="flex gap-3 justify-center">
                             <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">Cancel</button>
                             <button onClick={handleDelete} disabled={saving} className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors">
-                                {saving ? 'Deleting...' : 'Delete'}
+                                {saving ? <><ThreeBody size={16} color="#fff" /> Deleting...</> : 'Delete'}
                             </button>
                         </div>
                     </div>

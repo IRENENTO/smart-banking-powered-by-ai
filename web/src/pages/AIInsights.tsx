@@ -6,6 +6,7 @@ import { aiService, marketService } from '../services/api';
 import * as aiEngine from '../services/aiService';
 import { profileService } from '../services/api';
 import { TrendingUp, AlertTriangle, Target, Sparkles, Brain, RefreshCw, Shield, DollarSign, Zap, ThumbsUp, Calendar } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 import { useTheme } from '../context/ThemeContext';
 import { useBanking } from '../context/BankingContext';
 import { useToast } from '../context/ToastContext';
@@ -610,8 +611,7 @@ const AIInsights: React.FC = () => {
                                             opacity: investing ? 0.6 : 1, boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
                                         }}
                                     >
-                                        <ThumbsUp size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                                        {investing ? 'Processing...' : `Invest RWF ${predictionInput.amount.toLocaleString()}`}
+                                        {investing ? <><ThreeBody size={16} color="#fff" /> Processing...</> : <><ThumbsUp size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} /> Invest RWF ${predictionInput.amount.toLocaleString()}</>}
                                     </button>
                                 </>
                             )}

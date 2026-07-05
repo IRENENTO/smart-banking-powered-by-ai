@@ -10,6 +10,7 @@ import { useToast } from '../context/ToastContext';
 import { useNotifications } from '../context/NotificationContext';
 import { scheduleService } from '../services/api';
 import { Plus, Pause, Play, Trash2, Clock } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 
 type Tab = 'send' | 'deposit' | 'schedules';
 
@@ -207,7 +208,7 @@ const Payments: React.FC = () => {
                             </div>
 
                             <input value={depositPhoneNumber} placeholder={`Phone number (${depositProvider === 'mtn' ? 'MTN' : 'Airtel'}) — optional`} type="tel" onChange={(e) => setDepositPhoneNumber(e.target.value)} {...{style: inputStyle}} />
-                            <button type="submit" disabled={depositing} style={{ padding: '12px 20px', background: depositing ? '#6b7280' : '#059669', color: 'white', border: 'none', borderRadius: 14, fontWeight: 700, cursor: depositing ? 'not-allowed' : 'pointer' }}>{depositing ? 'Processing...' : 'Deposit'}</button>
+                            <button type="submit" disabled={depositing} style={{ padding: '12px 20px', background: depositing ? '#6b7280' : '#059669', color: 'white', border: 'none', borderRadius: 14, fontWeight: 700, cursor: depositing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>{depositing ? <><ThreeBody size={16} color="#fff" /> Processing...</> : 'Deposit'}</button>
                         </form>
                     </SectionCard>
                 )}

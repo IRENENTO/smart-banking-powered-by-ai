@@ -7,6 +7,7 @@ import MarketPredictionCard from '../components/MarketPredictionCard';
 import InvestmentRecommendation from '../components/InvestmentRecommendation';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Calculator, Brain, TrendingUp, Sparkles, RefreshCw, Zap, DollarSign } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 import { investmentService, profileService, securityService } from '../services/api';
 import * as aiEngine from '../services/aiService';
 import { useTheme } from '../context/ThemeContext';
@@ -74,6 +75,14 @@ const lookupBusinessSector = (name: string): { risk: string; growth: number; tre
     if (key.includes('forestry') || key.includes('timber')) return { risk: 'low', growth: 10, trend: 'stable' };
     if (key.includes('handicrafts')) return { risk: 'low', growth: 8, trend: 'stable' };
     return { risk: 'medium', growth: 12, trend: 'up' };
+};
+
+const sectorToInvestmentType = (sector: string): string => {
+    const key = sector.toLowerCase();
+    if (key.includes('real estate') || key.includes('housing') || key.includes('property')) return 'realestate';
+    if (key.includes('startup') || key.includes('innovation') || key.includes('technology') || key.includes('tech')) return 'startups';
+    if (key.includes('bond') || key.includes('fixed income')) return 'bonds';
+    return 'stocks';
 };
 
 const Investments: React.FC = () => {
@@ -156,29 +165,18 @@ const Investments: React.FC = () => {
         }
         try {
           const lookup = lookupBusinessSector(predictionInput.sector);
-          const newInvest = {
-            id: 'demo-inv-' + Date.now(),
-            sector: predictionInput.sector,
-            district: predictionInput.region,
-            amount: predictionInput.amount,
-            expectedReturn: lookup.growth,
-            duration: 12,
-            risk: lookup.risk,
-            createdAt: Date.now(),
-            earned: 0,
-            status: 'active',
-          };
-          setDemoInvestments(prev => [...prev, newInvest]);
-          investmentService.createInvestment({
-            type: predictionInput.sector,
+          const invType = sectorToInvestmentType(predictionInput.sector);
+          await investmentService.createInvestment({
+            type: invType,
             amount: predictionInput.amount,
             duration: 12,
             risk_level: lookup.risk,
             expected_return: lookup.growth,
-          }).catch(() => {});
+          });
+          await loadInvestments();
           setPredictionResult(null);
           setPredictionInput(p => ({ ...p, sector: '' }));
-          toast.success(`Put RWF ${predictionInput.amount.toLocaleString()} into ${predictionInput.sector}`);
+          toast.success(`Invested RWF ${predictionInput.amount.toLocaleString()} in ${predictionInput.sector}`);
           try { await refreshBankData(); } catch {}
         } catch {
           toast.error('Investment did not work.');
@@ -484,8 +482,7 @@ const Investments: React.FC = () => {
                     opacity: investing ? 0.6 : 1, boxShadow: '0 4px 20px rgba(16,185,129,0.3)',
                   }}
                 >
-                  <Zap size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} />
-                  {investing ? 'Working...' : `Put RWF ${predictionInput.amount.toLocaleString()} into this`}
+                  {investing ? <><ThreeBody size={16} color="#fff" /> Working...</> : <><Zap size={16} style={{ marginRight: 8, verticalAlign: 'middle' }} /> Invest</>}
                 </button>
               </>
             )}
@@ -602,7 +599,7 @@ const Investments: React.FC = () => {
                 <label style={{ display: 'grid', gap: 6 }}><span style={labelStyle}>Expected Profit % (not needed)</span><input type="text" inputMode="decimal" value={formData.expected_return} onChange={(e) => setFormData({ ...formData, expected_return: e.target.value })} placeholder={typeInfo(formData.type)?.expected_returns[formData.risk_level]?.toString()} className="input-field" style={inputStyle} /></label>
               </div>
               <div className="flex flex-wrap gap-3">
-                <button type="submit" className="btn btn-primary" disabled={busy !== null} aria-busy={busy !== null}>{busy === 'create' || busy === 'update' ? 'Working...' : (editingInvestment ? 'Change Investment' : 'Start Investment')}</button>
+                <button type="submit" className="btn btn-primary" disabled={busy !== null} aria-busy={busy !== null} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>{busy === 'create' || busy === 'update' ? <><ThreeBody size={16} color="#fff" /> Working...</> : (editingInvestment ? 'Change Investment' : 'Start Investment')}</button>
                 <button type="button" className={isDark ? 'btn btn-ghost' : 'btn btn-outline'}
                   style={!isDark ? { background: '#ffffff', color: '#374151', border: '1px solid #d1d5db', padding: '10px 20px', borderRadius: 10, fontWeight: 600, fontSize: 14, cursor: 'pointer' } : undefined}
                   onClick={() => { setShowCreateForm(false); setEditingInvestment(null); resetForm(); }} disabled={busy !== null}>Stop</button>

@@ -61,7 +61,7 @@ const Login: React.FC = () => {
         } catch (userErr: any) {
             // If user login fails, try admin login
             const errMsg = userErr.response?.data?.msg || userErr.response?.data?.message || '';
-            if (errMsg.toLowerCase().includes('invalid credentials') || errMsg.toLowerCase().includes('invalid email')) {
+            if (errMsg.toLowerCase().includes('invalid credentials') || errMsg.toLowerCase().includes('invalid email') || errMsg.toLowerCase().includes('wrong email')) {
                 try {
                     const adminRes = await authService.adminLogin({ email, password });
                     localStorage.setItem('admin_token', adminRes.data.token);

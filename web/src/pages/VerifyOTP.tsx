@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { otpService } from '../services/otpService';
 import { useTheme } from '../context/ThemeContext';
 import styles from './Auth.module.css';
+import ThreeBody from '../components/ThreeBody';
 
 const parseJSON = (value: string | null) => {
     if (!value || value === 'undefined' || value === 'null') return null;
@@ -276,12 +277,14 @@ const VerifyOTP: React.FC = () => {
                         )}
                         {error && <div className={styles.errorMsg}>{error}</div>}
                         
-                        <input 
+                        <button 
                             className={styles.loginButton} 
-                            type="submit" 
-                            value={loading ? 'Verifying...' : t.verifyButton}
+                            type="submit"
                             disabled={loading}
-                        />
+                            style={{ opacity: loading ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                        >
+                            {loading ? <><ThreeBody size={18} color="#fff" /> Verifying...</> : t.verifyButton}
+                        </button>
                     </form>
                     
                     <div className={styles.resendSection}>
@@ -290,8 +293,9 @@ const VerifyOTP: React.FC = () => {
                             onClick={handleResend}
                             className={styles.resendButton}
                             disabled={resendLoading}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                         >
-                            {resendLoading ? 'Sending...' : t.resendCode}
+                            {resendLoading ? <><ThreeBody size={14} color="#0ea5e9" /> Sending...</> : t.resendCode}
                         </button>
                     </div>
                     

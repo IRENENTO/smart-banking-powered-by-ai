@@ -1,8 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { Save, Loader, CheckCircle, AlertTriangle, Globe, RefreshCw } from 'lucide-react';
-
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+import { Save, CheckCircle, AlertTriangle, Globe, RefreshCw } from 'lucide-react';
+import ThreeBody from './ThreeBody';
 
 interface CmsSection {
     id: number;
@@ -19,6 +18,8 @@ const PAGE_LABELS: Record<string, string> = {
     services: 'Services',
     faq: 'FAQ'
 };
+
+const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:5001').replace(/\/api$/, '');
 
 const WebsiteEditor: React.FC = () => {
     const token = localStorage.getItem('admin_token');
@@ -116,7 +117,7 @@ const WebsiteEditor: React.FC = () => {
     if (loading) {
         return (
             <div className="flex items-center justify-center py-20">
-                <Loader className="w-8 h-8 animate-spin text-blue-600" />
+                <ThreeBody size={32} color="#2563eb" />
                 <span className="ml-3 text-gray-600 dark:text-gray-400">Loading content...</span>
             </div>
         );
@@ -138,7 +139,7 @@ const WebsiteEditor: React.FC = () => {
                         </span>
                     )}
                     <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 text-sm font-medium transition-colors">
-                        {saving ? <Loader size={16} className="animate-spin" /> : <Save size={16} />}
+                        {saving ? <ThreeBody size={16} color="#fff" /> : <Save size={16} />}
                         {saving ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>

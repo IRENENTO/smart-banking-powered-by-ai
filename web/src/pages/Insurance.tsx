@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PageLayout from '../components/PageLayout';
 import { motion } from 'framer-motion';
 import { Shield, AlertCircle, Zap, Heart, Activity, Smartphone, Bell } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 import { useLanguage } from '../context/LanguageContext';
 
 const Insurance: React.FC = () => {
@@ -263,7 +264,7 @@ const Insurance: React.FC = () => {
                   transition: 'all 0.3s ease'
                 }}
               >
-                {calculating ? 'Calculating...' : 'Calculate Premium'}
+                {calculating ? <><ThreeBody size={16} color="#fff" /> Calculating...</> : 'Calculate Premium'}
               </button>
             </div>
 

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Target, Calendar } from 'lucide-react';
 import { savingsService } from '../services/api';
 import Modal from './Modal';
+import ThreeBody from './ThreeBody';
 
 interface SavingsGoalModalProps {
   isOpen: boolean;
@@ -157,7 +158,7 @@ const SavingsGoalModal: React.FC<SavingsGoalModalProps> = ({ isOpen, onClose, on
             disabled={loading}
             className="w-full px-4 py-3 bg-[#0A9396] text-white rounded-xl font-medium hover:bg-[#087a7d] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-6"
           >
-            {loading ? 'Creating Goal...' : 'Create Goal'}
+            {loading ? <><ThreeBody size={16} color="#fff" /> Creating Goal...</> : 'Create Goal'}
           </button>
         </form>
       )}

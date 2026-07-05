@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Shield, KeyRound, ArrowLeft, CheckCircle, Loader } from 'lucide-react';
+import { Mail, Shield, KeyRound, ArrowLeft, CheckCircle } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 import { authService, otpService } from '../services/api';
 import { useTheme } from '../context/ThemeContext';
 
@@ -153,7 +154,7 @@ const ForgotPassword: React.FC = () => {
                 cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
-            >{loading ? <><Loader size={18} className="animate-spin" /> Sending...</> : 'Send Reset Code'}</button>
+            >{loading ? <><ThreeBody size={18} color="#fff" /> Sending...</> : 'Send Reset Code'}</button>
           </form>
         )}
 
@@ -175,7 +176,7 @@ const ForgotPassword: React.FC = () => {
                 cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
-            >{loading ? <><Loader size={18} className="animate-spin" /> Verifying...</> : 'Verify Code'}</button>
+            >{loading ? <><ThreeBody size={18} color="#fff" /> Verifying...</> : 'Verify Code'}</button>
             <button type="button" onClick={() => { setStep('email'); setError(''); setMessage(''); }}
               style={{ marginTop: 12, background: 'none', border: 'none', color: mutedColor, fontSize: 13, cursor: 'pointer', width: '100%', textDecoration: 'underline' }}>
               Change email
@@ -207,7 +208,7 @@ const ForgotPassword: React.FC = () => {
                 cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
               }}
-            >{loading ? <><Loader size={18} className="animate-spin" /> Resetting...</> : 'Reset Password'}</button>
+            >{loading ? <><ThreeBody size={18} color="#fff" /> Resetting...</> : 'Reset Password'}</button>
           </form>
         )}
       </motion.div>

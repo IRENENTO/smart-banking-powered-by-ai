@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PageLayout from '../components/PageLayout';
 import { motion } from 'framer-motion';
 import { Lock, Shield, AlertTriangle, Eye, ChevronRight, CheckCircle, Smartphone } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 import { useNavigate } from 'react-router-dom';
 import { settingsService } from '../services/settingsService';
 import { useToast } from '../context/ToastContext';
@@ -259,7 +260,7 @@ const Security: React.FC = () => {
                         transition: 'all 0.2s'
                       }}
                     >
-                      {feature.action.loading ? 'Updating...' : feature.action.label}
+                      {feature.action.loading ? <><ThreeBody size={16} /> Updating...</> : feature.action.label}
                       {!feature.action.loading && <ChevronRight size={16} />}
                     </button>
                   )}

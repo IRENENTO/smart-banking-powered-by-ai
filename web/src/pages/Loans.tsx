@@ -8,6 +8,7 @@ import {
   Wallet, List, Info as InfoIcon, ClipboardCheck,
   ThumbsUp, CreditCard
 } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import SectionCard from '../components/SectionCard';
@@ -57,6 +58,8 @@ const Loans: React.FC = () => {
   const [applyPredicting, setApplyPredicting] = useState(false);
   const [applyPrediction, setApplyPrediction] = useState<any>(null);
 
+  const [extending, setExtending] = useState(false);
+  const [approving, setApproving] = useState<string | null>(null);
   const [extendingLoan, setExtendingLoan] = useState<string | null>(null);
   const [extensionDays, setExtensionDays] = useState('');
   const [extensionResult, setExtensionResult] = useState<{ loanId: string; approved: boolean; reason?: string } | null>(null);
@@ -373,6 +376,7 @@ const Loans: React.FC = () => {
   const handleDemoApprove = async (loanId: string) => {
     const loan = demoLoans.find(l => l.id === loanId);
     if (!loan || loan.status !== 'pending') return;
+    setApproving(loanId);
     try {
       await deposit(loan.amount, `Loan disbursement: ${loan.purpose}`);
       setDemoLoans(prev => prev.map(l =>
@@ -398,10 +402,12 @@ const Loans: React.FC = () => {
     } catch (err) {
       toast.error('Failed to disburse loan. API may be offline.');
     }
+    setApproving(null);
   };
 
   const handleExtension = async (loanId: string) => {
     if (!extensionDays || parseInt(extensionDays) < 1) return;
+    setExtending(true);
     try {
       const response = await loanService.requestExtension(Number(loanId), parseInt(extensionDays)).catch(() => null);
       if (response?.data?.data) {
@@ -416,6 +422,7 @@ const Loans: React.FC = () => {
       setExtensionResult({ loanId, approved: true, reason: 'Demo mode — extension simulated.' });
       toast.success(`Loan extended by ${extensionDays} days (demo)`);
     }
+    setExtending(false);
     setExtendingLoan(null);
     setExtensionDays('');
   };
@@ -1399,7 +1406,7 @@ const Loans: React.FC = () => {
                                         opacity: (paying || !paymentAmount[loan.id] || parseFloat(paymentAmount[loan.id] || '0') <= 0) ? 0.6 : 1,
                                       }}
                                     >
-                                      {paying ? 'Processing...' : 'Pay'}
+                                      {paying ? <><ThreeBody size={14} color="#fff" /> Processing...</> : 'Pay'}
                                     </button>
                                     <button
                                       onClick={() => { setPayingLoanId(null); setPaymentAmount(prev => ({ ...prev, [loan.id]: '' })); }}
@@ -1465,7 +1472,7 @@ const Loans: React.FC = () => {
                                         opacity: (settingDeduction || !deductionAmount[loan.id] || parseFloat(deductionAmount[loan.id] || '0') <= 0) ? 0.6 : 1,
                                       }}
                                     >
-                                      {settingDeduction ? 'Setting...' : 'Set'}
+                                      {settingDeduction ? <><ThreeBody size={14} color="#fff" /> Setting...</> : 'Set'}
                                     </button>
                                     <button
                                       onClick={() => { setDeductionLoanId(null); setDeductionAmount(prev => ({ ...prev, [loan.id]: '' })); }}
@@ -1513,16 +1520,17 @@ const Loans: React.FC = () => {
                                     />
                                     <button
                                       onClick={() => handleExtension(loan.id)}
-                                      disabled={!extensionDays || parseInt(extensionDays) < 1}
+                                      disabled={extending || !extensionDays || parseInt(extensionDays) < 1}
                                       style={{
-                                        padding: '10px 20px', borderRadius: 8, border: 'none', cursor: (!extensionDays || parseInt(extensionDays) < 1) ? 'not-allowed' : 'pointer',
+                                        padding: '10px 20px', borderRadius: 8, border: 'none', cursor: (extending || !extensionDays || parseInt(extensionDays) < 1) ? 'not-allowed' : 'pointer',
                                         fontWeight: 600, fontSize: 13,
                                         background: 'linear-gradient(135deg, #0A9396, #4ECDC4)', color: 'white',
-                                        opacity: (!extensionDays || parseInt(extensionDays) < 1) ? 0.6 : 1,
+                                        opacity: (extending || !extensionDays || parseInt(extensionDays) < 1) ? 0.6 : 1,
+                                        display: 'flex', alignItems: 'center', gap: 6,
                                       }}
                                     >
-                                      <Calendar size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
-                                      Extend
+                                      {extending ? <ThreeBody size={14} color="#fff" /> : <Calendar size={14} />}
+                                      {extending ? 'Extending...' : 'Extend'}
                                     </button>
                                     <button
                                       onClick={() => { setExtendingLoan(null); setExtensionResult(null); }}
@@ -1568,16 +1576,18 @@ const Loans: React.FC = () => {
                           <div style={{ marginTop: 16, display: 'flex', gap: 12, alignItems: 'center' }}>
                             <button
                               onClick={() => handleDemoApprove(loan.id)}
+                              disabled={approving === loan.id}
                               style={{
-                                padding: '10px 20px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                                padding: '10px 20px', borderRadius: 10, border: 'none', cursor: approving === loan.id ? 'not-allowed' : 'pointer',
                                 fontWeight: 600, fontSize: 13,
                                 background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white',
                                 boxShadow: '0 4px 12px rgba(16,185,129,0.3)',
                                 display: 'flex', alignItems: 'center', gap: 6,
+                                opacity: approving === loan.id ? 0.6 : 1,
                               }}
                             >
-                              <ThumbsUp size={16} />
-                              Demo: Approve & Disburse
+                              {approving === loan.id ? <ThreeBody size={14} color="#fff" /> : <ThumbsUp size={16} />}
+                              {approving === loan.id ? 'Processing...' : 'Demo: Approve & Disburse'}
                             </button>
                             <span style={{ fontSize: 12, color: mutedColor }}>
                               (Adds RWF {loan.amount.toLocaleString()} to balance)

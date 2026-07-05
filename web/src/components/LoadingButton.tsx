@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import ThreeBody from './ThreeBody';
 
 interface LoadingButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
     loading?: boolean;
@@ -116,13 +116,10 @@ const LoadingButton: React.FC<LoadingButtonProps> = ({
 
             {/* Loading spinner */}
             {loading && (
-                <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                    style={{ display: 'flex', alignItems: 'center' }}
-                >
-                    <Loader2 size={size === 'sm' ? 16 : size === 'lg' ? 24 : 20} />
-                </motion.div>
+                <ThreeBody
+                    size={size === 'sm' ? 14 : size === 'lg' ? 22 : 18}
+                    color={variant === 'outline' || variant === 'ghost' ? '#0A9396' : '#ffffff'}
+                />
             )}
 
             {/* Button content */}

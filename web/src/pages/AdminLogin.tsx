@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Mail, Loader, AlertCircle } from 'lucide-react';
+import { Lock, Mail, AlertCircle } from 'lucide-react';
+import ThreeBody from '../components/ThreeBody';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:4000/api';
@@ -127,7 +128,7 @@ const AdminLogin: React.FC = () => {
                         >
                             {loading ? (
                                 <>
-                                    <Loader className="animate-spin" size={20} />
+                                    <ThreeBody size={20} color="#fff" />
                                     Signing in...
                                 </>
                             ) : (

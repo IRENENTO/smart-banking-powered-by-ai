@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Brain, Activity, Clock, Zap, AlertTriangle, CheckCircle, RefreshCw } from 'lucide-react';
 import SectionCard from './SectionCard';
+import ThreeBody from './ThreeBody';
 import { useTheme } from '../context/ThemeContext';
 import * as aiEngine from '../services/aiService';
 
@@ -42,7 +43,7 @@ const AIEngineStatus: React.FC = () => {
                 padding: '6px 10px', borderRadius: 8, border: 'none', cursor: 'pointer',
                 background: isDark ? '#1e293b' : '#f1f5f9', color: mutedColor,
             }}>
-                <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
+                {loading ? <ThreeBody size={14} /> : <RefreshCw size={14} />}
             </button>
         }>
             {loading && !status ? (
