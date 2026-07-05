@@ -43,18 +43,30 @@ exports.getInvestments = async (req, res) => {
         
         res.json({
             success: true,
-            data: investments.map(inv => ({
-                id: inv.id,
-                type: inv.type,
-                amount: inv.amount,
-                duration: inv.duration,
-                risk_level: inv.risk_level,
-                expected_return: inv.expected_return,
-                actual_return: inv.actual_return,
-                status: inv.status,
-                created_at: inv.created_at,
-                updated_at: inv.updated_at
-            }))
+            data: investments.map(inv => {
+                const amount = parseFloat(inv.amount);
+                const expectedReturnPct = parseFloat(inv.expected_return);
+                const expectedProfitAmount = amount * (expectedReturnPct / 100);
+                const totalDays = inv.duration * 30;
+                const dailyReturn = totalDays > 0 ? expectedProfitAmount / totalDays : 0;
+
+                return {
+                    id: inv.id,
+                    type: inv.type,
+                    amount: amount,
+                    duration: inv.duration,
+                    risk_level: inv.risk_level,
+                    expected_return: expectedReturnPct,
+                    expected_profit_amount: Math.round(expectedProfitAmount * 100) / 100,
+                    actual_return: parseFloat(inv.actual_return),
+                    daily_projection: Math.round(dailyReturn * 100) / 100,
+                    weekly_projection: Math.round(dailyReturn * 7 * 100) / 100,
+                    monthly_projection: Math.round(dailyReturn * 30 * 100) / 100,
+                    status: inv.status,
+                    created_at: inv.created_at,
+                    updated_at: inv.updated_at
+                };
+            })
         });
     } catch (err) {
         console.error('Get investments error:', err);

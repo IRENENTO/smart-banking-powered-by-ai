@@ -6,7 +6,7 @@ import PinModal from '../components/PinModal';
 import MarketPredictionCard from '../components/MarketPredictionCard';
 import InvestmentRecommendation from '../components/InvestmentRecommendation';
 import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, Calculator, Brain, TrendingUp, Sparkles, RefreshCw, Zap, DollarSign } from 'lucide-react';
+import { Plus, Edit2, Trash2, Calculator, Brain, TrendingUp, Sparkles, RefreshCw, Zap, DollarSign, ChevronDown, ChevronUp, BarChart3, Calendar } from 'lucide-react';
 import ThreeBody from '../components/ThreeBody';
 import { investmentService, profileService, securityService } from '../services/api';
 import * as aiEngine from '../services/aiService';
@@ -18,6 +18,10 @@ import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 interface Investment {
   id: number; type: string; amount: number; duration: number;
   risk_level: string; expected_return: number; actual_return: number;
+  expected_profit_amount?: number;
+  daily_projection?: number;
+  weekly_projection?: number;
+  monthly_projection?: number;
   status: string; created_at: string; updated_at: string;
 }
 interface InvestmentType { id: string; name: string; description: string; min_amount: number; risk_levels: string[]; expected_returns: { [key: string]: number }; }
@@ -114,6 +118,7 @@ const Investments: React.FC = () => {
   const [investing, setInvesting] = useState(false);
   const [localBalanceOffset, setLocalBalanceOffset] = useState(0);
   const [pinAction, setPinAction] = useState<{ cb: () => void } | null>(null);
+  const [expandedId, setExpandedId] = useState<number | string | null>(null);
   const { balance, deposit, withdraw, refresh: refreshBankData } = useBanking();
   const effectiveBalance = balance !== null ? balance + localBalanceOffset : null;
   const toast = useToast();
@@ -340,20 +345,39 @@ const Investments: React.FC = () => {
       })) || []
   ).filter((s: any) => s.name);
 
+  const computeProjections = (amount: number, expectedReturnPct: number, duration: number) => {
+    const expectedProfitAmount = amount * (expectedReturnPct / 100);
+    const totalDays = duration * 30;
+    const dailyReturn = totalDays > 0 ? expectedProfitAmount / totalDays : 0;
+    return {
+      expected_profit_amount: Math.round(expectedProfitAmount * 100) / 100,
+      daily_projection: Math.round(dailyReturn * 100) / 100,
+      weekly_projection: Math.round(dailyReturn * 7 * 100) / 100,
+      monthly_projection: Math.round(dailyReturn * 30 * 100) / 100,
+    };
+  };
+
   const allInvestments: Investment[] = [
-    ...investments,
-    ...demoInvestments.map(d => ({
-      id: d.id,
-      type: d.sector || 'Business',
-      amount: d.amount,
-      duration: d.duration,
-      risk_level: d.risk || 'medium',
-      expected_return: d.expectedReturn,
-      actual_return: d.earned || 0,
-      status: d.status,
-      created_at: d.createdAt ? new Date(d.createdAt).toISOString() : new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+    ...investments.map(inv => ({
+      ...inv,
+      ...computeProjections(inv.amount, inv.expected_return, inv.duration),
     })),
+    ...demoInvestments.map(d => {
+      const proj = computeProjections(d.amount, d.expectedReturn, d.duration);
+      return {
+        id: d.id,
+        type: d.sector || 'Business',
+        amount: d.amount,
+        duration: d.duration,
+        risk_level: d.risk || 'medium',
+        expected_return: d.expectedReturn,
+        actual_return: d.earned || 0,
+        ...proj,
+        status: d.status,
+        created_at: d.createdAt ? new Date(d.createdAt).toISOString() : new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+    }),
   ];
 
   if (loading) {
@@ -618,27 +642,83 @@ const Investments: React.FC = () => {
             <div style={{ display: 'grid', gap: 16 }}>
               {allInvestments.map((investment) => {
                 const info = typeInfo(investment.type);
+                const isExpanded = expandedId === investment.id;
+                const expectedProfit = investment.expected_profit_amount || 0;
+                const progress = expectedProfit > 0 ? Math.min((investment.actual_return / expectedProfit) * 100, 100) : 0;
                 return (
                   <motion.div key={investment.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                    className="glass-card" style={{ padding: '24px 26px', display: 'grid', gridTemplateColumns: '1fr auto', gap: 20, alignItems: 'center', ...(!isDark ? { background: '#ffffff', border: '1px solid #e5e7eb' } : {}) }}>
-                    <div>
-                      <div className="flex flex-wrap items-center gap-3" style={{ marginBottom: 14 }}>
-                        <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: isDark ? '#e2f0f5' : '#111827' }}>{info?.name || investment.type}</h4>
-                        <span className={`chip ${investment.status === 'active' ? 'chip-teal' : 'chip-gold'}`}>{investment.status}</span>
-                        <span className={`chip ${riskColors[investment.risk_level] || 'chip-teal'}`}>{investment.risk_level} risk</span>
+                    className="glass-card" style={{ padding: '24px 26px', ...(!isDark ? { background: '#ffffff', border: '1px solid #e5e7eb' } : {}) }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 20, alignItems: 'start' }}>
+                      <div>
+                        <div className="flex flex-wrap items-center gap-3" style={{ marginBottom: 14 }}>
+                          <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: isDark ? '#e2f0f5' : '#111827' }}>{info?.name || investment.type}</h4>
+                          <span className={`chip ${investment.status === 'active' ? 'chip-teal' : 'chip-gold'}`}>{investment.status}</span>
+                          <span className={`chip ${riskColors[investment.risk_level] || 'chip-teal'}`}>{investment.risk_level} risk</span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Invested</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#f1f5f9' : '#111827' }}>{investment.amount.toLocaleString()} RWF</div></div>
+                          <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Duration</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#f1f5f9' : '#111827' }}>{investment.duration} months</div></div>
+                          <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Expected Profit</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#4ade80' : '#059669' }}>{expectedProfit.toLocaleString()} RWF</div></div>
+                          <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Earned So Far</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#2dcece' : '#0A9396' }}>{investment.actual_return.toLocaleString()} RWF</div></div>
+                        </div>
+                        {investment.status === 'active' && (
+                          <div style={{ marginTop: 12 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: mutedColor, marginBottom: 4 }}>
+                              <span>Progress toward target profit ({investment.expected_return}%)</span>
+                              <span>{progress.toFixed(1)}%</span>
+                            </div>
+                            <div style={{ height: 6, borderRadius: 3, background: isDark ? '#1e293b' : '#e5e7eb', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${progress}%`, borderRadius: 3, background: 'linear-gradient(90deg, #0A9396, #2dcece)', transition: 'width 0.5s ease' }} />
+                            </div>
+                          </div>
+                        )}
+                        <div style={{ marginTop: 10, fontSize: 11, color: mutedColor }}>Started: {new Date(investment.created_at).toLocaleDateString()}</div>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Sum</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#f1f5f9' : '#111827' }}>{investment.amount.toLocaleString()} RWF</div></div>
-                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Time</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#f1f5f9' : '#111827' }}>{investment.duration} months</div></div>
-                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Expected Profit</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#4ade80' : '#059669' }}>{investment.expected_return}%</div></div>
-                        <div><div className="card-title" style={{ color: isDark ? undefined : '#6b7280' }}>Actual Profit</div><div style={{ fontSize: 15, fontWeight: 700, color: isDark ? '#2dcece' : '#0A9396' }}>{investment.actual_return.toLocaleString()} RWF</div></div>
+                      <div className="flex flex-col gap-2 items-end">
+                        <button onClick={() => setExpandedId(isExpanded ? null : investment.id)}
+                          style={{ background: 'none', border: 'none', color: '#0A9396', cursor: 'pointer', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                          {isExpanded ? 'Less' : 'Projections'}
+                        </button>
+                        <div className="flex flex-wrap gap-2">
+                          {investment.status === 'active' && typeof investment.id !== 'string' && (<LoadingButton onClick={() => startEditInvestment(investment)} disabled={busy !== null} variant="outline" size="sm"><Edit2 size={14} /> Edit</LoadingButton>)}
+                          <LoadingButton onClick={() => handleDeleteInvestment(investment.id)} disabled={busy === `delete-${investment.id}` || investment.status !== 'active'} variant="ghost" size="sm"><Trash2 size={14} /> Delete</LoadingButton>
+                        </div>
                       </div>
-                      <div style={{ marginTop: 10, fontSize: 11, color: mutedColor }}>Created: {new Date(investment.created_at).toLocaleDateString()}</div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {investment.status === 'active' && typeof investment.id !== 'string' && (<LoadingButton onClick={() => startEditInvestment(investment)} disabled={busy !== null} variant="outline" size="sm"><Edit2 size={14} /> Edit</LoadingButton>)}
-                      <LoadingButton onClick={() => handleDeleteInvestment(investment.id)} disabled={busy === `delete-${investment.id}` || investment.status !== 'active'} variant="ghost" size="sm"><Trash2 size={14} /> Delete</LoadingButton>
-                    </div>
+                    {isExpanded && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                        style={{ marginTop: 18, paddingTop: 18, borderTop: `1px solid ${isDark ? '#1e293b' : '#e5e7eb'}` }}>
+                        <h5 style={{ margin: '0 0 12px', fontSize: 14, fontWeight: 600, color: isDark ? '#e2f0f5' : '#111827', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <BarChart3 size={16} /> Projected Returns
+                        </h5>
+                        <div className="grid grid-cols-3 gap-4">
+                          <div style={{ padding: 14, borderRadius: 12, background: isDark ? 'rgba(10,147,150,0.08)' : 'rgba(10,147,150,0.06)', border: `1px solid ${isDark ? 'rgba(10,147,150,0.2)' : 'rgba(10,147,150,0.15)'}` }}>
+                            <div style={{ fontSize: 11, color: mutedColor, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> Daily</div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: '#0A9396' }}>{(investment.daily_projection || 0).toLocaleString()} RWF</div>
+                          </div>
+                          <div style={{ padding: 14, borderRadius: 12, background: isDark ? 'rgba(10,147,150,0.08)' : 'rgba(10,147,150,0.06)', border: `1px solid ${isDark ? 'rgba(10,147,150,0.2)' : 'rgba(10,147,150,0.15)'}` }}>
+                            <div style={{ fontSize: 11, color: mutedColor, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> Weekly</div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: '#0A9396' }}>{(investment.weekly_projection || 0).toLocaleString()} RWF</div>
+                          </div>
+                          <div style={{ padding: 14, borderRadius: 12, background: isDark ? 'rgba(10,147,150,0.08)' : 'rgba(10,147,150,0.06)', border: `1px solid ${isDark ? 'rgba(10,147,150,0.2)' : 'rgba(10,147,150,0.15)'}` }}>
+                            <div style={{ fontSize: 11, color: mutedColor, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> Monthly</div>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: '#0A9396' }}>{(investment.monthly_projection || 0).toLocaleString()} RWF</div>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 12, padding: 14, borderRadius: 12, background: isDark ? 'rgba(10,147,150,0.05)' : 'rgba(10,147,150,0.04)', border: `1px solid ${isDark ? 'rgba(10,147,150,0.12)' : 'rgba(10,147,150,0.1)'}` }}>
+                          <div style={{ fontSize: 12, color: mutedColor, marginBottom: 6 }}>
+                            If the business runs successfully, your <strong>{investment.amount.toLocaleString()} RWF</strong> investment
+                            at <strong>{investment.expected_return}%</strong> return over <strong>{investment.duration} months</strong>
+                            {' '}will yield:
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+                            <div><div style={{ fontSize: 11, color: mutedColor }}>Total Target Profit</div><div style={{ fontSize: 18, fontWeight: 700, color: '#4ade80' }}>{expectedProfit.toLocaleString()} RWF</div></div>
+                            <div><div style={{ fontSize: 11, color: mutedColor }}>Total Return</div><div style={{ fontSize: 18, fontWeight: 700, color: isDark ? '#f1f5f9' : '#111827' }}>{(investment.amount + expectedProfit).toLocaleString()} RWF</div></div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
                   </motion.div>
                 );
               })}
